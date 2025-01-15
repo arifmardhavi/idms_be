@@ -115,6 +115,29 @@ class TypeController extends Controller
         ], 200);
     }
 
+    public function showByCategory($categoryId)
+    {
+        // take categories with filtered unit_id
+        $categories = Type::with('category')
+            ->where('category_id', $categoryId) // Filter by unit_id
+            ->get();
+
+        // if not found categories
+        if ($categories->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No types found for the specified category.',
+            ], 404);
+        }
+
+        // if found categories
+        return response()->json([
+            'success' => true,
+            'message' => 'Types retrieved successfully.',
+            'data' => $categories,
+        ], 200);
+    }
+
     public function destroy($id)
     {
         $type = Type::find($id);
@@ -137,6 +160,33 @@ class TypeController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete type.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function nonactive($id) {
+        $type = Type::find($id);
+
+        if (!$type) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Type not found.',
+            ], 404);
+        }
+
+        try {
+            $type->status = 0;
+            $type->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Type nonaktif successfully.',
+            ], 200);        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to nonaktif type.',
                 'errors' => $e->getMessage(),
             ], 500);
         }

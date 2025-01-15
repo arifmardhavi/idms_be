@@ -159,4 +159,31 @@ class Tag_numberController extends Controller
             ], 500);
         }
     }
+
+    function nonactive($id) {
+        $tagnumber = Tag_number::find($id);
+
+        if (!$tagnumber) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tag number not found.',
+            ], 404);
+        }
+
+        try {
+            $tagnumber->status = 0;
+            $tagnumber->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tag number nonaktif successfully.',
+            ], 200);        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to nonaktif tag number.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

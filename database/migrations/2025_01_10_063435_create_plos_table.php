@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('plo', function (Blueprint $table) {
+        Schema::create('plos', function (Blueprint $table) {
             $table->id();
-            $table->integer('tag_number');
-            $table->text('plo_certificate');
+            $table->string('tag_number');
+            $table->string('no_certificate');
+            $table->string('plo_certificate');
+            $table->string('last_plo_certificate')->nullable();
             $table->date('issue_date');
             $table->date('overdue_date');
             $table->integer('rla')->default('0');
@@ -30,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('plo');
+        Schema::dropIfExists('plos');
     }
 };

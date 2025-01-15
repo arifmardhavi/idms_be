@@ -138,4 +138,31 @@ class UnitController extends Controller
             ], 500);
         }
     }
+
+    function nonactive($id) {
+        $unit = Unit::find($id);
+
+        if (!$unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unit not found.',
+            ], 404);
+        }
+
+        try {
+            $unit->status = 0;
+            $unit->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Unit nonaktif successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to nonaktif unit.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

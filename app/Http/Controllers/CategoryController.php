@@ -76,6 +76,30 @@ class CategoryController extends Controller
         ], 200);
     }
 
+    public function showByUnit($unitId)
+    {
+        // take categories with filtered unit_id
+        $categories = Category::with('unit')
+            ->where('unit_id', $unitId) // Filter by unit_id
+            ->get();
+
+        // if not found categories
+        if ($categories->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No categories found for the specified unit.',
+            ], 404);
+        }
+
+        // if found categories
+        return response()->json([
+            'success' => true,
+            'message' => 'Categories retrieved successfully.',
+            'data' => $categories,
+        ], 200);
+    }
+
+
     // Update a specific category
     public function update(Request $request, $id)
     {
@@ -144,6 +168,33 @@ class CategoryController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete category.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    function nonactive($id) {
+        $category = Category::find($id);
+
+        if (!$category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Category not found.',
+            ], 404);
+        }
+
+        try {
+            $category->status = 0;
+            $category->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Category nonaktif successfully.',
+            ], 200);        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to nonaktif category.',
                 'errors' => $e->getMessage(),
             ], 500);
         }
