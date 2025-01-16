@@ -37,4 +37,5 @@ Route::get('/types/category/{categoryId}', [TypeController::class, 'showByCatego
 Route::put('/types/nonactive/{id}', [TypeController::class, 'nonactive']); // nonactive type
 
 // Tag_number
+Route::get('/tagnumbers/type/{typeId}', [Tag_numberController::class, 'showByType']);
 Route::put('/tagnumbers/nonactive/{id}', [Tag_numberController::class, 'nonactive']); // nonactive tag_number

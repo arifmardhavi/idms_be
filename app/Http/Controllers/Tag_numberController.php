@@ -82,6 +82,16 @@ class Tag_numberController extends Controller
         ], 200);
     }
 
+    function showByType($typeId){
+        $tag_numbers = Tag_number::where('type_id', $typeId)->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tag numbers retrieved successfully.',
+            'data' => $tag_numbers,
+        ], 200);
+    }
+
     /**
      * Update the specified resource in storage.
      */
