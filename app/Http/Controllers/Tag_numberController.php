@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tag_number;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class Tag_numberController extends Controller
@@ -90,6 +91,39 @@ class Tag_numberController extends Controller
             'message' => 'Tag numbers retrieved successfully.',
             'data' => $tag_numbers,
         ], 200);
+    }
+
+    function showByTagNumber(Request $request) {
+        $tag_number = $request->query('tag_number');
+        // $tag_number = urldecode($tag_number);
+
+        $result = DB::table('tag_numbers')
+        ->join('types', 'tag_numbers.type_id', '=', 'types.id')
+        ->join('categories', 'types.category_id', '=', 'categories.id')
+        ->join('units', 'categories.unit_id', '=', 'units.id')
+        ->select(
+            'tag_numbers.id as tag_number_id',
+            'tag_numbers.tag_number',
+            'types.id as type_id',
+            'categories.id as category_id',
+            'units.id as unit_id'
+        )
+        ->where('tag_numbers.tag_number', $tag_number)
+        ->first();
+
+        if($result) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Tag number retrieved successfully.',
+                'data' => $result,
+            ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => $tag_number . ' not found.',
+            ], 404);
+        }
+        
     }
 
     /**

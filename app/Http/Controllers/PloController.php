@@ -110,8 +110,9 @@ class PloController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
+        // dd($request->all());
         $plo = Plo::find($id);
 
         if (!$plo) {
@@ -120,7 +121,7 @@ class PloController extends Controller
                 'message' => 'PLO not found.',
             ], 404);
         }
-
+        
         $validator = Validator::make($request->all(), [
             'tag_number' => 'required|string|max:255',
             'no_certificate' => 'required|string|max:255',
@@ -142,7 +143,6 @@ class PloController extends Controller
         }
 
         $validatedData = $validator->validated();
-
         try {
             if ($request->hasFile('plo_certificate')) {
                 if ($plo->plo_certificate) {
@@ -154,10 +154,13 @@ class PloController extends Controller
                         }
                     }
                 }
-                $file = $request->file('plo_certificate');
-                $filename = uniqid().'_' . $file->getClientOriginalName();
-                $path = $file->storeAs('plo/certificates', $filename);  
-                $validatedData['plo_certificate'] = $filename;
+                if ($request->hasFile('plo_certificate')) {
+                    $file = $request->file('plo_certificate');
+                    $filename = uniqid().'_' . $file->getClientOriginalName();
+                    // Store file in public/plo/certificates
+                    $path = $file->move(public_path('plo/certificates'), $filename);  
+                    $validatedData['plo_certificate'] = $filename;
+                }
             }
 
             if ($request->hasFile('file_rla')) {
@@ -169,7 +172,8 @@ class PloController extends Controller
                 }
                 $file = $request->file('file_rla');
                 $filename = uniqid().'_' . $file->getClientOriginalName();
-                $path = $file->storeAs('plo/rla', $filename);  
+                // Store file in public/plo/rla
+                $path = $file->move(public_path('plo/rla'), $filename);  
                 $validatedData['file_rla'] = $filename;
             }
 
@@ -209,6 +213,10 @@ class PloController extends Controller
                 $path = public_path('plo/certificates/' . $plo->plo_certificate);
                 if (file_exists($path)) {
                     unlink($path); // Hapus file
+                }
+                $path_last = public_path('plo/certificates/' . $plo->last_plo_certificate);
+                if (file_exists($path_last)) {
+                    unlink($path_last); // Hapus file
                 }
             }
             if ($plo->file_rla) {

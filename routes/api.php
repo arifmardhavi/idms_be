@@ -25,6 +25,14 @@ Route::apiResource('types', TypeController::class);
 Route::apiResource('tagnumbers', Tag_numberController::class);
 Route::apiResource('plo', PloController::class);
 
+
+// Route::patch('/plo/{id}', function (Request $request, $id) {
+//     return response()->json([
+//         'id' => $id,
+//         'data' => $request->all(),
+//     ]);
+//  });
+
 // Unit
 Route::put('/units/nonactive/{id}', [UnitController::class, 'nonactive']);
 
@@ -37,5 +45,6 @@ Route::get('/types/category/{categoryId}', [TypeController::class, 'showByCatego
 Route::put('/types/nonactive/{id}', [TypeController::class, 'nonactive']); // nonactive type
 
 // Tag_number
-Route::get('/tagnumbers/type/{typeId}', [Tag_numberController::class, 'showByType']);
+Route::get('/tagnumbers/type/{typeId}', [Tag_numberController::class, 'showByType']); // show tag_number by type_id
+Route::get('/tagname', [Tag_numberController::class, 'showByTagNumber']); // show tag_number by tag_number
 Route::put('/tagnumbers/nonactive/{id}', [Tag_numberController::class, 'nonactive']); // nonactive tag_number
