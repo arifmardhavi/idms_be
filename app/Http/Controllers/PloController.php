@@ -163,6 +163,18 @@ class PloController extends Controller
                 }
             }
 
+            if($request->rla == 0){
+                $validatedData['rla_issue'] = null;
+                $validatedData['rla_overdue'] = null;
+                if ($plo->file_rla) {
+                    $path = public_path('plo/rla/' . $plo->file_rla);
+                    if (file_exists($path)) {
+                        unlink($path); // Hapus file
+                    }
+                    $validatedData['file_rla'] = null;
+                }
+            }
+
             if ($request->hasFile('file_rla')) {
                 if ($plo->file_rla) {
                     $path = public_path('plo/rla/' . $plo->file_rla);

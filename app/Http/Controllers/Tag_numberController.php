@@ -126,6 +126,37 @@ class Tag_numberController extends Controller
         
     }
 
+    function showByTagNumberId($id) {
+
+        $result = DB::table('tag_numbers')
+        ->join('types', 'tag_numbers.type_id', '=', 'types.id')
+        ->join('categories', 'types.category_id', '=', 'categories.id')
+        ->join('units', 'categories.unit_id', '=', 'units.id')
+        ->select(
+            'tag_numbers.id as tag_number_id',
+            'tag_numbers.tag_number',
+            'types.id as type_id',
+            'categories.id as category_id',
+            'units.id as unit_id'
+        )
+        ->where('tag_numbers.id', $id)
+        ->first();
+
+        if($result) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Tag number retrieved successfully.',
+                'data' => $result,
+            ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => $tag_number . ' not found.',
+            ], 404);
+        }
+        
+    }
+
     /**
      * Update the specified resource in storage.
      */

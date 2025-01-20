@@ -90,7 +90,7 @@ class CoiController extends Controller
      */
     public function show(string $id)
     {
-        $coi = Coi::find($id);
+        $coi = Coi::with('tag_number')->find($id);
 
         if (!$coi) {
             return response()->json([
@@ -129,13 +129,13 @@ class CoiController extends Controller
             'rla' => 'required|in:0,1',
             'rla_issue' => 'nullable|date|required_if:rla,1', // required if rla is 1
             'rla_overdue' => 'nullable|date|required_if:rla,1|after_or_equal:rla_issue', // required if rla is 1
-            'file_rla' => 'nullable|file|mimes:pdf|max:3072|required_if:rla,1', // required if rla is 1
+            'file_rla' => 'nullable|file|mimes:pdf|max:3072', // required if rla is 1
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal',
+                'message' => 'Validasi gagal' . $request->coi_certificate,
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -155,6 +155,18 @@ class CoiController extends Controller
                     // Store file in public/coi/certificates
                     $path = $file->move(public_path('coi/certificates'), $filename);  
                     $validatedData['coi_certificate'] = $filename;
+                }
+            }
+
+            if($request->rla == 0){
+                $validatedData['rla_issue'] = null;
+                $validatedData['rla_overdue'] = null;
+                if ($coi->file_rla) {
+                    $path = public_path('coi/rla/' . $coi->file_rla);
+                    if (file_exists($path)) {
+                        unlink($path); // Hapus file
+                    }
+                    $validatedData['file_rla'] = null;
                 }
             }
 
