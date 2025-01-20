@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CoiController;
 use App\Http\Controllers\PloController;
 use App\Http\Controllers\Tag_numberController;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ Route::apiResource('categories', CategoryController::class);
 Route::apiResource('types', TypeController::class);
 Route::apiResource('tagnumbers', Tag_numberController::class);
 Route::apiResource('plo', PloController::class);
+Route::apiResource('coi', CoiController::class);
 
 
 // Route::patch('/plo/{id}', function (Request $request, $id) {

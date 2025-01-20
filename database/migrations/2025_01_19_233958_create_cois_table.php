@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('coi', function (Blueprint $table) {
+        Schema::create('cois', function (Blueprint $table) {
             $table->id();
-            $table->integer('tag_number');
+            $table->foreignId('tag_number_id')->constrained()->onDelete('cascade'); // Relation to types
+            $table->string('no_certificate');
             $table->text('coi_certificate');
             $table->date('issue_date');
             $table->date('overdue_date');
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('coi');
+        Schema::dropIfExists('cois');
     }
 };
