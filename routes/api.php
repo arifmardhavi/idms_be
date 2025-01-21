@@ -51,3 +51,9 @@ Route::get('/tagnumbers/type/{typeId}', [Tag_numberController::class, 'showByTyp
 Route::get('/tagnumbers/tag_number/{id}', [Tag_numberController::class, 'showByTagNumberId']); // show tag_number by ID with unit
 Route::get('/tagname', [Tag_numberController::class, 'showByTagNumber']); // show tag_number by tag_number
 Route::put('/tagnumbers/nonactive/{id}', [Tag_numberController::class, 'nonactive']); // nonactive tag_number
+
+
+// COI
+Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']); // multiple download COI certificates
+// PLO
+Route::post('/plo/download', [PloController::class, 'downloadPloCertificates']); // multiple download PLO certificates

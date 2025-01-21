@@ -250,4 +250,40 @@ class PloController extends Controller
             ], 500);
         }
     }
+
+    public function downloadPloCertificates(Request $request)
+    {
+        $ids = $request->input('ids');  // Mendapatkan IDs dari frontend
+        
+        // Ambil data PLO berdasarkan ID yang dipilih
+        $plos = Plo::whereIn('id', $ids)->get();
+        
+        // Buat file ZIP untuk menyimpan certificate PLO
+        $zip = new \ZipArchive();
+        $zipFilePath = public_path('plo_certificates.zip');
+
+        if (file_exists($zipFilePath)) {
+            unlink($zipFilePath);
+        }
+    
+        if ($zip->open($zipFilePath, \ZipArchive::CREATE) !== TRUE) {
+            return response()->json(['success' => false, 'message' => 'Gagal membuat file ZIP.']);
+        }
+    
+        foreach ($plos as $plo) {
+            // Cek jika file PLO ada dan file tersebut valid
+            if ($plo->plo_certificate) {
+                $filePath = public_path('plo/certificates/' . $plo->plo_certificate);
+                if (file_exists($filePath)) {
+                    // Menambahkan file ke dalam ZIP
+                    $zip->addFile($filePath, basename($filePath));  
+                }
+            }
+        }
+    
+        $zip->close();
+    
+        // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
+        return response()->json(['success' => true, 'url' => url('plo_certificates.zip')]);
+    }
 }

@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Coi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use ZipArchive;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CoiController extends Controller
 {
@@ -241,4 +244,44 @@ class CoiController extends Controller
             ], 500);
         }
     }
+
+    // Misalnya, di backend Laravel
+    public function downloadCoiCertificates(Request $request)
+    {
+        $ids = $request->input('ids');  // Mendapatkan IDs dari frontend
+        
+        // Ambil data COI berdasarkan ID yang dipilih
+        $cois = Coi::whereIn('id', $ids)->get();
+        
+        // Buat file ZIP untuk menyimpan certificate COI
+        $zip = new \ZipArchive();
+        $zipFilePath = public_path('coi_certificates.zip');
+
+        if (file_exists($zipFilePath)) {
+            unlink($zipFilePath);
+        }
+    
+        if ($zip->open($zipFilePath, \ZipArchive::CREATE) !== TRUE) {
+            return response()->json(['success' => false, 'message' => 'Gagal membuat file ZIP.']);
+        }
+    
+        foreach ($cois as $coi) {
+            // Cek jika file COI ada dan file tersebut valid
+            if ($coi->coi_certificate) {
+                $filePath = public_path('coi/certificates/' . $coi->coi_certificate);
+                if (file_exists($filePath)) {
+                    // Menambahkan file ke dalam ZIP
+                    $zip->addFile($filePath, basename($filePath));  
+                }
+            }
+        }
+    
+        $zip->close();
+    
+        // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
+        return response()->json(['success' => true, 'url' => url('coi_certificates.zip')]);
+    }
+    
+
+
 }
