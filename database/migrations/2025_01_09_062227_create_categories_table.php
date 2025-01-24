@@ -13,12 +13,10 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('unit_id'); // Foreign key untuk unit
             $table->string('category_name');
             $table->text('description')->nullable();
             $table->integer('status')->default('0');
             $table->timestamps();
-            $table->foreign('unit_id')->references('id')->on('units')->onDelete('cascade');
         });
     }
 

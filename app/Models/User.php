@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Model
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory;
+    use HasApiTokens, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -18,9 +20,12 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'fullname',
         'email',
+        'username',
         'password',
+        'level_user',
+        'status',
     ];
 
     /**
@@ -30,16 +35,44 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
-        'remember_token',
     ];
 
     /**
-     * The attributes that should be cast.
+     * Automatically hash the password when setting it.
      *
-     * @var array<string, string>
+     * @param string $value
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = Hash::make($value);
+    }
+
+    /**
+     * Scope a query to only include active users.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
+
+    /**
+     * Authenticate user login.
+     *
+     * @param string $email
+     * @param string $password
+     * @return User|null
+     */
+    public static function authenticate($email, $password)
+    {
+        $user = self::where('email', $email)->first();
+
+        if ($user && Hash::check($password, $user->password)) {
+            return $user;
+        }
+
+        return null;
+    }
 }

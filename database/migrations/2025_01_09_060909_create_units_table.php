@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('units', function (Blueprint $table) {
             $table->id();
             $table->string('unit_name');
+            $table->integer('unit_type')->default(0);
             $table->text('description')->nullable();
-            $table->integer('status')->default('0');
+            $table->integer('status')->default(0);
             $table->timestamps();
         });
     }

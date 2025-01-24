@@ -14,7 +14,7 @@ class Tag_numberController extends Controller
      */
     public function index()
     {
-        $tagnumbers = Tag_number::with('type')->get();
+        $tagnumbers = Tag_number::with(['type', 'unit'])->get();
 
         return response()->json([
             'success' => true,
@@ -32,6 +32,7 @@ class Tag_numberController extends Controller
             'tag_number' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type_id' => 'required|exists:types,id',
+            'unit_id' => 'required|exists:units,id',
             'status' => 'required|in:0,1',
         ]);
 
@@ -67,7 +68,7 @@ class Tag_numberController extends Controller
      */
     public function show($id)
     {
-        $category = Tag_number::with('type')->find($id);
+        $category = Tag_number::with(['type', 'unit'])->find($id);
 
         if (!$category) {
             return response()->json([
@@ -100,7 +101,7 @@ class Tag_numberController extends Controller
         $result = DB::table('tag_numbers')
         ->join('types', 'tag_numbers.type_id', '=', 'types.id')
         ->join('categories', 'types.category_id', '=', 'categories.id')
-        ->join('units', 'categories.unit_id', '=', 'units.id')
+        ->join('units', 'tag_numbers.unit_id', '=', 'units.id')
         ->select(
             'tag_numbers.id as tag_number_id',
             'tag_numbers.tag_number',
@@ -131,7 +132,7 @@ class Tag_numberController extends Controller
         $result = DB::table('tag_numbers')
         ->join('types', 'tag_numbers.type_id', '=', 'types.id')
         ->join('categories', 'types.category_id', '=', 'categories.id')
-        ->join('units', 'categories.unit_id', '=', 'units.id')
+        ->join('units', 'tag_numbers.unit_id', '=', 'units.id')
         ->select(
             'tag_numbers.id as tag_number_id',
             'tag_numbers.tag_number',
@@ -151,7 +152,7 @@ class Tag_numberController extends Controller
         } else {
             return response()->json([
                 'success' => false,
-                'message' => $tag_number . ' not found.',
+                'message' => $id . ' not found.',
             ], 404);
         }
         
@@ -175,6 +176,7 @@ class Tag_numberController extends Controller
             'tag_number' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type_id' => 'required|exists:types,id',
+            'unit_id' => 'required|exists:units,id',
             'status' => 'required|in:0,1',
         ]);
 

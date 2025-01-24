@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('tag_numbers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('unit_id')->constrained()->onDelete('cascade'); // Relation to units
             $table->foreignId('type_id')->constrained()->onDelete('cascade'); // Relation to types
             $table->string('tag_number');
             $table->text('description')->nullable();

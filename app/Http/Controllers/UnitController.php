@@ -22,7 +22,8 @@ class UnitController extends Controller
     // Store a new unit
     public function store(Request $request){
         $validator = Validator::make($request->all(), [
-            'unit_name' => 'required|string|max:255',
+            'unit_name' => 'required|string|max:100',
+            'unit_type' => 'required|integer',
             'description' => 'nullable|string',
             'status' => 'required|in:0,1',
         ]);
@@ -82,7 +83,8 @@ class UnitController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'unit_name' => 'required|string|max:255',
+            'unit_name' => 'required|string|max:100',
+            'unit_type' => 'required|integer',
             'description' => 'nullable|string',
             'status' => 'required|in:0,1',
         ]);

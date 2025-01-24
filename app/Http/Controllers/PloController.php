@@ -14,7 +14,7 @@ class PloController extends Controller
      */
     public function index()
     {
-        $plo = Plo::all();
+        $plo = Plo::with('unit')->get();
 
         return response()->json([
             'success' => true,
@@ -29,15 +29,15 @@ class PloController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'tag_number' => 'required|string|max:255',
+            'unit_id' => 'required|exists:units,id',
             'no_certificate' => 'required|string|max:255',
-            'plo_certificate' => 'required|file|mimes:pdf|max:3072',
             'issue_date' => 'required|date',
             'overdue_date' => 'required|date',
+            'plo_certificate' => 'required|file|mimes:pdf|max:2048',
             'rla' => 'required|in:0,1',
             'rla_issue' => 'nullable|date|required_if:rla,1', // required if rla is 1
             'rla_overdue' => 'nullable|date|required_if:rla,1|after_or_equal:rla_issue', // required if rla is 1
-            'file_rla' => 'nullable|file|mimes:pdf|max:3072|required_if:rla,1', // required if rla is 1
+            'rla_certificate' => 'nullable|file|mimes:pdf|max:3072|required_if:rla,1', // required if rla is 1
         ]);
 
         if ($validator->fails()) {
@@ -54,19 +54,46 @@ class PloController extends Controller
             // Handle plo_certificate upload
             if ($request->hasFile('plo_certificate')) {
                 $file = $request->file('plo_certificate');
-                $filename = uniqid().'_' . $file->getClientOriginalName();
-                // Store file in public/plo/certificates
-                $path = $file->move(public_path('plo/certificates'), $filename);  
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("plo/certificates/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                }
+
+                // Pindahkan file ke folder tujuan dengan nama unik
+                $path = $file->move(public_path('plo/certificates'), $filename);
+
+                // Simpan nama file ke data yang divalidasi
                 $validatedData['plo_certificate'] = $filename;
+
             }
 
             // Handle file_rla upload (if exists)
-            if ($request->hasFile('file_rla')) {
-                $file = $request->file('file_rla');
-                $filename = uniqid().'_' . $file->getClientOriginalName();
+            if ($request->hasFile('rla_certificate')) {
+                $file = $request->file('rla_certificate');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("plo/rla/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                }
+                
                 // Store file in public/plo/rla
                 $path = $file->move(public_path('plo/rla'), $filename);  
-                $validatedData['file_rla'] = $filename;
+                $validatedData['rla_certificate'] = $filename;
             }
 
             // Create new Plo record
@@ -91,7 +118,7 @@ class PloController extends Controller
      */
     public function show(string $id)
     {
-        $plo = Plo::find($id);
+        $plo = Plo::with('unit')->find($id);
 
         if (!$plo) {
             return response()->json([
@@ -123,15 +150,17 @@ class PloController extends Controller
         }
         
         $validator = Validator::make($request->all(), [
-            'tag_number' => 'required|string|max:255',
+            'unit_id' => 'required|exists:units,id',    
             'no_certificate' => 'required|string|max:255',
-            'plo_certificate' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
             'issue_date' => 'required|date',
             'overdue_date' => 'required|date|after_or_equal:issue_date',
+            'plo_certificate' => 'nullable|file|mimes:pdf|max:2048',
+            'plo_old_certificate' => 'nullable|file|mimes:pdf|max:2048',
             'rla' => 'required|in:0,1',
             'rla_issue' => 'nullable|date|required_if:rla,1',
             'rla_overdue' => 'nullable|date|required_if:rla,1|after_or_equal:rla_issue',
-            'file_rla' => 'nullable|file|mimes:pdf,doc,docx|max:2048|required_if:rla,1',
+            'rla_certificate' => 'nullable|file|mimes:pdf|max:2048|required_if:rla,1',
+            'rla_old_certificate' => 'nullable|file|mimes:pdf|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -144,49 +173,167 @@ class PloController extends Controller
 
         $validatedData = $validator->validated();
         try {
+            // input plo certificate ada 
             if ($request->hasFile('plo_certificate')) {
+                // plo certificate sebelumnya ada 
                 if ($plo->plo_certificate) {
-                    $validatedData['last_plo_certificate'] = $plo->plo_certificate;
-                    if ($plo->last_plo_certificate) {
-                        $path = public_path('plo/certificates/' . $plo->last_plo_certificate);
+                    // input plo old certificate tidak ada 
+                    if (!$request->hasFile('plo_old_certificate')) {
+                        // replace plo old certificate menjadi plo certificate sebelumnya
+                        $validatedData['plo_old_certificate'] = $plo->plo_certificate;
+                        // plo old certificate sebelumnya ada 
+                        if ($plo->plo_old_certificate) {
+                            $path = public_path('plo/certificates/' . $plo->plo_old_certificate);
+                            // file ada 
+                            if (file_exists($path)) {
+                                unlink($path); // Hapus file
+                            }
+                        }
+                    } 
+                }
+                // proses simpan file plo certificate baru
+                $file = $request->file('plo_certificate');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("plo/certificates/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                }
+
+                // Pindahkan file ke folder tujuan dengan nama unik
+                $path = $file->move(public_path('plo/certificates'), $filename);
+
+                // Simpan nama file ke data yang divalidasi
+                $validatedData['plo_certificate'] = $filename;
+            }
+            // input plo old certificate ada 
+            if ($request->hasFile('plo_old_certificate')) {
+                // plo old certificate sebelumnya ada 
+                if ($plo->plo_old_certificate) {
+                    $path = public_path('plo/certificates/' . $plo->plo_old_certificate);
+                    // file ada 
+                    if (file_exists($path)) {
+                        unlink($path); // Hapus file
+                    }
+                }
+                // proses simpan file plo old certificate baru
+                $file = $request->file('plo_old_certificate');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("plo/certificates/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                }
+
+                // Pindahkan file ke folder tujuan dengan nama unik
+                $path = $file->move(public_path('plo/certificates'), $filename);
+
+                // Simpan nama file ke data yang divalidasi
+                $validatedData['plo_old_certificate'] = $filename;
+            }
+
+            // jika rla di update jadi 0
+
+            // if($request->rla == 0){
+                //     $validatedData['rla_issue'] = null;
+                //     $validatedData['rla_overdue'] = null;
+                //     if ($plo->rla_certificate) {
+                //         $path = public_path('plo/rla/' . $plo->rla_certificate);
+                //         if (file_exists($path)) {
+                //             unlink($path); // Hapus file
+                //         }
+                //         $validatedData['rla_certificate'] = null;
+                //     }
+                //     if ($plo->rla_old_certificate) {
+                //         $path = public_path('plo/rla/' . $plo->rla_old_certificate);
+                //         if (file_exists($path)) {
+                //             unlink($path); // Hapus file
+                //         }
+                //         $validatedData['rla_old_certificate'] = null;
+                //     }
+            // }
+
+            // input rla certificate ada 
+            if ($request->hasFile('rla_certificate')) {
+                // rla certificate sebelumnya ada 
+                if ($plo->rla_certificate) {
+                    // input rla old certificate tidak ada 
+                    if(!$request->hasFile('rla_old_certificate')){
+                        // replace rla old certificate yang ada menjadi rla certificate sebelumnya
+                        $validatedData['rla_old_certificate'] = $plo->rla_certificate;
+                        // rla old certificate ada 
+                        if ($plo->rla_old_certificate) {
+                            $path = public_path('plo/rla/' . $plo->rla_old_certificate);
+                            // file ada 
+                            if (file_exists($path)) {
+                                unlink($path); // Hapus file
+                            }
+                        }
+                    }
+                    // proses simpan file rla certificate baru
+                    $file = $request->file('rla_certificate');
+                    $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                    $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                    $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                    $version = 0; // Awal versi
+                    // Format nama file
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+    
+                    // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                    while (file_exists(public_path("plo/rla/".$filename))) {
+                        $version++;
+                        $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                    }
+    
+                    // Pindahkan file ke folder tujuan dengan nama unik
+                    $path = $file->move(public_path('plo/rla'), $filename);
+    
+                    // Simpan nama file ke data yang divalidasi
+                    $validatedData['rla_certificate'] = $filename;
+                }
+                // input rla old certificate ada 
+                if ($request->hasFile('rla_old_certificate')) {
+                    // rla old certificate ada 
+                    if ($plo->rla_old_certificate) {
+                        $path = public_path('plo/rla/' . $plo->rla_old_certificate);
+                        // file ada 
                         if (file_exists($path)) {
                             unlink($path); // Hapus file
                         }
                     }
-                }
-                if ($request->hasFile('plo_certificate')) {
-                    $file = $request->file('plo_certificate');
-                    $filename = uniqid().'_' . $file->getClientOriginalName();
-                    // Store file in public/plo/certificates
-                    $path = $file->move(public_path('plo/certificates'), $filename);  
-                    $validatedData['plo_certificate'] = $filename;
-                }
-            }
+                    // proses input rla old certificate baru 
+                    $file = $request->file('rla_old_certificate');
+                    $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                    $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                    $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                    $version = 0; // Awal versi
+                    // Format nama file
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
 
-            if($request->rla == 0){
-                $validatedData['rla_issue'] = null;
-                $validatedData['rla_overdue'] = null;
-                if ($plo->file_rla) {
-                    $path = public_path('plo/rla/' . $plo->file_rla);
-                    if (file_exists($path)) {
-                        unlink($path); // Hapus file
+                    // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                    while (file_exists(public_path("plo/rla/".$filename))) {
+                        $version++;
+                        $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                     }
-                    $validatedData['file_rla'] = null;
-                }
-            }
 
-            if ($request->hasFile('file_rla')) {
-                if ($plo->file_rla) {
-                    $path = public_path('plo/rla/' . $plo->file_rla);
-                    if (file_exists($path)) {
-                        unlink($path); // Hapus file
-                    }
+                    // Pindahkan file ke folder tujuan dengan nama unik
+                    $path = $file->move(public_path('plo/rla'), $filename);
+
+                    // Simpan nama file ke data yang divalidasi
+                    $validatedData['rla_old_certificate'] = $filename;
                 }
-                $file = $request->file('file_rla');
-                $filename = uniqid().'_' . $file->getClientOriginalName();
-                // Store file in public/plo/rla
-                $path = $file->move(public_path('plo/rla'), $filename);  
-                $validatedData['file_rla'] = $filename;
             }
 
             $plo->update($validatedData);
@@ -226,13 +373,19 @@ class PloController extends Controller
                 if (file_exists($path)) {
                     unlink($path); // Hapus file
                 }
-                $path_last = public_path('plo/certificates/' . $plo->last_plo_certificate);
+                $path_last = public_path('plo/certificates/' . $plo->plo_old_certificate);
                 if (file_exists($path_last)) {
                     unlink($path_last); // Hapus file
                 }
             }
-            if ($plo->file_rla) {
-                $path = public_path('plo/rla/' . $plo->file_rla);
+            if ($plo->rla_certificate) {
+                $path = public_path('plo/rla/' . $plo->rla_certificate);
+                if (file_exists($path)) {
+                    unlink($path); // Hapus file
+                }
+            }
+            if ($plo->rla_old_certificate) {
+                $path = public_path('plo/rla/' . $plo->rla_old_certificate);
                 if (file_exists($path)) {
                     unlink($path); // Hapus file
                 }

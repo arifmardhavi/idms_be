@@ -12,7 +12,7 @@ class CategoryController extends Controller
     // Get all categories
     public function index()
     {
-        $categories = Category::with('unit')->get();
+        $categories = Category::all();
 
         return response()->json([
             'success' => true,
@@ -27,7 +27,6 @@ class CategoryController extends Controller
         $validator = Validator::make($request->all(), [
             'category_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'unit_id' => 'required|exists:units,id',
             'status' => 'required|in:0,1',
         ]);
         
@@ -60,7 +59,7 @@ class CategoryController extends Controller
     // Get a specific category
     public function show($id)
     {
-        $category = Category::with('unit')->find($id);
+        $category = Category::find($id);
 
         if (!$category) {
             return response()->json([
@@ -73,29 +72,6 @@ class CategoryController extends Controller
             'success' => true,
             'message' => 'Category retrieved successfully.',
             'data' => $category,
-        ], 200);
-    }
-
-    public function showByUnit($unitId)
-    {
-        // take categories with filtered unit_id
-        $categories = Category::with('unit')
-            ->where('unit_id', $unitId) // Filter by unit_id
-            ->get();
-
-        // if not found categories
-        if ($categories->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No categories found for the specified unit.',
-            ], 404);
-        }
-
-        // if found categories
-        return response()->json([
-            'success' => true,
-            'message' => 'Categories retrieved successfully.',
-            'data' => $categories,
         ], 200);
     }
 
@@ -115,7 +91,6 @@ class CategoryController extends Controller
         $validator = Validator::make($request->all(), [
             'category_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'unit_id' => 'required|exists:units,id',
             'status' => 'required|in:0,1',
         ]);
 

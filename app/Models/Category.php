@@ -8,10 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Category extends Model
 {
     use HasFactory;
-    protected $fillable = ['unit_id', 'category_name', 'description', 'status'];
+    protected $fillable = ['category_name', 'description', 'status'];
 
-    public function unit()
-    {
-        return $this->belongsTo(Unit::class);
-    }
+    
 }
