@@ -154,7 +154,7 @@ class PloController extends Controller
             'no_certificate' => 'required|string|max:255',
             'issue_date' => 'required|date',
             'overdue_date' => 'required|date|after_or_equal:issue_date',
-            'plo_certificate' => 'nullable|file|mimes:pdf|max:2048',
+            'plo_certificate' => $plo->plo_certificate ? 'nullable|file|mimes:pdf|max:2048' : 'required|file|mimes:pdf|max:2048',
             'plo_old_certificate' => 'nullable|file|mimes:pdf|max:2048',
             'rla' => 'required|in:0,1',
             'rla_issue' => 'nullable|date|required_if:rla,1',
@@ -399,6 +399,75 @@ class PloController extends Controller
                 'message' => 'PLO deleted successfully.',
             ], 200);
         } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete PLO.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    function deleteFilePlo(Request $request, $id) {
+        $plo = Plo::find($id);
+
+        if (!$plo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PLO not found.',
+            ], 404);
+        }
+
+        try {
+            // plo certificate 
+            if ($request->plo_certificate) {
+                $path = public_path('plo/certificates/' . $plo->plo_certificate);
+                if (file_exists($path)) {
+                    unlink($path); // Hapus file
+                }
+                $data = ['plo_certificate' => null];
+                $plo->update($data);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'PLO certificate deleted successfully.',
+                ], 200);
+            // plo old certificate
+            }elseif ($request->plo_old_certificate) {
+                $path = public_path('plo/certificates/' . $plo->plo_old_certificate);
+                if (file_exists($path)) {
+                    unlink($path); // Hapus file
+                }
+                $data = ['plo_old_certificate' => null];
+                $plo->update($data);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'PLO old certificate deleted successfully.',
+                ], 200);
+            // rla certificate
+            }elseif ($request->rla_certificate) {
+                $path = public_path('plo/rla/' . $plo->rla_certificate);
+                if (file_exists($path)) {
+                    unlink($path); // Hapus file
+                }
+                $data = ['rla_certificate' => null];
+                $plo->update($data);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'RLA certificate deleted successfully.',
+                ], 200);
+            // rla old certificate
+            }elseif ($request->rla_old_certificate) {
+                $path = public_path('plo/rla/' . $plo->rla_old_certificate);
+                if (file_exists($path)) {
+                    unlink($path); // Hapus file
+                }
+                $data = ['rla_old_certificate' => null];
+                $plo->update($data);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'RLA old certificate deleted successfully.',
+                ], 200);
+            }
+        }catch(\Exception $e){
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete PLO.',

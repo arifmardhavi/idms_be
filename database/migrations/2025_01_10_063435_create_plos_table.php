@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('no_certificate');
             $table->date('issue_date');
             $table->date('overdue_date');
-            $table->string('plo_certificate');
+            $table->string('plo_certificate')->nullable();
             $table->string('plo_old_certificate')->nullable();
             $table->integer('rla')->default('0');
             $table->date('rla_issue')->nullable();

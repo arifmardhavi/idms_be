@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('no_certificate');
             $table->date('issue_date');
             $table->date('overdue_date');
-            $table->text('coi_certificate');
+            $table->text('coi_certificate')->nullable();
             $table->text('coi_old_certificate')->nullable();
             $table->integer('rla')->default('0');
             $table->date('rla_issue')->nullable();

@@ -16,7 +16,7 @@ class CoiController extends Controller
      */
     public function index()
     {
-        $coi = Coi::with(['tag_number', 'plo'])->get();
+        $coi = Coi::with(['tag_number', 'plo', 'plo.unit'])->get();
 
         return response()->json([
             'success' => true,
@@ -152,7 +152,7 @@ class CoiController extends Controller
             'no_certificate' => 'required|string|max:255',
             'issue_date' => 'required|date',
             'overdue_date' => 'required|date',
-            'coi_certificate' => 'nullable|file|mimes:pdf|max:2048',
+            'coi_certificate' => $coi->coi_certificate ? 'nullable|file|mimes:pdf|max:2048' : 'required|file|mimes:pdf|max:2048',
             'coi_old_certificate' => 'nullable|file|mimes:pdf|max:2048',
             'rla' => 'required|in:0,1',
             'rla_issue' => 'nullable|date|required_if:rla,1', // required if rla is 1
@@ -390,6 +390,75 @@ class CoiController extends Controller
                 'message' => 'COI deleted successfully.',
             ], 200);
         } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete COI.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    function deleteFileCoi(Request $request, $id) {
+        $coi = Coi::find($id);
+
+        if (!$coi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'COI not found.',
+            ], 404);
+        }
+
+        try {
+            // coi certificate 
+            if ($request->coi_certificate) {
+                $path = public_path('coi/certificates/' . $coi->coi_certificate);
+                if (file_exists($path)) {
+                    unlink($path); // Hapus file
+                }
+                $data = ['coi_certificate' => null];
+                $coi->update($data);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'COI certificate deleted successfully.',
+                ], 200);
+            // coi old certificate
+            }elseif ($request->coi_old_certificate) {
+                $path = public_path('coi/certificates/' . $coi->coi_old_certificate);
+                if (file_exists($path)) {
+                    unlink($path); // Hapus file
+                }
+                $data = ['coi_old_certificate' => null];
+                $coi->update($data);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'COI old certificate deleted successfully.',
+                ], 200);
+            // rla certificate
+            }elseif ($request->rla_certificate) {
+                $path = public_path('coi/rla/' . $coi->rla_certificate);
+                if (file_exists($path)) {
+                    unlink($path); // Hapus file
+                }
+                $data = ['rla_certificate' => null];
+                $coi->update($data);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'RLA certificate deleted successfully.',
+                ], 200);
+            // rla old certificate
+            }elseif ($request->rla_old_certificate) {
+                $path = public_path('coi/rla/' . $coi->rla_old_certificate);
+                if (file_exists($path)) {
+                    unlink($path); // Hapus file
+                }
+                $data = ['rla_old_certificate' => null];
+                $coi->update($data);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'RLA old certificate deleted successfully.',
+                ], 200);
+            }
+        }catch(\Exception $e){
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete COI.',
