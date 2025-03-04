@@ -33,7 +33,7 @@ class PloController extends Controller
             'no_certificate' => 'required|string|max:255',
             'issue_date' => 'required|date',
             'overdue_date' => 'required|date',
-            'plo_certificate' => 'required|file|mimes:pdf|max:2048',
+            'plo_certificate' => 'required|file|mimes:pdf|max:15360',
             'rla' => 'required|in:0,1',
             'rla_issue' => 'nullable|date|required_if:rla,1', // required if rla is 1
             'rla_overdue' => 'nullable|date|required_if:rla,1|after_or_equal:rla_issue', // required if rla is 1
@@ -154,13 +154,13 @@ class PloController extends Controller
             'no_certificate' => 'required|string|max:255',
             'issue_date' => 'required|date',
             'overdue_date' => 'required|date|after_or_equal:issue_date',
-            'plo_certificate' => $plo->plo_certificate ? 'nullable|file|mimes:pdf|max:2048' : 'required|file|mimes:pdf|max:2048',
-            'plo_old_certificate' => 'nullable|file|mimes:pdf|max:2048',
+            'plo_certificate' => $plo->plo_certificate ? 'nullable|file|mimes:pdf|max:15360' : 'required|file|mimes:pdf|max:15360',
+            'plo_old_certificate' => 'nullable|file|mimes:pdf|max:15360',
             'rla' => 'required|in:0,1',
             'rla_issue' => 'nullable|date|required_if:rla,1',
             'rla_overdue' => 'nullable|date|required_if:rla,1|after_or_equal:rla_issue',
-            'rla_certificate' => 'nullable|file|mimes:pdf|max:2048',
-            'rla_old_certificate' => 'nullable|file|mimes:pdf|max:2048',
+            'rla_certificate' => 'nullable|file|mimes:pdf|max:15360',
+            'rla_old_certificate' => 'nullable|file|mimes:pdf|max:15360',
         ]);
 
         if ($validator->fails()) {

@@ -36,11 +36,11 @@ class CoiController extends Controller
             'no_certificate' => 'required|string|max:255',
             'issue_date' => 'required|date',
             'overdue_date' => 'required|date',
-            'coi_certificate' => 'required|file|mimes:pdf|max:2048',
+            'coi_certificate' => 'required|file|mimes:pdf|max:15360',
             'rla' => 'required|in:0,1',
             'rla_issue' => 'nullable|date|required_if:rla,1', // required if rla is 1
             'rla_overdue' => 'nullable|date|required_if:rla,1|after_or_equal:rla_issue', // required if rla is 1
-            'rla_certificate' => 'nullable|file|mimes:pdf|max:2048|required_if:rla,1', // required if rla is 1
+            'rla_certificate' => 'nullable|file|mimes:pdf|max:15360|required_if:rla,1', // required if rla is 1
         ]);
 
         if ($validator->fails()) {
@@ -152,13 +152,13 @@ class CoiController extends Controller
             'no_certificate' => 'required|string|max:255',
             'issue_date' => 'required|date',
             'overdue_date' => 'required|date',
-            'coi_certificate' => $coi->coi_certificate ? 'nullable|file|mimes:pdf|max:2048' : 'required|file|mimes:pdf|max:2048',
-            'coi_old_certificate' => 'nullable|file|mimes:pdf|max:2048',
+            'coi_certificate' => $coi->coi_certificate ? 'nullable|file|mimes:pdf|max:15360' : 'required|file|mimes:pdf|max:15360',
+            'coi_old_certificate' => 'nullable|file|mimes:pdf|max:15360',
             'rla' => 'required|in:0,1',
             'rla_issue' => 'nullable|date|required_if:rla,1', // required if rla is 1
             'rla_overdue' => 'nullable|date|required_if:rla,1|after_or_equal:rla_issue', // required if rla is 1
-            'rla_certificate' => 'nullable|file|mimes:pdf|max:2048',
-            'rla_old_certificate' => 'nullable|file|mimes:pdf|max:2048',
+            'rla_certificate' => 'nullable|file|mimes:pdf|max:15360',
+            'rla_old_certificate' => 'nullable|file|mimes:pdf|max:15360',
         ]);
 
         if ($validator->fails()) {
