@@ -511,4 +511,65 @@ class PloController extends Controller
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
         return response()->json(['success' => true, 'url' => url('plo_certificates.zip')]);
     }
+    public function countPloDueDays() {
+        $today = strtotime(date('Y-m-d')); //mengambil tanggal saat ini
+        // Inisialisasi variabel count
+        // dd($today);
+        $ploMoreThanSixMonths = 0;
+        $ploLessThanSixMonths = 0;
+        $ploExpired = 0;
+        $rlaMoreThanSixMonths = 0;
+        $rlaLessThanSixMonths = 0;
+        $rlaExpired = 0;
+
+        // Ambil semua data PLO
+        $plo = Plo::all();
+
+        foreach ($plo as $item) {
+            // Hitung overdue_date untuk PLO
+            if (!empty($item->overdue_date)) {
+                $overdueTimestamp = strtotime($item->overdue_date);
+                $sixMonthsLater = strtotime("+6 months", $today);
+
+                if ($overdueTimestamp >= $sixMonthsLater) {
+                    $ploMoreThanSixMonths++;
+                } elseif ($overdueTimestamp >= $today && $overdueTimestamp < $sixMonthsLater) {
+                    $ploLessThanSixMonths++;
+                } elseif ($overdueTimestamp < $today) {
+                    $ploExpired++;
+                }
+            }
+
+            // Hitung rla_overdue untuk RLA
+            if (!empty($item->rla_overdue)) {
+                $rlaOverdueTimestamp = strtotime($item->rla_overdue);
+                $sixMonthsLater = strtotime("+6 months", $today);
+
+                if ($rlaOverdueTimestamp >= $sixMonthsLater) {
+                    $rlaMoreThanSixMonths++;
+                } elseif ($rlaOverdueTimestamp >= $today && $rlaOverdueTimestamp < $sixMonthsLater) {
+                    $rlaLessThanSixMonths++;
+                } elseif ($rlaOverdueTimestamp < $today) {
+                    $rlaExpired++;
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'PLO & RLA status count retrieved successfully.',
+            'data' => [
+                'plo_more_than_six_months' => $ploMoreThanSixMonths,
+                'plo_less_than_six_months' => $ploLessThanSixMonths,
+                'plo_expired' => $ploExpired,
+                'rla_more_than_six_months' => $rlaMoreThanSixMonths,
+                'rla_less_than_six_months' => $rlaLessThanSixMonths,
+                'rla_expired' => $rlaExpired,
+            ],
+        ], 200);
+
+    }
+
+    
+
 }

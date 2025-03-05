@@ -59,10 +59,12 @@ use App\Models\User;
     // COI
     Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']); // multiple download COI certificates
     Route::put('/coi/deletefile/{id}', [CoiController::class, 'deleteFileCoi']); // delete download COI certificates
+    Route::get('/coi_countduedays', [CoiController::class, 'countCoiDueDays']); // count coi due days and grouping
     // PLO
     Route::put('/plo/deletefile/{id}', [PloController::class, 'deleteFilePlo']); // delete download PLO certificates
     Route::post('/plo/download', [PloController::class, 'downloadPloCertificates']); // multiple download PLO certificates
-
+    Route::get('/plo_countduedays', [PloController::class, 'countPloDueDays']); // count plo due days and grouping
+    
 
 
 Route::post('/login', [UserController::class, 'login']);
