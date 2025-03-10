@@ -242,27 +242,6 @@ class CoiController extends Controller
                 $validatedData['coi_old_certificate'] = $filename;
             }
 
-            // jika rla di update jadi 0
-
-            // if($request->rla == 0){
-                //     $validatedData['rla_issue'] = null;
-                //     $validatedData['rla_overdue'] = null;
-                //     if ($coi->rla_certificate) {
-                //         $path = public_path('coi/rla/' . $coi->rla_certificate);
-                //         if (file_exists($path)) {
-                //             unlink($path); // Hapus file
-                //         }
-                //         $validatedData['rla_certificate'] = null;
-                //     }
-                //     if ($coi->rla_old_certificate) {
-                //         $path = public_path('coi/rla/' . $coi->rla_old_certificate);
-                //         if (file_exists($path)) {
-                //             unlink($path); // Hapus file
-                //         }
-                //         $validatedData['rla_old_certificate'] = null;
-                //     }
-            // }
-
             // input rla certificate ada 
             if ($request->hasFile('rla_certificate')) {
                 // rla certificate sebelumnya ada 
@@ -467,7 +446,6 @@ class CoiController extends Controller
         }
     }
 
-    // Misalnya, di backend Laravel
     public function downloadCoiCertificates(Request $request)
     {
         $ids = $request->input('ids');  // Mendapatkan IDs dari frontend
@@ -508,11 +486,11 @@ class CoiController extends Controller
         $today = strtotime(date('Y-m-d')); //mengambil tanggal saat ini
         // Inisialisasi variabel count
         // dd($today);
-        $coiMoreThanSixMonths = 0;
-        $coiLessThanSixMonths = 0;
+        $coiMoreThanNineMonths = 0;
+        $coiLessThanNineMonths = 0;
         $coiExpired = 0;
-        $rlaMoreThanSixMonths = 0;
-        $rlaLessThanSixMonths = 0;
+        $rlaMoreThanNineMonths = 0;
+        $rlaLessThanNineMonths = 0;
         $rlaExpired = 0;
 
         // Ambil semua data coi
@@ -522,12 +500,12 @@ class CoiController extends Controller
             // Hitung overdue_date untuk coi
             if (!empty($item->overdue_date)) {
                 $overdueTimestamp = strtotime($item->overdue_date);
-                $sixMonthsLater = strtotime("+6 months", $today);
+                $nineMonthsLater = strtotime("+9 months", $today);
 
-                if ($overdueTimestamp >= $sixMonthsLater) {
-                    $coiMoreThanSixMonths++;
-                } elseif ($overdueTimestamp >= $today && $overdueTimestamp < $sixMonthsLater) {
-                    $coiLessThanSixMonths++;
+                if ($overdueTimestamp >= $nineMonthsLater) {
+                    $coiMoreThanNineMonths++;
+                } elseif ($overdueTimestamp >= $today && $overdueTimestamp < $nineMonthsLater) {
+                    $coiLessThanNineMonths++;
                 } elseif ($overdueTimestamp < $today) {
                     $coiExpired++;
                 }
@@ -536,12 +514,12 @@ class CoiController extends Controller
             // Hitung rla_overdue untuk RLA
             if (!empty($item->rla_overdue)) {
                 $rlaOverdueTimestamp = strtotime($item->rla_overdue);
-                $sixMonthsLater = strtotime("+6 months", $today);
+                $nineMonthsLater = strtotime("+9 months", $today);
 
-                if ($rlaOverdueTimestamp >= $sixMonthsLater) {
-                    $rlaMoreThanSixMonths++;
-                } elseif ($rlaOverdueTimestamp >= $today && $rlaOverdueTimestamp < $sixMonthsLater) {
-                    $rlaLessThanSixMonths++;
+                if ($rlaOverdueTimestamp >= $nineMonthsLater) {
+                    $rlaMoreThanNineMonths++;
+                } elseif ($rlaOverdueTimestamp >= $today && $rlaOverdueTimestamp < $nineMonthsLater) {
+                    $rlaLessThanNineMonths++;
                 } elseif ($rlaOverdueTimestamp < $today) {
                     $rlaExpired++;
                 }
@@ -552,11 +530,11 @@ class CoiController extends Controller
             'success' => true,
             'message' => 'COI & RLA status count retrieved successfully.',
             'data' => [
-                'coi_more_than_six_months' => $coiMoreThanSixMonths,
-                'coi_less_than_six_months' => $coiLessThanSixMonths,
+                'coi_more_than_nine_months' => $coiMoreThanNineMonths,
+                'coi_less_than_nine_months' => $coiLessThanNineMonths,
                 'coi_expired' => $coiExpired,
-                'rla_more_than_six_months' => $rlaMoreThanSixMonths,
-                'rla_less_than_six_months' => $rlaLessThanSixMonths,
+                'rla_more_than_nine_months' => $rlaMoreThanNineMonths,
+                'rla_less_than_nine_months' => $rlaLessThanNineMonths,
                 'rla_expired' => $rlaExpired,
             ],
         ], 200);

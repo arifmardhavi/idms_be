@@ -515,11 +515,11 @@ class PloController extends Controller
         $today = strtotime(date('Y-m-d')); //mengambil tanggal saat ini
         // Inisialisasi variabel count
         // dd($today);
-        $ploMoreThanSixMonths = 0;
-        $ploLessThanSixMonths = 0;
+        $ploMoreThanNineMonths = 0;
+        $ploLessThanNineMonths = 0;
         $ploExpired = 0;
-        $rlaMoreThanSixMonths = 0;
-        $rlaLessThanSixMonths = 0;
+        $rlaMoreThanNineMonths = 0;
+        $rlaLessThanNineMonths = 0;
         $rlaExpired = 0;
 
         // Ambil semua data PLO
@@ -529,12 +529,12 @@ class PloController extends Controller
             // Hitung overdue_date untuk PLO
             if (!empty($item->overdue_date)) {
                 $overdueTimestamp = strtotime($item->overdue_date);
-                $sixMonthsLater = strtotime("+6 months", $today);
+                $nineMonthsLater = strtotime("+9 months", $today);
 
-                if ($overdueTimestamp >= $sixMonthsLater) {
-                    $ploMoreThanSixMonths++;
-                } elseif ($overdueTimestamp >= $today && $overdueTimestamp < $sixMonthsLater) {
-                    $ploLessThanSixMonths++;
+                if ($overdueTimestamp >= $nineMonthsLater) {
+                    $ploMoreThanNineMonths++;
+                } elseif ($overdueTimestamp >= $today && $overdueTimestamp < $nineMonthsLater) {
+                    $ploLessThanNineMonths++;
                 } elseif ($overdueTimestamp < $today) {
                     $ploExpired++;
                 }
@@ -543,12 +543,12 @@ class PloController extends Controller
             // Hitung rla_overdue untuk RLA
             if (!empty($item->rla_overdue)) {
                 $rlaOverdueTimestamp = strtotime($item->rla_overdue);
-                $sixMonthsLater = strtotime("+6 months", $today);
+                $nineMonthsLater = strtotime("+9 months", $today);
 
-                if ($rlaOverdueTimestamp >= $sixMonthsLater) {
-                    $rlaMoreThanSixMonths++;
-                } elseif ($rlaOverdueTimestamp >= $today && $rlaOverdueTimestamp < $sixMonthsLater) {
-                    $rlaLessThanSixMonths++;
+                if ($rlaOverdueTimestamp >= $nineMonthsLater) {
+                    $rlaMoreThanNineMonths++;
+                } elseif ($rlaOverdueTimestamp >= $today && $rlaOverdueTimestamp < $nineMonthsLater) {
+                    $rlaLessThanNineMonths++;
                 } elseif ($rlaOverdueTimestamp < $today) {
                     $rlaExpired++;
                 }
@@ -559,11 +559,11 @@ class PloController extends Controller
             'success' => true,
             'message' => 'PLO & RLA status count retrieved successfully.',
             'data' => [
-                'plo_more_than_six_months' => $ploMoreThanSixMonths,
-                'plo_less_than_six_months' => $ploLessThanSixMonths,
+                'plo_more_than_nine_months' => $ploMoreThanNineMonths,
+                'plo_less_than_nine_months' => $ploLessThanNineMonths,
                 'plo_expired' => $ploExpired,
-                'rla_more_than_six_months' => $rlaMoreThanSixMonths,
-                'rla_less_than_six_months' => $rlaLessThanSixMonths,
+                'rla_more_than_nine_months' => $rlaMoreThanNineMonths,
+                'rla_less_than_nine_months' => $rlaLessThanNineMonths,
                 'rla_expired' => $rlaExpired,
             ],
         ], 200);

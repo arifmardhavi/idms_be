@@ -4,6 +4,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CoiController;
 use App\Http\Controllers\PloController;
+use App\Http\Controllers\SkhpController;
 use App\Http\Controllers\Tag_numberController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,7 @@ use App\Models\User;
     Route::apiResource('tagnumbers', Tag_numberController::class);
     Route::apiResource('plo', PloController::class);
     Route::apiResource('coi', CoiController::class);
+    Route::apiResource('skhp', SkhpController::class);
     Route::apiResource('users', UserController::class);
 // });
     // Route::patch('/plo/{id}', function (Request $request, $id) {
@@ -64,6 +66,10 @@ use App\Models\User;
     Route::put('/plo/deletefile/{id}', [PloController::class, 'deleteFilePlo']); // delete download PLO certificates
     Route::post('/plo/download', [PloController::class, 'downloadPloCertificates']); // multiple download PLO certificates
     Route::get('/plo_countduedays', [PloController::class, 'countPloDueDays']); // count plo due days and grouping
+    // SKHP
+    Route::post('/skhp/download', [SkhpController::class, 'downloadskhpCertificates']); // multiple download COI certificates
+    Route::put('/skhp/deletefile/{id}', [SkhpController::class, 'deleteFileskhp']); // delete download COI certificates
+    Route::get('/skhp_countduedays', [SkhpController::class, 'countskhpDueDays']); // count coi due days and grouping
     
 
 
