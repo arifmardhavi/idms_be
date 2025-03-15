@@ -14,7 +14,7 @@ class SkhpController extends Controller
      */
     public function index()
     {
-        $skhp = Skhp::with(['tag_number', 'plo', 'plo.unit'])->get();
+        $skhp = Skhp::with(['tag_number', 'plo', 'plo.unit'])->orderBy('id', 'desc')->get();
 
         return response()->json([
             'success' => true,
@@ -142,19 +142,16 @@ class SkhpController extends Controller
             if ($request->hasFile('file_skhp')) {
                 // skhp certificate sebelumnya ada 
                 if ($skhp->file_skhp) {
-                    // input file old skhp tidak ada 
-                    if (!$request->hasFile('file_old_skhp')) {
-                        // replace file old skhp menjadi skhp certificate sebelumnya
-                        $validatedData['file_old_skhp'] = $skhp->file_skhp;
-                        // file old skhp sebelumnya ada 
-                        if ($skhp->file_old_skhp) {
-                            $path = public_path('skhp/' . $skhp->file_old_skhp);
-                            // file ada 
-                            if (file_exists($path)) {
-                                unlink($path); // Hapus file
-                            }
+                    // replace file old skhp menjadi skhp certificate sebelumnya
+                    $validatedData['file_old_skhp'] = $skhp->file_skhp;
+                    // file old skhp sebelumnya ada 
+                    if ($skhp->file_old_skhp) {
+                        $path = public_path('skhp/' . $skhp->file_old_skhp);
+                        // file ada 
+                        if (file_exists($path)) {
+                            unlink($path); // Hapus file
                         }
-                    } 
+                    }
                 }
                 // proses simpan file skhp certificate baru
                 $file = $request->file('file_skhp;');
@@ -177,37 +174,7 @@ class SkhpController extends Controller
                 // Simpan nama file ke data yang divalidasi
                 $validatedData['file_skhp;'] = $filename;
             }
-            // input file old skhp ada 
-            if ($request->hasFile('file_old_skhp')) {
-                // file old skhp sebelumnya ada 
-                if ($skhp->file_old_skhp) {
-                    $path = public_path('skhp/' . $skhp->file_old_skhp);
-                    // file ada 
-                    if (file_exists($path)) {
-                        unlink($path); // Hapus file
-                    }
-                }
-                // proses simpan file file old skhp baru
-                $file = $request->file('file_old_skhp');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("skhp/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                // Pindahkan file ke folder tujuan dengan nama unik
-                $path = $file->move(public_path('skhp'), $filename);
-
-                // Simpan nama file ke data yang divalidasi
-                $validatedData['file_old_skhp'] = $filename;
-            }
+            
             $skhp->update($validatedData);
 
             return response()->json([

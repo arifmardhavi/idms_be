@@ -4,6 +4,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CoiController;
 use App\Http\Controllers\PloController;
+use App\Http\Controllers\ReportPloController;
 use App\Http\Controllers\SkhpController;
 use App\Http\Controllers\Tag_numberController;
 use Illuminate\Http\Request;
@@ -31,6 +32,7 @@ use App\Models\User;
     Route::apiResource('coi', CoiController::class);
     Route::apiResource('skhp', SkhpController::class);
     Route::apiResource('users', UserController::class);
+    Route::apiResource('report_plo', ReportPloController::class);
 // });
     // Route::patch('/plo/{id}', function (Request $request, $id) {
     //     return response()->json([
@@ -70,6 +72,10 @@ use App\Models\User;
     Route::post('/skhp/download', [SkhpController::class, 'downloadskhpCertificates']); // multiple download COI certificates
     Route::put('/skhp/deletefile/{id}', [SkhpController::class, 'deleteFileskhp']); // delete download COI certificates
     Route::get('/skhp_countduedays', [SkhpController::class, 'countskhpDueDays']); // count coi due days and grouping
+    
+    // REPORT PLO 
+    Route::get('/report_plos/{id}', [ReportPloController::class, 'showWithPloId']); // get report plo by plo id
+
     
 
 

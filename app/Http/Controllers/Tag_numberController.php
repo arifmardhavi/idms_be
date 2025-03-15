@@ -14,7 +14,7 @@ class Tag_numberController extends Controller
      */
     public function index()
     {
-        $tagnumbers = Tag_number::with(['type', 'unit'])->get();
+        $tagnumbers = Tag_number::with(['type', 'unit'])->orderBy('id', 'desc')->get();
 
         return response()->json([
             'success' => true,
