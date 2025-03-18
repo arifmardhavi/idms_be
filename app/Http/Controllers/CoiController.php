@@ -41,6 +41,8 @@ class CoiController extends Controller
             'rla_issue' => 'nullable|date|required_if:rla,1', // required if rla is 1
             'rla_overdue' => 'nullable|date|required_if:rla,1|after_or_equal:rla_issue', // required if rla is 1
             'rla_certificate' => 'nullable|file|mimes:pdf|max:25600|required_if:rla,1', // required if rla is 1
+            're_engineer' => 'required|in:0,1',
+            're_engineer_certificate' => 'nullable|file|mimes:pdf|max:25600|required_if:re_engineer,1',
         ]);
 
         if ($validator->fails()) {
@@ -104,6 +106,33 @@ class CoiController extends Controller
                     ], 422);
                 } 
                 $validatedData['rla_certificate'] = $filename; 
+            }
+
+            // Handle file_re_engineer upload (if exists)
+            if ($request->hasFile('re_engineer_certificate')) {
+                $file = $request->file('re_engineer_certificate');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("coi/re_engineer/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                }
+                // Store file in public/coi/re_engineer
+                $path = $file->move(public_path('coi/re_engineer'), $filename);  
+                if(!$path){
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Re-Engineering Certificate failed upload.',
+                    ], 422);
+                } 
+                $validatedData['re_engineer_certificate'] = $filename;
+                // dd($validatedData); 
             }
 
             $coi = Coi::create($validatedData);
@@ -171,6 +200,8 @@ class CoiController extends Controller
             'rla_overdue' => 'nullable|date|required_if:rla,1|after_or_equal:rla_issue', // required if rla is 1
             'rla_certificate' => 'nullable|file|mimes:pdf|max:25600',
             'rla_old_certificate' => 'nullable|file|mimes:pdf|max:25600',
+            're_engineer' => 'required|in:0,1',
+            're_engineer_certificate' => 'nullable|file|mimes:pdf|max:25600|required_if:re_engineer,1',
         ]);
 
         if ($validator->fails()) {
@@ -292,6 +323,44 @@ class CoiController extends Controller
                 $validatedData['rla_certificate'] = $filename;
             }
 
+            // input rla certificate ada 
+            if ($request->hasFile('re_engineer_certificate')) {
+                // rla certificate sebelumnya ada 
+                if ($coi->re_engineer_certificate) {
+                    $path = public_path('coi/re_engineer/' . $coi->re_engineer_certificate);
+                    // file ada 
+                    if (file_exists($path)) {
+                        unlink($path); // Hapus file
+                    }
+                }
+
+                $file = $request->file('re_engineer_certificate');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("coi/re_engineer/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                }
+
+                // Pindahkan file ke folder tujuan dengan nama unik
+                $path = $file->move(public_path('coi/re_engineer'), $filename);
+                if(!$path){
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Re-Engineering Certificate failed upload.',
+                    ], 422);
+                }
+
+                // Simpan nama file ke data yang divalidasi
+                $validatedData['re_engineer_certificate'] = $filename;
+            }
+
             $coi->update($validatedData);
 
             return response()->json([
@@ -337,6 +406,12 @@ class CoiController extends Controller
             }
             if ($coi->rla_old_certificate) {
                 $path = public_path('coi/rla/' . $coi->rla_old_certificate);
+                if (file_exists($path)) {
+                    unlink($path); // Hapus file
+                }
+            }
+            if ($coi->re_engineer_certificate) {
+                $path = public_path('coi/re_engineer/' . $coi->re_engineer_certificate);
                 if (file_exists($path)) {
                     unlink($path); // Hapus file
                 }
