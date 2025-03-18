@@ -227,17 +227,14 @@ class CoiController extends Controller
             if ($request->hasFile('rla_certificate')) {
                 // rla certificate sebelumnya ada 
                 if ($coi->rla_certificate) {
-                    // input rla old certificate tidak ada 
-                    if(!$request->hasFile('rla_old_certificate')){
-                        // replace rla old certificate yang ada menjadi rla certificate sebelumnya
-                        $validatedData['rla_old_certificate'] = $coi->rla_certificate;
-                        // rla old certificate ada 
-                        if ($coi->rla_old_certificate) {
-                            $path = public_path('coi/rla/' . $coi->rla_old_certificate);
-                            // file ada 
-                            if (file_exists($path)) {
-                                unlink($path); // Hapus file
-                            }
+                    // replace rla old certificate yang ada menjadi rla certificate sebelumnya
+                    $validatedData['rla_old_certificate'] = $coi->rla_certificate;
+                    // rla old certificate ada 
+                    if ($coi->rla_old_certificate) {
+                        $path = public_path('coi/rla/' . $coi->rla_old_certificate);
+                        // file ada 
+                        if (file_exists($path)) {
+                            unlink($path); // Hapus file
                         }
                     }
                     // proses simpan file rla certificate baru
@@ -257,11 +254,42 @@ class CoiController extends Controller
     
                     // Pindahkan file ke folder tujuan dengan nama unik
                     $path = $file->move(public_path('coi/rla'), $filename);
+                    if(!$path){
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'RLA Certificate failed upload.',
+                        ], 422);
+                    }
     
                     // Simpan nama file ke data yang divalidasi
                     $validatedData['rla_certificate'] = $filename;
                 }
-                
+
+                $file = $request->file('rla_certificate');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("coi/rla/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                }
+
+                // Pindahkan file ke folder tujuan dengan nama unik
+                $path = $file->move(public_path('coi/rla'), $filename);
+                if(!$path){
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'RLA Certificate failed upload.',
+                    ], 422);
+                }
+
+                // Simpan nama file ke data yang divalidasi
+                $validatedData['rla_certificate'] = $filename;
             }
 
             $coi->update($validatedData);

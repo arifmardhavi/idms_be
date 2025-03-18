@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CoiController;
@@ -24,16 +25,19 @@ use App\Models\User;
 |
 */
 // Route::middleware(['auth:sanctum'])->group(function () {
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout']);
+Route::middleware(['auth:api', 'role:1'])->group(function () {
     Route::apiResource('units', UnitController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('types', TypeController::class);
     Route::apiResource('tagnumbers', Tag_numberController::class);
+});
     Route::apiResource('plo', PloController::class);
     Route::apiResource('coi', CoiController::class);
     Route::apiResource('skhp', SkhpController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('report_plo', ReportPloController::class);
-// });
     // Route::patch('/plo/{id}', function (Request $request, $id) {
     //     return response()->json([
     //         'id' => $id,
@@ -79,4 +83,4 @@ use App\Models\User;
     
 
 
-Route::post('/login', [UserController::class, 'login']);
+// Route::post('/login', [UserController::class, 'login']);
