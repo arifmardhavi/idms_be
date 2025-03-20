@@ -10,6 +10,11 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, ...$levels)
     {
+        // Izinkan semua akses GET tanpa cek level
+        if ($request->isMethod('get')) {
+            return $next($request);
+        }
+
         // Autentikasi user
         $user = JWTAuth::parseToken()->authenticate();
 
@@ -18,7 +23,7 @@ class RoleMiddleware
             return response()->json(['error' => 'Akun tidak aktif'], 403);
         }
 
-        // Cek akses berdasarkan level langsung
+        // Cek akses berdasarkan level langsung (kecuali GET)
         if (!in_array($user->level_user, $levels)) {
             return response()->json(['error' => 'Tidak memiliki akses'], 403);
         }
@@ -26,4 +31,3 @@ class RoleMiddleware
         return $next($request);
     }
 }
-

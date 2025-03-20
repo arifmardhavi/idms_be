@@ -25,7 +25,7 @@ use App\Models\User;
 |
 */
 // Route::middleware(['auth:sanctum'])->group(function () {
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::middleware(['auth:api', 'role:1'])->group(function () {
     Route::apiResource('units', UnitController::class);
@@ -38,12 +38,7 @@ Route::middleware(['auth:api', 'role:1'])->group(function () {
     Route::apiResource('skhp', SkhpController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('report_plo', ReportPloController::class);
-    // Route::patch('/plo/{id}', function (Request $request, $id) {
-    //     return response()->json([
-    //         'id' => $id,
-    //         'data' => $request->all(),
-    //     ]);
-    //  });
+   
 
     // Unit
     Route::put('/units/nonactive/{id}', [UnitController::class, 'nonactive']);

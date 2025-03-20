@@ -31,8 +31,10 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'fullname' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users,email',
+            'username' => 'required|string|unique:users,username',
             'password' => 'required|string|min:6',
             'level_user' => 'required|integer',
+            'status' => 'required|in:0,1',	
         ]);
 
         if ($validator->fails()) {
@@ -43,12 +45,9 @@ class UserController extends Controller
             ], 422);
         }
 
-        $user = User::create([
-            'fullname' => $request->fullname,
-            'email' => $request->email,
-            'password' => $request->password, // Password auto-hashed in model
-            'level_user' => $request->level_user,
-        ]);
+        $validatedData = $validator->validated();
+
+        $user = User::create($validatedData);
 
         return response()->json([
             'success' => true,
