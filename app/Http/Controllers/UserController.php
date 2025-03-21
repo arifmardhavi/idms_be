@@ -92,10 +92,12 @@ class UserController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'fullname' => 'string|max:255',
-            'email' => 'string|email|unique:users,email,' . $id,
-            'password' => 'string|min:6',
-            'level_user' => 'integer',
+            'fullname' => 'required|string|max:255',
+            'email' => 'required|string|email|unique:users,email,' . $id,
+            'username' => 'required|string|unique:users,username,' . $id,
+            'password' => 'nullable|string|min:6',
+            'level_user' => 'required|integer',
+            'status' => 'required|in:0,1',	
         ]);
 
         if ($validator->fails()) {
@@ -105,8 +107,8 @@ class UserController extends Controller
                 'errors' => $validator->errors(),
             ], 422);
         }
-
-        $user->update($request->only(['fullname', 'email', 'password', 'level_user']));
+        $validatedData = $validator->validated();
+        $user->update($validatedData);
 
         return response()->json([
             'success' => true,
@@ -137,43 +139,30 @@ class UserController extends Controller
         ], 200);
     }
 
-    /**
-     * Authenticate user and return token.
-     */
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+    function nonactive($id) {
+        $user = User::find($id);
 
-        if ($validator->fails()) {
+        if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation errors.',
-                'errors' => $validator->errors(),
-            ], 422);
+                'message' => 'user not found.',
+            ], 404);
         }
 
-        $user = User::where('email', $request->email)->first();
+        try {
+            $user->status = 0;
+            $user->save();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'user nonaktif successfully.',
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid credentials.',
-            ], 401);
+                'message' => 'Failed to nonaktif user.',
+                'errors' => $e->getMessage(),
+            ], 500);
         }
-
-        // Membuat token menggunakan Sanctum
-        $token = $user->createToken('authToken')->plainTextToken;
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Login successful.',
-            'data' => [
-                'user' => $user,
-                'token' => $token,
-            ],
-        ], 200);
     }
 }

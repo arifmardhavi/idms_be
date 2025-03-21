@@ -189,7 +189,7 @@ class CoiController extends Controller
         
         $validator = Validator::make($request->all(), [
             'plo_id' => 'required|exists:plos,id',
-            'tag_number_id' => 'required|exists:tag_numbers,id',
+            'tag_number_id' => 'required|exists:tag_numbers,id|unique:cois,tag_number_id,' . $id,
             'no_certificate' => 'required|string|max:255',
             'issue_date' => 'required|date',
             'overdue_date' => 'required|date',

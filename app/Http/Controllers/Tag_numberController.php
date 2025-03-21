@@ -191,7 +191,7 @@ class Tag_numberController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'tag_number' => 'required|string|max:255',
+            'tag_number' => 'required|string|max:255|unique:tag_numbers,tag_number,' . $id,
             'description' => 'nullable|string',
             'type_id' => 'required|exists:types,id',
             'unit_id' => 'required|exists:units,id',

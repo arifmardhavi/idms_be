@@ -44,17 +44,18 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('username', 'password');
-        $token = JWTAuth::attempt($credentials);
 
-        if (!$token) {
+        // Cek apakah username terdaftar
+        $user = User::where('username', $credentials['username'])->first();
+        if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized.',
+                'message' => 'Username tidak terdaftar.',
                 'data' => null
-            ], 401);
+            ], 404);
         }
 
-        $user = JWTAuth::user();
+        // Cek status user
         if ($user->status != 1) {
             return response()->json([
                 'success' => false,
@@ -62,6 +63,18 @@ class AuthController extends Controller
                 'data' => null
             ], 403);
         }
+
+        // Cek password
+        if (!Hash::check($credentials['password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password salah.',
+                'data' => null
+            ], 401);
+        }
+
+        // Buat token
+        $token = JWTAuth::fromUser($user);
 
         return response()->json([
             'success' => true,
@@ -72,6 +85,7 @@ class AuthController extends Controller
             ],
         ]);
     }
+
 
     public function me()
     {

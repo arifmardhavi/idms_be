@@ -119,7 +119,7 @@ class SkhpController extends Controller
         
         $validator = Validator::make($request->all(), [
             'plo_id' => 'required|exists:plos,id',
-            'tag_number_id' => 'required|exists:tag_numbers,id',
+            'tag_number_id' => 'required|exists:tag_numbers,id|unique:skhps,tag_number_id,' . $id,
             'no_skhp' => 'required|string|max:255',
             'issue_date' => 'required|date',
             'overdue_date' => 'required|date',

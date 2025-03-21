@@ -42,6 +42,8 @@ Route::middleware(['auth:api', 'role:1'])->group(function () {
 
     // Unit
     Route::put('/units/nonactive/{id}', [UnitController::class, 'nonactive']);
+    // User
+    Route::put('/users/nonactive/{id}', [UserController::class, 'nonactive']);
 
     // Category
     Route::get('/categories/unit/{unitId}', [CategoryController::class, 'showByUnit']); // show category by unit_id
