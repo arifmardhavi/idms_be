@@ -173,7 +173,7 @@ class SkhpController extends Controller
                 $path = $file->move(public_path('skhp'), $filename);
 
                 // Simpan nama file ke data yang divalidasi
-                $validatedData['file_skhp;'] = $filename;
+                $validatedData['file_skhp'] = $filename;
             }
             
             $skhp->update($validatedData);
