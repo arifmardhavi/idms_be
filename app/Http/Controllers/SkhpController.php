@@ -154,7 +154,8 @@ class SkhpController extends Controller
                     }
                 }
                 // proses simpan file skhp certificate baru
-                $file = $request->file('file_skhp;');
+                $file = $request->file('file_skhp');
+                // dd($file);
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
                 $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
                 $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
