@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CoiController;
+use App\Http\Controllers\ContractController;
 use App\Http\Controllers\PloController;
 use App\Http\Controllers\ReportPloController;
 use App\Http\Controllers\SkhpController;
@@ -33,6 +34,7 @@ Route::middleware(['auth:api', 'role:1'])->group(function () {
     Route::apiResource('types', TypeController::class);
     Route::apiResource('tagnumbers', Tag_numberController::class);
 });
+    Route::apiResource('contract', ContractController::class);
     Route::apiResource('plo', PloController::class);
     Route::apiResource('coi', CoiController::class);
     Route::apiResource('skhp', SkhpController::class);
