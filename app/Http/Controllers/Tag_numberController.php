@@ -28,6 +28,10 @@ class Tag_numberController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge([
+            'tag_number' => strtoupper(preg_replace('/\s+/', '', $request->tag_number)),
+        ]);
+        
         $validator = Validator::make($request->all(), [
             'tag_number' => 'required|string|max:255|unique:tag_numbers,tag_number',
             'description' => 'nullable|string',
@@ -190,6 +194,10 @@ class Tag_numberController extends Controller
             ], 404);
         }
 
+        $request->merge([
+            'tag_number' => strtoupper(preg_replace('/\s+/', '', $request->tag_number)),
+        ]);
+        
         $validator = Validator::make($request->all(), [
             'tag_number' => 'required|string|max:255|unique:tag_numbers,tag_number,' . $id,
             'description' => 'nullable|string',
