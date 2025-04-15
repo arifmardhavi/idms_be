@@ -9,10 +9,13 @@ use App\Http\Controllers\PloController;
 use App\Http\Controllers\ReportPloController;
 use App\Http\Controllers\SkhpController;
 use App\Http\Controllers\Tag_numberController;
+use App\Http\Controllers\TermBillingController;
+use App\Http\Controllers\TerminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\TypeController;
+use App\Models\Termin;
 use App\Models\User;
 
 /*
@@ -35,6 +38,8 @@ Route::middleware(['auth:api', 'role:1'])->group(function () {
     Route::apiResource('tagnumbers', Tag_numberController::class);
 });
     Route::apiResource('contract', ContractController::class);
+    Route::apiResource('termin', TerminController::class);
+    Route::apiResource('termbilling', TermBillingController::class);
     Route::apiResource('plo', PloController::class);
     Route::apiResource('coi', CoiController::class);
     Route::apiResource('skhp', SkhpController::class);
@@ -77,8 +82,11 @@ Route::middleware(['auth:api', 'role:1'])->group(function () {
     Route::get('/skhp_countduedays', [SkhpController::class, 'countskhpDueDays']); // count coi due days and grouping
     
     // REPORT PLO 
-    Route::get('/report_plos/{id}', [ReportPloController::class, 'showWithPloId']); // get report plo by plo id
-
+    Route::get('/report_plos/{id}', [ReportPloController::class, 'showWithPloId']);
+    // TERMIN 
+    Route::get('/termin/contract/{id}', [TerminController::class, 'showByContract']);
+    // TERM BILLING 
+    Route::get('/termbilling/contract/{id}', [TermBillingController::class, 'showByContract']);
     
 
 
