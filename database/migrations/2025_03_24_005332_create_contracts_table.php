@@ -21,6 +21,10 @@ return new class extends Migration
             $table->date('contract_date');
             $table->integer('contract_price');
             $table->string('contract_file');
+            $table->char('kom')->default('0');
+            $table->date('contract_start_date')->nullable();
+            $table->date('contract_end_date')->nullable();
+            $table->string('meeting_notes')->nullable();
             $table->char('contract_status')->default('1');
             $table->timestamps();
         });

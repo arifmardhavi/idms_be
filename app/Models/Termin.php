@@ -15,4 +15,9 @@ class Termin extends Model
     {
         return $this->belongsTo(Contract::class);
     }
+
+    public function termBilling()
+    {
+        return $this->hasMany(TermBilling::class, 'termin_id');
+    }
 }
