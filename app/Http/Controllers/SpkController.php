@@ -173,7 +173,7 @@ class SpkController extends Controller
             'spk_start_date' => 'required|date',
             'spk_end_date' => 'required|date',
             'spk_price' => 'required|integer',
-            'spk_file' => 'required|file|mimes:pdf|max:25600',
+            'spk_file' => 'nullable|file|mimes:pdf|max:25600',
             'spk_status' => 'required|in:0,1',
             'invoice' => 'required|in:0,1',
             'invoice_value' => 'nullable|integer',
