@@ -15,4 +15,9 @@ class Contract extends Model
         return $this->hasMany(Termin::class);
     }
 
+    public function spk()
+    {
+        return $this->hasMany(Spk::class);
+    }
+
 }

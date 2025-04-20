@@ -121,7 +121,7 @@ class ContractController extends Controller
     public function show(string $id)
 {
     // Ambil contract + relasi termins dan masing-masing billing count
-    $contract = Contract::withCount('termin')
+    $contract = Contract::withCount(['termin', 'spk'])
         ->with(['termin' => function ($query) {
             $query->withCount('termBilling');
         }])
@@ -144,6 +144,7 @@ class ContractController extends Controller
             ...$contract->toArray(),
             'termin_count' => $contract->termin_count,
             'billing_count' => $billingCount,
+            'spk_count' => $contract->spk_count,
         ],
     ], 200);
 }

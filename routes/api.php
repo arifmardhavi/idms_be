@@ -8,6 +8,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\PloController;
 use App\Http\Controllers\ReportPloController;
 use App\Http\Controllers\SkhpController;
+use App\Http\Controllers\Spk_progressController;
 use App\Http\Controllers\SpkController;
 use App\Http\Controllers\Tag_numberController;
 use App\Http\Controllers\TermBillingController;
@@ -45,6 +46,7 @@ Route::middleware(['auth:api', 'role:1'])->group(function () {
     Route::apiResource('coi', CoiController::class);
     Route::apiResource('skhp', SkhpController::class);
     Route::apiResource('spk', SpkController::class);
+    Route::apiResource('spk_progress', Spk_progressController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('report_plo', ReportPloController::class);
    
@@ -91,6 +93,8 @@ Route::middleware(['auth:api', 'role:1'])->group(function () {
     Route::get('/termbilling/contract/{id}', [TermBillingController::class, 'showByContract']);
     // SPK 
     Route::get('/spk/contract/{id}', [SpkController::class, 'showByContract']);
+    // PROGRESS PEKERJAAN SPK 
+    Route::get('/spk_progress/contract/{id}', [Spk_progressController::class, 'showByContract']);
     
 
 
