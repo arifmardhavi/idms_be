@@ -33,7 +33,7 @@ use App\Models\User;
 // Route::middleware(['auth:sanctum'])->group(function () {
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout']);
-Route::middleware(['auth:api', 'role:1'])->group(function () {
+Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::apiResource('units', UnitController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('types', TypeController::class);
@@ -52,6 +52,7 @@ Route::middleware(['auth:api', 'role:1'])->group(function () {
    
 
     // Unit
+    Route::get('/activeunits', [UnitController::class, 'showByStatus']);
     Route::put('/units/nonactive/{id}', [UnitController::class, 'nonactive']);
     // User
     Route::put('/users/nonactive/{id}', [UserController::class, 'nonactive']);

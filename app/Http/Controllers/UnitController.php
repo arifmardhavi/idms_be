@@ -54,6 +54,23 @@ class UnitController extends Controller
     }
 
     // Get a specific unit
+    public function showByStatus(){
+        $unit = Unit::where('status', 1)->get();
+
+        if (!$unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unit not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Unit retrieved successfully.',
+            'data' => $unit,
+        ], 200);
+    }
+
     public function show($id){
         $unit = Unit::find($id);
 
