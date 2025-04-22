@@ -89,7 +89,7 @@ class Tag_numberController extends Controller
     }
 
     function showByType($typeId){
-        $tag_numbers = Tag_number::with(['type'])->where('type_id', $typeId)->get();
+        $tag_numbers = Tag_number::with(['type'])->where('type_id', $typeId)->where('status', 1)->get();
 
         return response()->json([
             'success' => true,
@@ -99,7 +99,7 @@ class Tag_numberController extends Controller
     }
 
     function showByTypeUnit($typeId, $unitId) {
-        $tag_numbers = Tag_number::where('type_id', $typeId)->where('unit_id', $unitId)->get();
+        $tag_numbers = Tag_number::where('type_id', $typeId)->where('unit_id', $unitId)->where('status', 1)->get();
     
         if ($tag_numbers->isEmpty()) {
             return response()->json([

@@ -58,10 +58,12 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::put('/users/nonactive/{id}', [UserController::class, 'nonactive']);
 
     // Category
+    Route::get('/activecategories', [CategoryController::class, 'showByStatus']);
     Route::get('/categories/unit/{unitId}', [CategoryController::class, 'showByUnit']); // show category by unit_id
     Route::put('/categories/nonactive/{id}', [CategoryController::class, 'nonactive']); // nonactive category
 
     // Type
+    Route::get('/activetypes', [TypeController::class, 'showByStatus']);
     Route::get('/types/category/{categoryId}', [TypeController::class, 'showByCategory']); // show type by category_id
     Route::put('/types/nonactive/{id}', [TypeController::class, 'nonactive']); // nonactive type
 

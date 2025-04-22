@@ -115,11 +115,29 @@ class TypeController extends Controller
         ], 200);
     }
 
+    public function showByStatus(){
+        $type = Type::where('status', 1)->get();
+
+        if (!$type) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Type not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Type retrieved successfully.',
+            'data' => $type,
+        ], 200);
+    }
+
     public function showByCategory($categoryId)
     {
-        // take categories with filtered unit_id
+        // take categories with filtered type_id
         $categories = Type::with('category')
-            ->where('category_id', $categoryId) // Filter by unit_id
+            ->where('category_id', $categoryId) // Filter by type_id
+            ->where('status', 1) // Filter by status active
             ->get();
 
         // if not found categories

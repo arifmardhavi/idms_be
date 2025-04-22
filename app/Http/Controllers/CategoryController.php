@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -71,6 +70,23 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category retrieved successfully.',
+            'data' => $category,
+        ], 200);
+    }
+
+    public function showByStatus(){
+        $category = Category::where('status', 1)->get();
+
+        if (!$category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'category not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'category retrieved successfully.',
             'data' => $category,
         ], 200);
     }
