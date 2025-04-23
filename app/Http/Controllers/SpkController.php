@@ -181,19 +181,25 @@ class SpkController extends Controller
 
     public function showByContract(string $id)
     {
-        $spk = Spk::where('contract_id', $id)->with('contract')->get();
+        $spkList = Spk::where('contract_id', $id)->with('contract')->get();
 
-        if (!$spk) {
+        if ($spkList->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'spk not found.',
+                'message' => 'SPK not found.',
             ], 404);
         }
-
+    
+        $spkListWithWeeks = $spkList->map(function ($spk) {
+            $spkArray = $spk->toArray();
+            $spkArray['weeks'] = $this->generateWeeks($spk->spk_start_date, $spk->spk_end_date);
+            return $spkArray;
+        });
+    
         return response()->json([
             'success' => true,
-            'message' => 'spk retrieved successfully.',
-            'data' => $spk,
+            'message' => 'SPK retrieved successfully.',
+            'data' => $spkListWithWeeks,
         ], 200);
     }
 
