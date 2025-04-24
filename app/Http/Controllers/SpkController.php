@@ -11,43 +11,6 @@ use Illuminate\Support\Collection;
 class SpkController extends Controller
 {
 
-    private function generateWeeks($startDate, $endDate): array
-    {
-        $start = Carbon::parse($startDate);
-        $end = Carbon::parse($endDate);
-
-        // Cari Jumat pertama setelah start date (atau pas start date jika sudah Jumat)
-        if (!$start->isFriday()) {
-            $start = $start->next(Carbon::FRIDAY);
-        }
-
-        $weeks = [];
-        $weekNumber = 1;
-
-        while ($start->lte($end)) {
-            $weekStart = $start->copy();
-            $weekEnd = $weekStart->copy()->addDays(6);
-
-            // Batasi supaya nggak lewat dari end date SPK
-            if ($weekEnd->gt($end)) {
-                $weekEnd = $end->copy();
-            }
-
-            $weeks[] = [
-                'week' => $weekNumber,
-                'start' => $weekStart->format('Y-m-d'),
-                'end' => $weekEnd->format('Y-m-d'),
-                'label' => "Week {$weekNumber} ({$weekStart->format('d M')} - {$weekEnd->format('d M Y')})",
-                'value' => "{$weekStart->format('Y-m-d')}_{$weekEnd->format('Y-m-d')}",
-            ];
-
-            $weekNumber++;
-            $start = $weekStart->addDays(7);
-        }
-
-        return $weeks;
-    }
-
     /**
      * Display a listing of the resource.
      */
@@ -166,16 +129,10 @@ class SpkController extends Controller
                 'message' => 'spk not found.',
             ], 404);
         }
-
-        $weeks = $this->generateWeeks($spk->spk_start_date, $spk->spk_end_date);
-
         return response()->json([
             'success' => true,
             'message' => 'spk retrieved successfully.',
-            'data' => [
-                ...$spk->toArray(),
-                'weeks' => $weeks,
-            ],
+            'data' => $spk,
         ], 200);
     }
 
@@ -190,16 +147,10 @@ class SpkController extends Controller
             ], 404);
         }
     
-        $spkListWithWeeks = $spkList->map(function ($spk) {
-            $spkArray = $spk->toArray();
-            $spkArray['weeks'] = $this->generateWeeks($spk->spk_start_date, $spk->spk_end_date);
-            return $spkArray;
-        });
-    
         return response()->json([
             'success' => true,
             'message' => 'SPK retrieved successfully.',
-            'data' => $spkListWithWeeks,
+            'data' => $spkList,
         ], 200);
     }
 

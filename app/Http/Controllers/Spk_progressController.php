@@ -9,43 +9,6 @@ use Illuminate\Support\Facades\Validator;
 
 class Spk_progressController extends Controller
 {
-
-    private function generateWeeks($startDate, $endDate): array
-    {
-        $start = Carbon::parse($startDate);
-        $end = Carbon::parse($endDate);
-
-        // Cari Jumat pertama setelah start date (atau pas start date jika sudah Jumat)
-        if (!$start->isFriday()) {
-            $start = $start->next(Carbon::FRIDAY);
-        }
-
-        $weeks = [];
-        $weekNumber = 1;
-
-        while ($start->lte($end)) {
-            $weekStart = $start->copy();
-            $weekEnd = $weekStart->copy()->addDays(6);
-
-            // Batasi supaya nggak lewat dari end date SPK
-            if ($weekEnd->gt($end)) {
-                $weekEnd = $end->copy();
-            }
-
-            $weeks[] = [
-                'week' => $weekNumber,
-                'start' => $weekStart->format('Y-m-d'),
-                'end' => $weekEnd->format('Y-m-d'),
-                'label' => "Week {$weekNumber} ({$weekStart->format('d M')} - {$weekEnd->format('d M Y')})",
-                'value' => "{$weekStart->format('Y-m-d')}_{$weekEnd->format('Y-m-d')}",
-            ];
-
-            $weekNumber++;
-            $start = $weekStart->addDays(7);
-        }
-
-        return $weeks;
-    }
     /**
      * Display a listing of the resource.
      */
@@ -136,11 +99,11 @@ class Spk_progressController extends Controller
     }
     public function showByContract(string $id)
     {
-        $spk_progress = Spk_progress::with('spk')
-        ->whereHas('spk', function ($query) use ($id) {
-            $query->where('contract_id', $id);
-        })
-        ->get();
+        $spk_progress = Spk_progress::with('spk')  // Memuat spk dan weeks terkait
+            ->whereHas('spk', function ($query) use ($id) {
+                $query->where('contract_id', $id);
+            })
+            ->get();
 
         return response()->json([
             'success' => true,
