@@ -143,34 +143,36 @@ class Spk_progressController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            $file = $request->file('progress_file');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-            $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-            $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-            $version = 0; // Awal versi
-            // Format nama file
-            $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-            // Cek apakah file dengan nama ini sudah ada di folder tujuan
-            while (file_exists(public_path("contract/spk/progress/".$filename))) {
-                $version++;
+            if ($request->hasFile('progress_file')) {
+                $file = $request->file('progress_file');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-            }
-            // Store file in public/contract/spk/progress
-            $path = $file->move(public_path('contract/spk/progress'), $filename);
-            if(!$path){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File Progress failed update.',
-                ], 422);
-            }  
-            $validatedData['progress_file'] = $filename;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("contract/spk/progress/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                }
+                // Store file in public/contract/spk/progress
+                $path = $file->move(public_path('contract/spk/progress'), $filename);
+                if(!$path){
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'File Progress failed update.',
+                    ], 422);
+                }  
+                $validatedData['progress_file'] = $filename;
                 if($spk_progress->progress_file){
                     $spk_progressBefore = public_path('contract/spk/progress/' . $spk_progress->progress_file);
                     if (file_exists($spk_progressBefore)) {
                         unlink($spk_progressBefore); // Hapus file
                     }
                 }
+            }
             
             if($spk_progress->update($validatedData)){
                 return response()->json([
