@@ -43,6 +43,19 @@ class Spk_progressController extends Controller
             ], 422);
         }
 
+        $latestProgress = Spk_progress::where('spk_id', $request->spk_id)
+                    ->latest('id')
+                    ->value('actual_progress');
+
+        if ($latestProgress !== null && $request->actual_progress <= $latestProgress) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => [
+                    'actual_progress' => ['Progress aktual harus lebih besar dari sebelumnya (' . $latestProgress . '%)']
+                ],
+            ], 422);
+        }
+
         $validatedData = $validator->validated();
 
         try {
@@ -90,6 +103,19 @@ class Spk_progressController extends Controller
     public function show(string $id)
     {
         $spk_progress = Spk_progress::with('spk')->find($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Progress Pekerjaan retrieved successfully.',
+            'data' => $spk_progress,
+        ], 200);
+    }
+
+    public function showBySpk(string $id)
+    {
+        $spk_progress = Spk_progress::where('spk_id', $id)
+                                    ->orderBy('id', 'desc') // atau 'updated_at' tergantung kebutuhan
+                                    ->first();
 
         return response()->json([
             'success' => true,

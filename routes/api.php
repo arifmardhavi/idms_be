@@ -97,6 +97,7 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     // SPK 
     Route::get('/spk/contract/{id}', [SpkController::class, 'showByContract']);
     // PROGRESS PEKERJAAN SPK 
+    Route::get('/spk_progress/spk/{id}', [Spk_progressController::class, 'showBySpk']);
     Route::get('/spk_progress/contract/{id}', [Spk_progressController::class, 'showByContract']);
     
 
