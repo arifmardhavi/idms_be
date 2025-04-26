@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('term_billings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('termin_id')->constrained()->onDelete('cascade'); // Relation to contracts
-            $table->string('billing_value');
+            $table->bigInteger('billing_value');
             $table->string('payment_document');
             $table->timestamps();
         });

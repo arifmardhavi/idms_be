@@ -18,11 +18,11 @@ return new class extends Migration
             $table->string('spk_name');
             $table->date('spk_start_date');
             $table->date('spk_end_date');
-            $table->integer('spk_price');
+            $table->bigInteger('spk_price');
             $table->string('spk_file');
             $table->char('spk_status')->default('1');
             $table->char('invoice')->default('0');
-            $table->integer('invoice_value')->nullable();
+            $table->bigInteger('invoice_value')->nullable();
             $table->string('invoice_file')->nullable();
             $table->timestamps();
         });

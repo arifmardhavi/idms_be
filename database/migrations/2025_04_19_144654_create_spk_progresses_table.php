@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('spk_progresses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('spk_id')->constrained('spks')->onDelete('cascade');
-            $table->char('week', 3);
-            $table->string('actual_progress');
-            $table->string('plan_progress');
+            $table->integer('week', 3);
+            $table->integer('actual_progress');
+            $table->integer('plan_progress');
             $table->string('progress_file');
             $table->timestamps();
         });

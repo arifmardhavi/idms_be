@@ -14,7 +14,7 @@ class Spk_progressController extends Controller
      */
     public function index()
     {
-        $spk_progress = Spk_progress::with(['spk'])->get();
+        $spk_progress = Spk_progress::all();
 
         return response()->json([
             'success' => true,
@@ -125,11 +125,15 @@ class Spk_progressController extends Controller
     }
     public function showByContract(string $id)
     {
-        $spk_progress = Spk_progress::with('spk')  // Memuat spk dan weeks terkait
-            ->whereHas('spk', function ($query) use ($id) {
-                $query->where('contract_id', $id);
-            })
-            ->get();
+        $spk_progress = Spk_progress::with('spk') // Tetap load relasi
+        ->whereHas('spk', function ($query) use ($id) {
+            $query->where('contract_id', $id);
+        })
+        ->get()
+        ->each(function ($item) {
+            $item->spk->makeHidden(['weeks']); // Hide hanya 'weeks' dalam relasi spk
+        });
+
 
         return response()->json([
             'success' => true,

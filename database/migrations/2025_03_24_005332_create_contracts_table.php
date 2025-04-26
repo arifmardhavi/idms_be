@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('contract_name');
             $table->char('contract_type')->default('1');
             $table->date('contract_date');
-            $table->integer('contract_price');
+            $table->bigInteger('contract_price');
             $table->string('contract_file');
             $table->char('kom')->default('0');
             $table->date('contract_start_date')->nullable();

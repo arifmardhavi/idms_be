@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CoiController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\Lumpsum_progressController;
 use App\Http\Controllers\PloController;
 use App\Http\Controllers\ReportPloController;
 use App\Http\Controllers\SkhpController;
@@ -47,6 +48,7 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::apiResource('skhp', SkhpController::class);
     Route::apiResource('spk', SpkController::class);
     Route::apiResource('spk_progress', Spk_progressController::class);
+    Route::apiResource('lumpsum_progress', Lumpsum_progressController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('report_plo', ReportPloController::class);
    
@@ -99,6 +101,8 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     // PROGRESS PEKERJAAN SPK 
     Route::get('/spk_progress/spk/{id}', [Spk_progressController::class, 'showBySpk']);
     Route::get('/spk_progress/contract/{id}', [Spk_progressController::class, 'showByContract']);
+    // PROGRESS PEKERJAAN LUMPSUM 
+    Route::get('/lumpsum_progress/contract/{id}', [Lumpsum_progressController::class, 'showByContract']);
     
 
 
