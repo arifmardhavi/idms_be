@@ -50,6 +50,7 @@ class ContractController extends Controller
         }
 
         $validatedData = $validator->validated();
+        $validatedData['initial_contract_price'] = $request->contract_price;
 
         try {
             $file = $request->file('contract_file');
@@ -188,6 +189,7 @@ class ContractController extends Controller
         }
 
         $validatedData = $validator->validated();
+        $validatedData['initial_contract_price'] = $request->contract_price;
 
         try {
             if($request->hasFile('contract_file')){

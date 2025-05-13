@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AmandemenController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
@@ -51,6 +52,7 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::apiResource('lumpsum_progress', Lumpsum_progressController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('report_plo', ReportPloController::class);
+    Route::apiResource('amandemen', AmandemenController::class);
    
 
     // Unit
@@ -103,6 +105,8 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::get('/spk_progress/contract/{id}', [Spk_progressController::class, 'showByContract']);
     // PROGRESS PEKERJAAN LUMPSUM 
     Route::get('/lumpsum_progress/contract/{id}', [Lumpsum_progressController::class, 'showByContract']);
+    // AMANDEMEN
+    Route::get('/amandemen/contract/{id}', [AmandemenController::class, 'showByContract']);
     
 
 
