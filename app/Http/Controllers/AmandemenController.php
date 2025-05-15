@@ -32,7 +32,7 @@ class AmandemenController extends Controller
         $validator = Validator::make($request->all(), [
             'contract_id' => 'required|exists:contracts,id', 
             'ba_agreement_file' => 'required|file|mimes:pdf|max:5120' , 
-            'result_amendemen_file'=> 'required|file|mimes:pdf|max:5120', 
+            'result_amandemen_file'=> 'required|file|mimes:pdf|max:5120', 
             'principle_permit_file' => 'nullable|file|mimes:pdf|max:5120',
             'amandemen_price' => 'nullable|integer', 
             'amandemen_end_date' => 'nullable|date', 
@@ -66,7 +66,7 @@ class AmandemenController extends Controller
                 if ($contractPrice > 0) {
                     $increasePercentage = (($amandemenPrice - $contractPrice) / $contractPrice) * 100;
         
-                    if ($increasePercentage > 10 && !$principlePermit) {
+                    if ($increasePercentage >= 10 && !$principlePermit) {
                         $validator->errors()->add(
                             'principle_permit_file',
                             'File principle permit wajib diunggah karena perubahan nilai amandemen naik lebih dari 10% dari nilai kontrak awal.'
@@ -128,8 +128,8 @@ class AmandemenController extends Controller
             }  
             $validatedData['ba_agreement_file'] = $filename;
 
-            if($request->hasFile('result_amendemen_file')){
-                $file = $request->file('result_amendemen_file');
+            if($request->hasFile('result_amandemen_file')){
+                $file = $request->file('result_amandemen_file');
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
                 $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
                 $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
@@ -138,19 +138,19 @@ class AmandemenController extends Controller
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
 
                 // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/amandemen/result_amendemen/".$filename))) {
+                while (file_exists(public_path("contract/amandemen/result_amandemen/".$filename))) {
                     $version++;
                     $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 }
                 // Store file in public/contract
-                $path = $file->move(public_path('contract/amandemen/result_amendemen'), $filename);
+                $path = $file->move(public_path('contract/amandemen/result_amandemen'), $filename);
                 if(!$path){
                     return response()->json([
                         'success' => false,
-                        'message' => 'result_amendemen File failed upload.',
+                        'message' => 'result_amandemen File failed upload.',
                     ], 422);
                 }  
-                $validatedData['result_amendemen_file'] = $filename;
+                $validatedData['result_amandemen_file'] = $filename;
             }
             if($request->hasFile('principle_permit_file')){
                 $file = $request->file('principle_permit_file');
@@ -196,7 +196,7 @@ class AmandemenController extends Controller
                     }
 
                     if (!is_null($amandemen->amandemen_penalty) && !is_null($contract->initial_contract_price)) {
-                        $contract->contract_penalty = ($contract->initial_contract_price * ($amandemen->amandemen_penalty / 100));
+                        $contract->contract_penalty = $amandemen->amandemen_penalty;
                         $updated = true;
                     }
 
@@ -275,8 +275,8 @@ class AmandemenController extends Controller
         
         $validator = Validator::make($request->all(), [
             'contract_id' => 'required|exists:contracts,id', 
-            'ba_agreement_file' => 'required|file|mimes:pdf|max:5120' , 
-            'result_amendemen_file'=> 'required|file|mimes:pdf|max:5120', 
+            'ba_agreement_file' => 'nullable|file|mimes:pdf|max:5120' , 
+            'result_amandemen_file'=> 'nullable|file|mimes:pdf|max:5120', 
             'principle_permit_file' => 'nullable|file|mimes:pdf|max:5120',
             'amandemen_price' => 'nullable|integer', 
             'amandemen_end_date' => 'nullable|date', 
@@ -310,30 +310,12 @@ class AmandemenController extends Controller
                 if ($contractPrice > 0) {
                     $increasePercentage = (($amandemenPrice - $contractPrice) / $contractPrice) * 100;
         
-                    if ($increasePercentage > 10 && !$principlePermit) {
+                    if ($increasePercentage >= 10 && !$principlePermit) {
                         $validator->errors()->add(
                             'principle_permit_file',
                             'File principle permit wajib diunggah karena perubahan nilai amandemen naik lebih dari 10% dari nilai kontrak awal.'
                         );
                     }
-                }
-            }
-            if ($contract) {
-                $amandemenEndDate = $request->input('amandemen_end_date');
-
-                if (!is_null($amandemenPrice) && $amandemenPrice <= $contract->contract_price) {
-                    $validator->errors()->add(
-                        'amandemen_price',
-                        'Perubahan Nilai Amandemen tidak boleh lebih kecil dari nilai kontrak yaitu ' . number_format($contract->contract_price, 0, ',', '.')
-                    );
-                }
-        
-                if (!is_null($amandemenEndDate) && $amandemenEndDate <= $contract->contract_end_date) {
-                    $formattedDate = Carbon::parse($contract->contract_end_date)->translatedFormat('d F Y'); // Contoh: 11 November 2026
-                    $validator->errors()->add(
-                        'amandemen_end_date',
-                        'Perubahan waktu Amandemen tidak boleh lebih awal dari tanggal akhir kontrak yaitu ' . $formattedDate
-                    );
                 }
             }
         });
@@ -383,8 +365,8 @@ class AmandemenController extends Controller
                 $validatedData['ba_agreement_file'] = $filename;
             }
 
-            if($request->hasFile('result_amendemen_file')){
-                $file = $request->file('result_amendemen_file');
+            if($request->hasFile('result_amandemen_file')){
+                $file = $request->file('result_amandemen_file');
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
                 $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
                 $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
@@ -393,25 +375,25 @@ class AmandemenController extends Controller
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
 
                 // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/amandemen/result_amendemen/".$filename))) {
+                while (file_exists(public_path("contract/amandemen/result_amandemen/".$filename))) {
                     $version++;
                     $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 }
                 // Store file in public/contract
-                $path = $file->move(public_path('contract/amandemen/result_amendemen'), $filename);
+                $path = $file->move(public_path('contract/amandemen/result_amandemen'), $filename);
                 if(!$path){
                     return response()->json([
                         'success' => false,
-                        'message' => 'result_amendemen File failed upload.',
+                        'message' => 'result_amandemen File failed upload.',
                     ], 422);
                 }  
-                if ($amandemen->result_amendemen_file) {
-                    $remove_path = public_path('contract/amandemen/result_amendemen/' . $amandemen->result_amendemen_file);
+                if ($amandemen->result_amandemen_file) {
+                    $remove_path = public_path('contract/amandemen/result_amandemen/' . $amandemen->result_amandemen_file);
                     if (file_exists($remove_path)) {
                         unlink($remove_path); // Hapus file
                     }
                 }
-                $validatedData['result_amendemen_file'] = $filename;
+                $validatedData['result_amandemen_file'] = $filename;
             }
             if($request->hasFile('principle_permit_file')){
                 $file = $request->file('principle_permit_file');
@@ -443,7 +425,7 @@ class AmandemenController extends Controller
                 }
                 $validatedData['principle_permit_file'] = $filename;
             }
-            $amandemen = Amandemen::create($validatedData);
+            $amandemen->update($validatedData);
 
             // Tambahkan logika update contract di sini
             if ($amandemen) {
@@ -508,8 +490,8 @@ class AmandemenController extends Controller
                     unlink($path); // Hapus file
                 }
             }
-            if ($amandemen->result_amendemen_file) {
-                $path = public_path('contract/amandemen/result_amendemen/' . $amandemen->result_amendemen_file);
+            if ($amandemen->result_amandemen_file) {
+                $path = public_path('contract/amandemen/result_amandemen/' . $amandemen->result_amandemen_file);
                 if (file_exists($path)) {
                     unlink($path); // Hapus file
                 }

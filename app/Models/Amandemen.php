@@ -11,7 +11,7 @@ class Amandemen extends Model
     protected $fillable = [
         'contract_id', 
         'ba_agreement_file', 
-        'result_amendemen_file', 
+        'result_amandemen_file', 
         'principle_permit_file', 
         'amandemen_price', 
         'amandemen_end_date', 

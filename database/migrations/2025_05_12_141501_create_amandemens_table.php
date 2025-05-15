@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('contract_id')->constrained('contracts')->onDelete('cascade');
             $table->text('ba_agreement_file');
-            $table->text('result_amendemen_file');
+            $table->text('result_amandemen_file');
             $table->text('principle_permit_file')->nullable();
             $table->bigInteger('amandemen_price')->nullable();
             $table->date('amandemen_end_date')->nullable();
-            $table->bigInteger('amandemen_penalty')->nullable();
+            $table->bigInteger('amandemen_penalty')->default(0);
             $table->text('amandemen_termin')->nullable();
             $table->timestamps();
         });
