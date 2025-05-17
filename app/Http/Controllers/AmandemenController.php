@@ -196,7 +196,7 @@ class AmandemenController extends Controller
                     }
 
                     if (!is_null($amandemen->amandemen_penalty) && !is_null($contract->initial_contract_price)) {
-                        $contract->contract_penalty = $amandemen->amandemen_penalty;
+                        $contract->contract_penalty = ($contract->initial_contract_price * ($amandemen->amandemen_penalty / 100));
                         $updated = true;
                     }
 
@@ -305,7 +305,7 @@ class AmandemenController extends Controller
             $amandemenPrice = $request->input('amandemen_price');
             $principlePermit = $request->file('principle_permit_file');
             if ($contract && $amandemenPrice) {
-                $contractPrice = $contract->initial_contract_price;
+                $contractPrice = $contract->contract_price;
         
                 if ($contractPrice > 0) {
                     $increasePercentage = (($amandemenPrice - $contractPrice) / $contractPrice) * 100;

@@ -31,6 +31,11 @@ class Spk extends Model
         return $this->belongsTo(Contract::class);
     }
 
+    public function spk_progress()
+    {
+        return $this->hasMany(Spk_progress::class, 'spk_id');
+    }
+
     public function getWeeksAttribute()
     {
         $start = Carbon::parse($this->spk_start_date);

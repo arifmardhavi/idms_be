@@ -51,6 +51,7 @@ class ContractController extends Controller
 
         $validatedData = $validator->validated();
         $validatedData['initial_contract_price'] = $request->contract_price;
+        $validatedData['total_contract_price'] = $request->contract_price;
 
         try {
             $file = $request->file('contract_file');
@@ -122,7 +123,7 @@ class ContractController extends Controller
     public function show(string $id)
 {
     // Ambil contract + relasi termins dan masing-masing billing count
-    $contract = Contract::withCount(['termin', 'spk'])
+    $contract = Contract::withCount(['termin', 'spk', 'amandemen'])
         ->with(['termin' => function ($query) {
             $query->withCount('termBilling');
         }])
@@ -146,6 +147,7 @@ class ContractController extends Controller
             'termin_count' => $contract->termin_count,
             'billing_count' => $billingCount,
             'spk_count' => $contract->spk_count,
+            'amandemen_count' => $contract->amandemen_count,
         ],
     ], 200);
 }
@@ -172,7 +174,7 @@ class ContractController extends Controller
             'contract_name' => 'required|string|max:255',
             'contract_type' => 'required|in:1,2', 
             'contract_date' => 'required|date', 
-            'contract_price' => 'required|integer' , 
+            'initial_contract_price' => 'required|integer' , 
             'contract_file' => 'nullable|file|mimes:pdf|max:30720',
             'kom' => 'required|in:0,1',
             'contract_start_date' => 'nullable|date|required_if:kom,1', 
@@ -189,8 +191,9 @@ class ContractController extends Controller
         }
 
         $validatedData = $validator->validated();
-        $validatedData['initial_contract_price'] = $request->contract_price;
-
+        $validatedData['contract_penalty'] = ($request->initial_contract_price * ((Contract::find($id)->amandemen()->latest()->first()?->amandemen_penalty ?? 0) / 100))?? 0;
+        // console.log($validatedData['contract_penalty']);
+        // dd($validatedData);
         try {
             if($request->hasFile('contract_file')){
                 $file = $request->file('contract_file');
@@ -256,6 +259,18 @@ class ContractController extends Controller
                 }
 
                 $validatedData['meeting_notes'] = $filename;
+            }
+            
+            $contract = Contract::find($id);
+            $latestPenalty = $contract->amandemen()->latest()->first()?->amandemen_penalty ?? 0;
+            $latestPrice = $contract->amandemen()->latest()->first()?->amandemen_price ?? 0;
+
+            $validatedData['contract_penalty'] = $request->initial_contract_price * ($latestPenalty / 100);
+            $hasAmandemen = $contract->amandemen()->exists();
+            if ($hasAmandemen) {
+                $validatedData['contract_price'] = $latestPrice;
+            }else{
+                $validatedData['contract_price'] = $request->initial_contract_price;
             }
 
             $contract->update($validatedData);
