@@ -107,6 +107,8 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::get('/lumpsum_progress/contract/{id}', [Lumpsum_progressController::class, 'showByContract']);
     // AMANDEMEN
     Route::get('/amandemen/contract/{id}', [AmandemenController::class, 'showByContract']);
+    // CONTRACT
+    Route::get('/monitoring_contract', [ContractController::class, 'monitoring']);
     
 
 

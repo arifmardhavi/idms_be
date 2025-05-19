@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Contract;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -325,4 +326,107 @@ class ContractController extends Controller
             ], 500);
         }
     }
+
+
+
+    public function monitoring()
+    {
+        $today = Carbon::today();
+
+         $contracts = Contract::all();
+         $count = $contracts->count();
+
+        $blue = Contract::where('contract_status', 0)->count(); // kontrak selesai
+
+        $green = 0;
+        $yellow = 0;
+        $red = 0;
+        $active = 0;
+        $lumpsum = 0;
+        $unit_price = 0;
+
+        foreach ($contracts as $contract) {
+            // Skip kontrak yang sudah selesai (status 0) agar tidak dihitung ganda
+            if ($contract->contract_type == 1) {
+                $lumpsum++;
+            }else{
+                $unit_price++;
+            }
+            if ($contract->contract_status == 0) {
+                continue;
+            }
+
+            if ($contract->contract_status == 1) {
+                $active++;
+            }
+
+
+            $endDate = Carbon::parse($contract->contract_end_date);
+            $weeksDiff = $today->diffInWeeks($endDate, false); // false agar bisa negatif
+
+            if ($weeksDiff >= 4) {
+                $green++;
+            } elseif ($weeksDiff > 0 && $weeksDiff < 4) {
+                $yellow++;
+            } else {
+                $red++;
+            }
+        }
+
+        // monitoring progress pekerjaan 
+        $statusCounts = [
+            'blue' => 0,   // Kontrak selesai
+            'green' => 0,  // Deviasi 0%
+            'yellow' => 0, // Deviasi ≤ 20%
+            'red' => 0,  // Deviasi > 20%
+            'black' => 0,  // Belum upload amandemen
+        ];
+
+        foreach ($contracts as $contract) {
+            $color = $contract->monitoring_progress['color'];
+
+            switch ($color) {
+                case 'blue':
+                    $statusCounts['blue']++;
+                    break;
+                case 'green':
+                    $statusCounts['green']++;
+                    break;
+                case 'yellow':
+                    $statusCounts['yellow']++;
+                    break;
+                case 'red':
+                    $statusCounts['red']++;
+                    break;
+                case 'black':
+                    $statusCounts['black']++;
+                    break;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Monitoring durasi MPP berhasil.',
+            'data' => [
+                'total_contract' => $count, 
+                'total_active_contract' => $active,
+                'total_lumpsum_contract' => $lumpsum,
+                'total_unit_price_contract' => $unit_price,
+                'monitoring_durasi_mpp' => [
+                    'blue' => $blue,
+                    'green' => $green,
+                    'yellow' => $yellow,
+                    'red' => $red,
+                ],
+                'monitoring_progress_pekerjaan' => [
+                    'blue' => $statusCounts['blue'],
+                    'green' => $statusCounts['green'],
+                    'yellow' => $statusCounts['yellow'],
+                    'red' => $statusCounts['red'],
+                    'black' => $statusCounts['black'],
+                ],
+            ]
+        ], 200);
+    }
+
 }
