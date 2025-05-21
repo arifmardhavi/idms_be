@@ -305,7 +305,7 @@ class AmandemenController extends Controller
             $amandemenPrice = $request->input('amandemen_price');
             $principlePermit = $request->file('principle_permit_file');
             if ($contract && $amandemenPrice) {
-                $contractPrice = $contract->contract_price;
+                $contractPrice = $contract->initial_contract_price;
         
                 if ($contractPrice > 0) {
                     $increasePercentage = (($amandemenPrice - $contractPrice) / $contractPrice) * 100;
@@ -316,6 +316,24 @@ class AmandemenController extends Controller
                             'File principle permit wajib diunggah karena perubahan nilai amandemen naik lebih dari 10% dari nilai kontrak awal.'
                         );
                     }
+                }
+            }
+            if ($contract) {
+                $amandemenEndDate = $request->input('amandemen_end_date');
+        
+                if (!is_null($amandemenPrice) && $amandemenPrice <= $contract->initial_contract_price) {
+                    $validator->errors()->add(
+                        'amandemen_price',
+                        'Perubahan Nilai Amandemen tidak boleh lebih kecil dari nilai kontrak awal yaitu ' . number_format($contract->initial_contract_price, 0, ',', '.')
+                    );
+                }
+        
+                if (!is_null($amandemenEndDate) && $amandemenEndDate <= $contract->contract_date) {
+                    $formattedDate = Carbon::parse($contract->contract_date)->translatedFormat('d F Y'); // Contoh: 11 November 2026
+                    $validator->errors()->add(
+                        'amandemen_end_date',
+                        'Perubahan waktu Amandemen tidak boleh lebih awal dari tanggal kontrak yaitu ' . $formattedDate
+                    );
                 }
             }
         });
@@ -434,9 +452,18 @@ class AmandemenController extends Controller
                 if ($contract) {
                     $updated = false;
 
-                    if (!is_null($amandemen->amandemen_price)) {
-                        $contract->contract_price = $amandemen->amandemen_price;
-                        $updated = true;
+                    $inputPrice = $request->input('amandemen_price');
+
+                    if (!is_null($inputPrice)) {
+                        // Abaikan amandemen yang sedang diupdate
+                        $maxAmandemenPrice = Amandemen::where('contract_id', $amandemen->contract_id)
+                            ->where('id', '!=', $amandemen->id)
+                            ->max('amandemen_price') ?? 0;
+
+                        if ($inputPrice > $maxAmandemenPrice) {
+                            $contract->contract_price = $inputPrice;
+                            $updated = true;
+                        }
                     }
 
                     if (!is_null($amandemen->amandemen_end_date)) {
