@@ -40,6 +40,7 @@ class ContractController extends Controller
             'contract_start_date' => 'nullable|date|required_if:kom,1', 
             'contract_end_date' => 'nullable|date|required_if:kom,1', 
             'meeting_notes' => 'nullable|file|mimes:pdf|max:3072', 
+            'pengawas' => 'required|in:0,1',
             'contract_status' => 'required|in:0,1',
         ]);
         
@@ -53,6 +54,7 @@ class ContractController extends Controller
         $validatedData = $validator->validated();
         $validatedData['initial_contract_price'] = $request->contract_price;
         $validatedData['total_contract_price'] = $request->contract_price;
+        $validatedData['vendor_name'] = strtoupper($request->vendor_name);
 
         try {
             $file = $request->file('contract_file');
@@ -180,7 +182,8 @@ class ContractController extends Controller
             'kom' => 'required|in:0,1',
             'contract_start_date' => 'nullable|date|required_if:kom,1', 
             'contract_end_date' => 'nullable|date|required_if:kom,1', 
-            'meeting_notes' => 'nullable|file|mimes:pdf|max:3072',  
+            'meeting_notes' => 'nullable|file|mimes:pdf|max:3072',
+            'pengawas' => 'required|in:0,1',  
             'contract_status' => 'required|in:0,1',
         ]);
         
@@ -273,7 +276,7 @@ class ContractController extends Controller
             }else{
                 $validatedData['contract_price'] = $request->initial_contract_price;
             }
-
+            $validatedData['vendor_name'] = strtoupper($request->vendor_name);
             $contract->update($validatedData);
 
             return response()->json([
