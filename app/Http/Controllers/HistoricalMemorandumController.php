@@ -13,7 +13,7 @@ class HistoricalMemorandumController extends Controller
      */
     public function index()
     {
-        $historicalMemorandum = HistoricalMemorandum::with('tag_number')->get()
+        $historicalMemorandum = HistoricalMemorandum::with('unit','category','tag_number')->get()
         ->map(function ($item) {
             $data = $item->toArray();
             if ($item->tag_number === null) {
@@ -37,10 +37,13 @@ class HistoricalMemorandumController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'unit_id' => 'required',
+            'category_id' => 'required|exists:categories,id',
             'tag_number_id' => 'nullable|exists:tag_numbers,id',
-            'judul_memorandum' => 'required|string|max:255',
-            'jenis_memorandum' => 'required|in:0,1',
-            'jenis_pekerjaan' => 'required|in:0,1,2,3',
+            'no_dokumen' => 'required|string|max:255|unique:historical_memorandum,no_dokumen',
+            'perihal' => 'required|string|max:255',
+            'tipe_memorandum' => 'required',
+            'tanggal_terbit' => 'required|date',
             'memorandum_file' => 'required|file|mimes:pdf|max:30720', // 30 MB
         ]);
 
@@ -90,7 +93,7 @@ class HistoricalMemorandumController extends Controller
      */
     public function show(string $id)
     {
-        $historicalMemorandum = HistoricalMemorandum::with('tag_number')->find($id);
+        $historicalMemorandum = HistoricalMemorandum::with('unit','category','tag_number')->find($id);
 
         if (!$historicalMemorandum) {
             return response()->json([
@@ -126,10 +129,13 @@ class HistoricalMemorandumController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
+            'unit_id' => 'required',
+            'category_id' => 'required|exists:categories,id',
             'tag_number_id' => 'nullable|exists:tag_numbers,id',
-            'judul_memorandum' => 'required|string|max:255',
-            'jenis_memorandum' => 'required|in:0,1',
-            'jenis_pekerjaan' => 'required|in:0,1,2,3',
+            'no_dokumen' => 'required|string|max:255|unique:historical_memorandum,no_dokumen,' . $historicalMemorandum->id,
+            'perihal' => 'required|string|max:255',
+            'tipe_memorandum' => 'required',
+            'tanggal_terbit' => 'required|date',
             'memorandum_file' => 'nullable|file|mimes:pdf|max:30720', // 30 MB
         ]);
 

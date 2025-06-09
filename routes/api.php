@@ -76,6 +76,7 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     // Tag_number
     Route::get('/tagnumbers/type/{typeId}', [Tag_numberController::class, 'showByType']); // show tag_number by type_id
     Route::get('/tagnumbers/typeunit/{typeId}/{unitId}', [Tag_numberController::class, 'showByTypeUnit']); // show tag_number by type_id
+    Route::get('/tagnumbers/unit/{unitId}', [Tag_numberController::class, 'showByUnit']); // show tag_number by type_id
     Route::get('/tagnumbers/tag_number/{id}', [Tag_numberController::class, 'showByTagNumberId']); // show tag_number by ID with unit
     Route::get('/tagname', [Tag_numberController::class, 'showByTagNumber']); // show tag_number by tag_number
     Route::put('/tagnumbers/nonactive/{id}', [Tag_numberController::class, 'nonactive']); // nonactive tag_number

@@ -114,6 +114,22 @@ class Tag_numberController extends Controller
             'data' => $tag_numbers,
         ], 200);
     }
+    function showByUnit($unitId) {
+        $tag_numbers = Tag_number::with('unit')->where('unit_id', $unitId)->where('status', 1)->get();
+    
+        if ($tag_numbers->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tag numbers not found.',
+            ], 404);
+        }
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Tag numbers retrieved successfully.',
+            'data' => $tag_numbers,
+        ], 200);
+    }
     
 
     function showByTagNumber(Request $request) {
