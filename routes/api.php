@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CoiController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\HistoricalMemorandumController;
+use App\Http\Controllers\LampiranMemoController;
 use App\Http\Controllers\Lumpsum_progressController;
 use App\Http\Controllers\PloController;
 use App\Http\Controllers\ReportPloController;
@@ -53,6 +54,7 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::apiResource('lumpsum_progress', Lumpsum_progressController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('report_plo', ReportPloController::class);
+    Route::apiResource('lampiran_memo', LampiranMemoController::class);
     Route::apiResource('amandemen', AmandemenController::class);
     Route::apiResource('historical_memorandum', HistoricalMemorandumController::class);
    
@@ -112,6 +114,8 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::get('/amandemen/contract/{id}', [AmandemenController::class, 'showByContract']);
     // CONTRACT
     Route::get('/monitoring_contract', [ContractController::class, 'monitoring']);
+    // HISTORICAL MEMORANDUM LAMPIRAN
+    Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId']);
     
 
 

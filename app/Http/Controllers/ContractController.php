@@ -32,15 +32,15 @@ class ContractController extends Controller
             'vendor_name' => 'required|string|max:255' , 
             'no_contract'=> 'required|string|max:200|unique:contracts,no_contract', 
             'contract_name' => 'required|string|max:255',
-            'contract_type' => 'required|in:1,2', 
-            'contract_date' => 'required|date', 
+            'contract_type' => 'required|in:1,2,3', 
+            'contract_date' => 'nullable|date|required_if:contract_type,!=3', // contract_date is required if contract_type is not 3
             'contract_price' => 'required|integer' , 
             'contract_file' => 'required|file|mimes:pdf|max:30720',
-            'kom' => 'required|in:0,1',
+            'kom' => 'nullable|in:0,1|required_if:contract_type,!=3', // Kom is required if contract_type is not 3
             'contract_start_date' => 'nullable|date|required_if:kom,1', 
             'contract_end_date' => 'nullable|date|required_if:kom,1', 
             'meeting_notes' => 'nullable|file|mimes:pdf|max:3072', 
-            'pengawas' => 'required|in:0,1',
+            'pengawas' => 'required|in:0,1,2',
             'contract_status' => 'required|in:0,1',
         ]);
         
@@ -55,6 +55,7 @@ class ContractController extends Controller
         $validatedData['initial_contract_price'] = $request->contract_price;
         $validatedData['total_contract_price'] = $request->contract_price;
         $validatedData['vendor_name'] = strtoupper($request->vendor_name);
+        $validatedData['contract_name'] = strtoupper($request->contract_name);
 
         try {
             $file = $request->file('contract_file');
@@ -175,15 +176,16 @@ class ContractController extends Controller
             'vendor_name' => 'required|string|max:255' , 
             'no_contract'=> 'required|string|max:200|unique:contracts,no_contract,'  . $id, 
             'contract_name' => 'required|string|max:255',
-            'contract_type' => 'required|in:1,2', 
-            'contract_date' => 'required|date', 
-            'initial_contract_price' => 'required|integer' , 
+            'contract_type' => 'required|in:1,2,3', 
+            'contract_date' => 'nullable|date|required_if:contract_type,!=3', // contract_date is required if contract_type is not 3
+            'contract_price' => 'nullable|integer|required_if:contract_type,3', // contract_price is required if contract_type is not 3, 
+            'initial_contract_price' => 'required|integer',
             'contract_file' => 'nullable|file|mimes:pdf|max:30720',
-            'kom' => 'required|in:0,1',
+            'kom' => 'nullable|in:0,1|required_if:contract_type,!=3', // Kom is required if contract_type is not 3
             'contract_start_date' => 'nullable|date|required_if:kom,1', 
             'contract_end_date' => 'nullable|date|required_if:kom,1', 
             'meeting_notes' => 'nullable|file|mimes:pdf|max:3072',
-            'pengawas' => 'required|in:0,1',  
+            'pengawas' => 'required|in:0,1,2',  
             'contract_status' => 'required|in:0,1',
         ]);
         
@@ -196,7 +198,9 @@ class ContractController extends Controller
 
         $validatedData = $validator->validated();
         $validatedData['contract_penalty'] = ($request->initial_contract_price * ((Contract::find($id)->amandemen()->latest()->first()?->amandemen_penalty ?? 0) / 100))?? 0;
-        // console.log($validatedData['contract_penalty']);
+        if ($request->contract_type == 3){
+            $validatedData['contract_date'] = null; 
+        }      // console.log($validatedData['contract_penalty']);
         // dd($validatedData);
         try {
             if($request->hasFile('contract_file')){
@@ -277,6 +281,7 @@ class ContractController extends Controller
                 $validatedData['contract_price'] = $request->initial_contract_price;
             }
             $validatedData['vendor_name'] = strtoupper($request->vendor_name);
+            $validatedData['contract_name'] = strtoupper($request->contract_name);
             $contract->update($validatedData);
 
             return response()->json([
