@@ -17,6 +17,103 @@ class Contract extends Model
         'sisa_nilai',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($contract) {
+            // Hapus file kontrak jika ada
+            if ($contract->contract_file) {
+                $filePath = public_path('contract/' . $contract->contract_file);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+            // Hapus meeting notes yang terkait
+            if ($contract->meeting_notes) {
+                $filePath = public_path('contract/meeting_notes/' . $contract->meeting_notes);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+            // Hapus file Lumpsum Progress jika ada (hanya untuk kontrak lumpsum)
+            foreach ($contract->lumpsum_progress as $lumpsumProgress) {
+                if ($lumpsumProgress->progress_file) {
+                    $filePath = public_path('contract/lumpsum/progress/' . $lumpsumProgress->progress_file);
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+            }
+            // Hapus semua SPK yang terkait
+            foreach ($contract->spk as $spk) {
+                // Hapus file SPK jika ada
+                if ($spk->spk_file) {
+                    $filePath = public_path('contract/spk/' . $spk->spk_file);
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+                // Hapus file invoice SPK jika ada
+                if ($spk->invoice_file) {
+                    $filePath = public_path('contract/spk/invoice/' . $spk->invoice_file);
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+                // Hapus semua progress SPK yang terkait
+                foreach ($spk->spk_progress as $progress) {
+                    if ($progress->progress_file) {
+                        $filePath = public_path('contract/spk/progress/' . $progress->progress_file);
+                        if (file_exists($filePath)) {
+                            unlink($filePath);
+                        }
+                    }
+                }
+                // Hapus SPK itu sendiri
+                $spk->delete();
+            }
+            // Hapus semua termin yang terkait
+            foreach ($contract->termin as $termin) {
+                // Hapus semua term billing yang terkait
+                foreach ($termin->termBilling as $termBilling) {
+                    if ($termBilling->payment_document) {
+                        $filePath = public_path('contract/payment/' . $termBilling->payment_document);
+                        if (file_exists($filePath)) {
+                            unlink($filePath);
+                        }
+                    }
+                }
+                // Hapus termin itu sendiri
+                $termin->delete();
+            }
+            // Hapus semua amandemen yang terkait
+            foreach ($contract->amandemen as $amandemen) {
+                if ($amandemen->ba_agreement_file) {
+                    $filePath = public_path('contract/amandemen/ba_agreement/' . $amandemen->ba_agreement_file);
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+                if ($amandemen->result_amandemen_file) {
+                    $filePath = public_path('contract/amandemen/result_amandemen/' . $amandemen->result_amandemen_file);
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+                if ($amandemen->principle_permit_file) {
+                    $filePath = public_path('contract/amandemen/principle_permit/' . $amandemen->principle_permit_file);
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+                // Hapus amandemen itu sendiri
+                $amandemen->delete();
+            }
+
+        });
+    }
+
     public function termin()
     {
         return $this->hasMany(Termin::class);

@@ -198,10 +198,7 @@ class HistoricalMemorandumController extends Controller
         }
 
         try {
-            // Hapus file jika ada
-            if (file_exists(public_path("historical_memorandum/" .$historicalMemorandum->memorandum_file))) {
-                unlink(public_path("historical_memorandum/" .$historicalMemorandum->memorandum_file));
-            }
+            
             $historicalMemorandum->delete();
             return response()->json([
                 'success' => true,

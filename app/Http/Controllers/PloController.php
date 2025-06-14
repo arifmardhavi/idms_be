@@ -329,30 +329,7 @@ class PloController extends Controller
         }
 
         try {
-            if ($plo->plo_certificate) {
-                $path = public_path('plo/certificates/' . $plo->plo_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
-            }
-            if ($plo->plo_old_certificate) {
-                $path_last = public_path('plo/certificates/' . $plo->plo_old_certificate);
-                if (file_exists($path_last)) {
-                    unlink($path_last); // Hapus file
-                }
-            }
-            if ($plo->rla_certificate) {
-                $path = public_path('plo/rla/' . $plo->rla_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
-            }
-            if ($plo->rla_old_certificate) {
-                $path = public_path('plo/rla/' . $plo->rla_old_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
-            }            
+                        
             $plo->delete();
             return response()->json([
                 'success' => true,

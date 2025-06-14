@@ -6,6 +6,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CoiController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\DatasheetController;
+use App\Http\Controllers\EngineeringDataController;
+use App\Http\Controllers\GaDrawingController;
 use App\Http\Controllers\HistoricalMemorandumController;
 use App\Http\Controllers\LampiranMemoController;
 use App\Http\Controllers\Lumpsum_progressController;
@@ -57,6 +60,9 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::apiResource('lampiran_memo', LampiranMemoController::class);
     Route::apiResource('amandemen', AmandemenController::class);
     Route::apiResource('historical_memorandum', HistoricalMemorandumController::class);
+    Route::apiResource('datasheet', DatasheetController::class);
+    Route::apiResource('ga_drawing', GaDrawingController::class);
+    Route::apiResource('engineering_data', EngineeringDataController::class);
    
 
     // Unit

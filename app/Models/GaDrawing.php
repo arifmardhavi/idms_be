@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class GaDrawing extends Model
+{
+    use HasFactory;
+    protected $table = 'ga_drawings';
+    protected $fillable = [
+        'engineering_data_id',
+        'drawing_file',
+    ];
+    public function engineeringData()
+    {
+        return $this->belongsTo(EngineeringData::class);
+    }
+}
