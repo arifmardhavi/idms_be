@@ -60,6 +60,7 @@ class DatasheetController extends Controller
             ], 422);
         }
         $validatedData = $validator->validated();
+        // dd($validatedData);
         try {
             if ($request->hasFile('datasheet_file')) {
                 $file = $request->file('datasheet_file');
@@ -68,11 +69,12 @@ class DatasheetController extends Controller
                 $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
                 $version = 0; // Awal versi
                 $tag_number = EngineeringData::find($validatedData['engineering_data_id'])->tagNumber->tag_number; // Ambil tag number dari engineering data
-                $filename =  $originalName . '_' . 'datasheet_' . $tag_number . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
+                $cleanTagNumber = str_replace('/00', '', $tag_number); // hasil: '1-C-25'
+                $filename =  $originalName . '_' . 'datasheet_' . $cleanTagNumber . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
                 // $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
                 while (file_exists(public_path("engineering_data/datasheet/".$filename))) {
                     $version++; // Increment versi
-                    $filename =  $originalName . '_' . 'datasheet_' . $tag_number . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru 
+                    $filename =  $originalName . '_' . 'datasheet_' . $cleanTagNumber . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru 
                 }
                 $path = $file->move(public_path('engineering_data/datasheet'), $filename);
                 if(!$path){
@@ -82,7 +84,20 @@ class DatasheetController extends Controller
                     ], 422);
                 }  
                 $validatedData['datasheet_file'] = $filename;
-            }    
+            }
+            $datasheet = Datasheet::create($validatedData);
+            if ($datasheet) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Datasheet created successfully.',
+                    'data' => $datasheet,
+                ], 201);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create Datasheet.',
+                ], 500);
+            }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

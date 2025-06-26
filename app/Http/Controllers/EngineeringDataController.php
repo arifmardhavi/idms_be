@@ -15,7 +15,7 @@ class EngineeringDataController extends Controller
      */
     public function index()
     {
-        $engineering_data = EngineeringData::orderBy('id', 'desc')->get();
+        $engineering_data = EngineeringData::with('tagNumber')->orderBy('id', 'desc')->get();
         return response()->json([
             'success' => true,
             'message' => 'Engineering Data retrieved successfully.',

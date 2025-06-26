@@ -12,6 +12,18 @@ class EngineeringData extends Model
     protected $fillable = [
         'tag_number_id',
     ];
+    protected $appends = [
+        'ga_drawings_count',
+        'datasheets_count',
+    ];
+    public function getGaDrawingsCountAttribute()
+    {
+        return $this->gaDrawings()->count();
+    }
+    public function getDatasheetsCountAttribute()
+    {
+        return $this->datasheets()->count();
+    }
 
     public function tagNumber()
     {

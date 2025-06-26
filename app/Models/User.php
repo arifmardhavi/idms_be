@@ -73,4 +73,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->toArray();
     }
+
+    public function contracts()
+    {
+        return $this->belongsToMany(Contract::class)->withTimestamps();
+    }
 }

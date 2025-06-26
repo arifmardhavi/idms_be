@@ -13,7 +13,7 @@ class HistoricalMemorandumController extends Controller
      */
     public function index()
     {
-        $historicalMemorandum = HistoricalMemorandum::with('unit','category','tag_number')->get()
+        $historicalMemorandum = HistoricalMemorandum::orderBy('tanggal_terbit', 'desc')->with('unit','category','tag_number')->get()
         ->map(function ($item) {
             $data = $item->toArray();
             if ($item->tag_number === null) {

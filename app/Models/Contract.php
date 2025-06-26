@@ -15,6 +15,8 @@ class Contract extends Model
         'durasi_mpp',
         'monitoring_progress',
         'sisa_nilai',
+        'actual_progress',
+        'plan_progress',
     ];
 
     protected static function boot()
@@ -112,6 +114,11 @@ class Contract extends Model
             }
 
         });
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
     }
 
     public function termin()
@@ -313,6 +320,23 @@ class Contract extends Model
             'sisa' => $sisaNilai,
             'color' => $color
         ];
+    }
+
+    public function getActualProgressAttribute()
+    {
+        if ($this->contract_type == 2) {
+            return $this->latestActualProgressSpk() ?? 0; // asumsikan return persentase 0-100
+        } else {
+            return $this->lumpsum_progress()->latest()->value('actual_progress') ?? 0; // asumsikan return persentase 0-100
+        }
+    }
+    public function getPlanProgressAttribute()
+    {
+        if ($this->contract_type == 2) {
+            return $this->latestPlanProgressSpk() ?? 0; // asumsikan return persentase 0-100
+        } else {
+            return $this->lumpsum_progress()->latest()->value('plan_progress') ?? 0; // asumsikan return persentase 0-100
+        }
     }
 
 

@@ -122,7 +122,11 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::get('/monitoring_contract', [ContractController::class, 'monitoring']);
     // HISTORICAL MEMORANDUM LAMPIRAN
     Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId']);
-    
+    // GA DRAWING
+    Route::get('/ga_drawing/engineering/{id}', [GaDrawingController::class, 'showWithEngineeringDataId']);
+    // DATASHEET
+    Route::get('/datasheet/engineering/{id}', [DatasheetController::class, 'showWithEngineeringDataId']);
 
-
-// Route::post('/login', [UserController::class, 'login']);
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/contracts/user', [ContractController::class, 'contractsByUser']);
+    });

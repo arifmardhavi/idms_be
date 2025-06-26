@@ -15,11 +15,25 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
+        $users = User::with('contracts:id')->get();
+        $data = $users->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'fullname' => $user->fullname,
+                'email' => $user->email,
+                'username' => $user->username,
+                'level_user' => $user->level_user,
+                'status' => $user->status,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+                // 👇 hanya ambil ID dari kontrak
+                'contracts' => $user->contracts->pluck('id')->toArray(),
+            ];
+        });
         return response()->json([
             'success' => true,
             'message' => 'Users retrieved successfully.',
-            'data' => $users,
+            'data' => $data,
         ], 200);
     }
 
@@ -33,8 +47,10 @@ class UserController extends Controller
             'email' => 'required|string|email|unique:users,email',
             'username' => 'required|string|unique:users,username',
             'password' => 'required|string|min:6',
-            'level_user' => 'required|integer',
-            'status' => 'required|in:0,1',	
+            'level_user' => 'required|numeric|in:1,2,3', // 1: Admin, 2: User, 3: Vendor
+            'status' => 'required|in:0,1', // 0: Nonaktif, 1: Aktif
+            'contract_id' => 'nullable|array|required_if:level_user,3', // support array
+            'contract_id.*' => 'exists:contracts,id', // validasi setiap ID kontrak
         ]);
 
         if ($validator->fails()) {
@@ -46,13 +62,22 @@ class UserController extends Controller
         }
 
         $validatedData = $validator->validated();
+         // Ambil contract_id dari request jika ada
+        $contractIds = $validatedData['contract_id'] ?? [];
+
+        // Hapus contract_id dari array utama agar tidak dimasukkan ke kolom users
+        unset($validatedData['contract_id']);
 
         $user = User::create($validatedData);
+        // Hubungkan dengan kontrak (jika ada)
+        if (!empty($contractIds)) {
+            $user->contracts()->attach($contractIds); // bisa juga pakai sync()
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'User created successfully.',
-            'data' => $user,
+            'data' => $user->load('contracts'),
         ], 201);
     }
 
@@ -92,12 +117,14 @@ class UserController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'fullname' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users,email,' . $id,
-            'username' => 'required|string|unique:users,username,' . $id,
+            'fullname' => 'sometimes|string|max:255',
+            'email' => 'sometimes|string|email|unique:users,email,' . $id,
+            'username' => 'sometimes|string|unique:users,username,' . $id,
             'password' => 'nullable|string|min:6',
-            'level_user' => 'required|integer',
-            'status' => 'required|in:0,1',	
+            'level_user' => 'sometimes|in:1,2,3',
+            'status' => 'sometimes|in:0,1',
+            'contract_id' => 'nullable|array|required_if:level_user,3',
+            'contract_id.*' => 'exists:contracts,id',
         ]);
 
         if ($validator->fails()) {
@@ -107,15 +134,46 @@ class UserController extends Controller
                 'errors' => $validator->errors(),
             ], 422);
         }
+
         $validatedData = $validator->validated();
+
+        // Hash password jika dikirim
+        if (!empty($validatedData['password'])) {
+            $validatedData['password'] = Hash::make($validatedData['password']);
+        }
+
+        // Ambil contract_id yang sudah divalidasi
+        $contractIds = array_filter(
+            array_unique(array_map('intval', $validatedData['contract_id'] ?? []))
+        );
+
+        unset($validatedData['contract_id']); // Hapus dari mass update
+
+        // Simpan level_user lama untuk membandingkan perubahan
+        $oldLevelUser = $user->level_user;
+        $newLevelUser = $validatedData['level_user'] ?? $oldLevelUser;
+
+        // Update user
         $user->update($validatedData);
+
+        // Tangani kontrak berdasarkan perubahan level_user
+        if ($newLevelUser == 3) {
+            // Jika vendor, sinkronkan kontrak (boleh kosong)
+            $user->contracts()->sync($contractIds);
+        } elseif ($oldLevelUser == 3 && $newLevelUser != 3) {
+            // Jika sebelumnya vendor, dan sekarang bukan vendor, hapus kontrak
+            $user->contracts()->sync([]);
+        }
+        // Jika sebelumnya dan sekarang bukan vendor, tidak perlu apa-apa
 
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully.',
-            'data' => $user,
+            'data' => $user->load('contracts:id'),
         ], 200);
     }
+
+
 
     /**
      * Remove the specified user from storage.

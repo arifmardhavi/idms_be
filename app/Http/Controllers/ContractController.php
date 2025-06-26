@@ -23,6 +23,29 @@ class ContractController extends Controller
     }
 
     /**
+     * Display contracts related to the logged-in vendor user.
+     */
+    public function contractsByUser(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not authenticated.',
+            ], 401);
+        }
+
+        // Ambil contract yang terkait dengan user vendor
+        $contracts = $user->contracts()->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Contracts retrieved successfully for user.',
+            'data' => $contracts,
+        ], 200);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -275,7 +298,8 @@ class ContractController extends Controller
 
             $validatedData['contract_penalty'] = $request->initial_contract_price * ($latestPenalty / 100);
             $hasAmandemen = $contract->amandemen()->exists();
-            if ($hasAmandemen) {
+            $hasAmandemenPrice = $contract->amandemen()->whereNotNull('amandemen_price')->exists();
+            if ($hasAmandemen && $hasAmandemenPrice) {
                 $validatedData['contract_price'] = $latestPrice;
             }else{
                 $validatedData['contract_price'] = $request->initial_contract_price;
