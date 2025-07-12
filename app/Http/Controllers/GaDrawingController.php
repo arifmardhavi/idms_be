@@ -48,7 +48,8 @@ class GaDrawingController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'engineering_data_id' => 'required|exists:engineering_data,id',
-            'drawing_file' => 'required|file|mimes:pdf,jpg,jpeg,png,svg,webp|max:20480',
+            'drawing_file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:204800',
+            'date_drawing' => 'nullable|date', // Tambahkan validasi untuk tanggal drawing
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -136,7 +137,8 @@ class GaDrawingController extends Controller
         }
         $validator = Validator::make($request->all(), [
             'engineering_data_id' => 'required|exists:engineering_data,id',
-            'drawing_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,svg,webp|max:20480',
+            'drawing_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:20480',
+            'date_drawing' => 'nullable|date', // Tambahkan validasi untuk tanggal drawing
         ]);
         if ($validator->fails()) {
             return response()->json([

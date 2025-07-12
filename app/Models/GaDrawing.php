@@ -12,6 +12,7 @@ class GaDrawing extends Model
     protected $fillable = [
         'engineering_data_id',
         'drawing_file',
+        'date_drawing', 
     ];
     public function engineeringData()
     {

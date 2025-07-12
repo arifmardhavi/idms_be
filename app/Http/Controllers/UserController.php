@@ -15,7 +15,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('contracts:id')->get();
+        $users = User::with('contracts:id')->orderBy('id', 'desc')->get();
         $data = $users->map(function ($user) {
             return [
                 'id' => $user->id,
@@ -26,8 +26,7 @@ class UserController extends Controller
                 'status' => $user->status,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
-                // 👇 hanya ambil ID dari kontrak
-                'contracts' => $user->contracts->pluck('id')->toArray(),
+                'contracts' => $user->contracts->pluck('id')->toArray(), // hanya ambil ID dari kontrak
             ];
         });
         return response()->json([
@@ -47,7 +46,7 @@ class UserController extends Controller
             'email' => 'required|string|email|unique:users,email',
             'username' => 'required|string|unique:users,username',
             'password' => 'required|string|min:6',
-            'level_user' => 'required|numeric|in:1,2,3', // 1: Admin, 2: User, 3: Vendor
+            'level_user' => 'required|numeric|in:1,2,3,4,5', // 1: Admin, 2: User, 3: Vendor, 4: viewer all, 5: viewer
             'status' => 'required|in:0,1', // 0: Nonaktif, 1: Aktif
             'contract_id' => 'nullable|array|required_if:level_user,3', // support array
             'contract_id.*' => 'exists:contracts,id', // validasi setiap ID kontrak
@@ -121,10 +120,9 @@ class UserController extends Controller
             'email' => 'sometimes|string|email|unique:users,email,' . $id,
             'username' => 'sometimes|string|unique:users,username,' . $id,
             'password' => 'nullable|string|min:6',
-            'level_user' => 'sometimes|in:1,2,3',
+            'level_user' => 'sometimes|in:1,2,3,4,5',
             'status' => 'sometimes|in:0,1',
-            'contract_id' => 'nullable|array|required_if:level_user,3',
-            'contract_id.*' => 'exists:contracts,id',
+            'contract_id' => 'nullable|string|required_if:level_user,3',
         ]);
 
         if ($validator->fails()) {
@@ -137,15 +135,8 @@ class UserController extends Controller
 
         $validatedData = $validator->validated();
 
-        // Hash password jika dikirim
-        if (!empty($validatedData['password'])) {
-            $validatedData['password'] = Hash::make($validatedData['password']);
-        }
-
         // Ambil contract_id yang sudah divalidasi
-        $contractIds = array_filter(
-            array_unique(array_map('intval', $validatedData['contract_id'] ?? []))
-        );
+        $contractIds = explode(',', $validatedData['contract_id']) ?? [];
 
         unset($validatedData['contract_id']); // Hapus dari mass update
 
@@ -160,7 +151,7 @@ class UserController extends Controller
         if ($newLevelUser == 3) {
             // Jika vendor, sinkronkan kontrak (boleh kosong)
             $user->contracts()->sync($contractIds);
-        } elseif ($oldLevelUser == 3 && $newLevelUser != 3) {
+        } elseif ($oldLevelUser == 3 && $newLevelUser != 3) {   
             // Jika sebelumnya vendor, dan sekarang bukan vendor, hapus kontrak
             $user->contracts()->sync([]);
         }

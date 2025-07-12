@@ -48,7 +48,7 @@ class LampiranMemoController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'historical_memorandum_id' => 'required|exists:historical_memorandum,id',
-            'lampiran_memo' => 'required|file|mimes:pdf,doc,docx,txt,xls,xlsx,csv,ppt,pptx,jpg,jpeg,png,webp|max:30720',
+            'lampiran_memo' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:20480',
         ]);
 
         if ($validator->fails()) {

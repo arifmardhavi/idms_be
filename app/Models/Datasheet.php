@@ -12,6 +12,7 @@ class Datasheet extends Model
     protected $fillable = [
         'engineering_data_id',
         'datasheet_file',
+        'date_datasheet',
     ];
     public function engineeringData()
     {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\HistoricalMemorandum;
+use App\Models\Tag_number;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -13,12 +14,20 @@ class HistoricalMemorandumController extends Controller
      */
     public function index()
     {
-        $historicalMemorandum = HistoricalMemorandum::orderBy('tanggal_terbit', 'desc')->with('unit','category','tag_number')->get()
+        $historicalMemorandum = HistoricalMemorandum::orderBy('tanggal_terbit', 'desc')->with('unit','category')->get()
         ->map(function ($item) {
             $data = $item->toArray();
-            if ($item->tag_number === null) {
-                unset($data['tag_number']);
+
+            // Parse tag_number_id string into array of IDs
+            if (!empty($item->tag_number_id)) {
+                $tagNumberIds = explode(',', $item->tag_number_id);
+                // Query tag numbers by IDs
+                $tagNumbers = Tag_number::whereIn('id', $tagNumberIds)->pluck('tag_number')->toArray();
+                $data['tag_numbers'] = $tagNumbers;
+            } else {
+                $data['tag_numbers'] = [];
             }
+
             return $data;
         });
 
@@ -39,7 +48,7 @@ class HistoricalMemorandumController extends Controller
         $validator = Validator::make($request->all(), [
             'unit_id' => 'required',
             'category_id' => 'required|exists:categories,id',
-            'tag_number_id' => 'nullable|exists:tag_numbers,id',
+            'tag_number_id' => 'nullable|string',
             'no_dokumen' => 'required|string|max:255|unique:historical_memorandum,no_dokumen',
             'perihal' => 'required|string|max:255',
             'tipe_memorandum' => 'required',
@@ -93,7 +102,7 @@ class HistoricalMemorandumController extends Controller
      */
     public function show(string $id)
     {
-        $historicalMemorandum = HistoricalMemorandum::with('unit','category','tag_number')->find($id);
+        $historicalMemorandum = HistoricalMemorandum::with('unit','category')->find($id);
 
         if (!$historicalMemorandum) {
             return response()->json([
@@ -102,9 +111,14 @@ class HistoricalMemorandumController extends Controller
             ], 404);
         }
 
-        // Sembunyikan relasi jika null
-        if (is_null($historicalMemorandum->tag_number)) {
-            $historicalMemorandum->makeHidden(['tag_number']);
+        // Parse tag_number_id string into array of IDs
+        if (!empty($historicalMemorandum->tag_number_id)) {
+            $tagNumberIds = explode(',', $historicalMemorandum->tag_number_id);
+            // Query tag numbers by IDs
+            $tagNumbers = \App\Models\Tag_number::whereIn('id', $tagNumberIds)->pluck('tag_number')->toArray();
+            $historicalMemorandum->tag_numbers = $tagNumbers;
+        } else {
+            $historicalMemorandum->tag_numbers = [];
         }
 
         return response()->json([
@@ -131,7 +145,7 @@ class HistoricalMemorandumController extends Controller
         $validator = Validator::make($request->all(), [
             'unit_id' => 'required',
             'category_id' => 'required|exists:categories,id',
-            'tag_number_id' => 'nullable|exists:tag_numbers,id',
+            'tag_number_id' => 'nullable|string',
             'no_dokumen' => 'required|string|max:255|unique:historical_memorandum,no_dokumen,' . $historicalMemorandum->id,
             'perihal' => 'required|string|max:255',
             'tipe_memorandum' => 'required',
