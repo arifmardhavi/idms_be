@@ -48,7 +48,8 @@ class LampiranMemoController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'historical_memorandum_id' => 'required|exists:historical_memorandum,id',
-            'lampiran_memo' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:20480',
+            'lampiran_memo' => 'required|array',
+            'lampiran_memo.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:204800',
         ]);
 
         if ($validator->fails()) {
@@ -59,49 +60,72 @@ class LampiranMemoController extends Controller
             ], 422);
         }
 
-        $validatedData = $validator->validated();
+        if (count($request->file('lampiran_memo')) > 10) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Maksimal upload 10 file.',
+            ], 422);
+        }
+
         try {
-            if ($request->hasFile('lampiran_memo')) {
-                $file = $request->file('lampiran_memo');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
-                while (file_exists(public_path("historical_memorandum/lampiran/".$filename))) {
-                    $version++; // Increment versi
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru
+            $result = [];
+            $failedFiles = [];
+
+            foreach ($request->file('lampiran_memo') as $file) {
+                $originalName = $file->getClientOriginalName();
+
+                try {
+                    $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
+                    $extension = $file->getClientOriginalExtension();
+                    $dateNow = date('dmY');
+                    $version = 0;
+
+                    $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
+                    while (file_exists(public_path("historical_memorandum/lampiran/" . $filename))) {
+                        $version++;
+                        $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
+                    }
+
+                    $path = $file->move(public_path('historical_memorandum/lampiran'), $filename);
+                    if (!$path) {
+                        $failedFiles[] = [
+                            'name' => $originalName,
+                            'error' => 'Gagal memindahkan file ke direktori tujuan.'
+                        ];
+                        continue;
+                    }
+
+                    $lampiran = LampiranMemo::create([
+                        'historical_memorandum_id' => $request->historical_memorandum_id,
+                        'lampiran_memo' => $filename,
+                    ]);
+
+                    $result[] = $lampiran;
+
+                } catch (\Throwable $fileError) {
+                    $failedFiles[] = [
+                        'name' => $originalName,
+                        'error' => $fileError->getMessage()
+                    ];
                 }
-                $path = $file->move(public_path('historical_memorandum/lampiran'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Lampiran Memorandum failed upload.',
-                    ], 422);
-                }  
-                $validatedData['lampiran_memo'] = $filename;
             }
-            $lampiranMemo = LampiranMemo::create($validatedData);
-            if($lampiranMemo){
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Lampiran Memorandum created successfully.',
-                    'data' => $lampiranMemo,
-                ], 201);
-            }else{
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to create Lampiran Memorandum.',
-                ], 422);
-            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Upload selesai.',
+                'data' => $result,
+                'failed_files' => $failedFiles,
+            ], 201);
+
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create Lampiran Memorandum.',
+                'message' => 'Gagal upload lampiran.',
                 'errors' => $e->getMessage(),
             ], 500);
         }
     }
+
 
     /**
      * Display the specified resource.

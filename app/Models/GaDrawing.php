@@ -10,6 +10,7 @@ class GaDrawing extends Model
     use HasFactory;
     protected $table = 'ga_drawings';
     protected $fillable = [
+        'no_dokumen',
         'engineering_data_id',
         'drawing_file',
         'date_drawing', 

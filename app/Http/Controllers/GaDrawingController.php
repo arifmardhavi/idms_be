@@ -47,9 +47,11 @@ class GaDrawingController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'no_dokumen' => 'nullable|string|max:255|unique:ga_drawings,no_dokumen', // Validasi no_dokumen unik
             'engineering_data_id' => 'required|exists:engineering_data,id',
-            'drawing_file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:204800',
             'date_drawing' => 'nullable|date', // Tambahkan validasi untuk tanggal drawing
+            'drawing_file' => 'required|array',
+            'drawing_file.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:204800',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -58,48 +60,70 @@ class GaDrawingController extends Controller
                 'errors' => $validator->errors(),
             ], 422);
         }
-        $validatedData = $validator->validated();
-
-        try{
-            if ($request->hasFile('drawing_file')) {
-                $file = $request->file('drawing_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
-                while (file_exists(public_path("engineering_data/ga_drawing/".$filename))) {
-                    $version++; // Increment versi
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru
-                }
-                $path = $file->move(public_path('engineering_data/ga_drawing'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'GA Drawing failed upload.',
-                    ], 422);
-                }  
-                $validatedData['drawing_file'] = $filename;
-            }
-            
-            $gaDrawing = GaDrawing::create($validatedData);
-            if ($gaDrawing) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'GA Drawing created successfully.',
-                    'data' => $gaDrawing,
-                ], 201);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to create GA Drawing.',
-                ], 500);
-            }
-        } catch (\Exception $e) {
+        if (count($request->file('drawing_file')) > 10) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to upload GA Drawing file.',
-                'error' => $e->getMessage(),
+                'message' => 'Maksimal upload 10 file.',
+            ], 422);
+        }
+
+        try {
+            $result = [];
+            $failedFiles = [];
+
+            foreach ($request->file('drawing_file') as $file) {
+                $originalName = $file->getClientOriginalName();
+
+                try {
+                    $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
+                    $extension = $file->getClientOriginalExtension();
+                    $dateNow = date('dmY');
+                    $version = 0;
+
+                    $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
+                    while (file_exists(public_path("engineering_data/ga_drawing/" . $filename))) {
+                        $version++;
+                        $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
+                    }
+
+                    $path = $file->move(public_path('engineering_data/ga_drawing'), $filename);
+                    if (!$path) {
+                        $failedFiles[] = [
+                            'name' => $originalName,
+                            'error' => 'Gagal memindahkan file ke direktori tujuan.'
+                        ];
+                        continue;
+                    }
+
+                    $drawing = GaDrawing::create([
+                        'engineering_data_id' => $request->engineering_data_id,
+                        'no_dokumen' => $request->no_dokumen,
+                        'date_drawing' => $request->date_drawing,
+                        'drawing_file' => $filename,
+                    ]);
+
+                    $result[] = $drawing;
+
+                } catch (\Throwable $fileError) {
+                    $failedFiles[] = [
+                        'name' => $originalName,
+                        'error' => $fileError->getMessage()
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Upload selesai.',
+                'data' => $result,
+                'failed_files' => $failedFiles,
+            ], 201);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal upload drawing.',
+                'errors' => $e->getMessage(),
             ], 500);
         }
     }
@@ -136,6 +160,7 @@ class GaDrawingController extends Controller
             ], 404);
         }
         $validator = Validator::make($request->all(), [
+            'no_dokumen' => 'nullable|string|max:255|unique:ga_drawings,no_dokumen,' . $id, // Validasi no_dokumen unik kecuali untuk ID yang sama
             'engineering_data_id' => 'required|exists:engineering_data,id',
             'drawing_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:20480',
             'date_drawing' => 'nullable|date', // Tambahkan validasi untuk tanggal drawing

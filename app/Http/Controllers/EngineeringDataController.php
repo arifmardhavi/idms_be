@@ -102,7 +102,7 @@ class EngineeringDataController extends Controller
      */
     public function show(string $id)
     {
-        $engineering_data = EngineeringData::find($id);
+        $engineering_data = EngineeringData::with('tagNumber')->find($id);
         if (!$engineering_data) {
             return response()->json([
                 'success' => false,

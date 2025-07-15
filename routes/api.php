@@ -94,6 +94,7 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']); // multiple download COI certificates
     Route::put('/coi/deletefile/{id}', [CoiController::class, 'deleteFileCoi']); // delete download COI certificates
     Route::get('/coi_countduedays', [CoiController::class, 'countCoiDueDays']); // count coi due days and grouping
+    Route::get('/coi/tag_number/{id}', [CoiController::class, 'showByTagNumber']);
     // PLO
     Route::put('/plo/deletefile/{id}', [PloController::class, 'deleteFilePlo']); // delete download PLO certificates
     Route::post('/plo/download', [PloController::class, 'downloadPloCertificates']); // multiple download PLO certificates

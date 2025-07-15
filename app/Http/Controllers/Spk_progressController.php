@@ -47,11 +47,11 @@ class Spk_progressController extends Controller
                     ->latest('id')
                     ->value('actual_progress');
 
-        if ($latestProgress !== null && $request->actual_progress <= $latestProgress) {
+        if ($latestProgress !== null && $request->actual_progress < $latestProgress) {
             return response()->json([
                 'message' => 'Validasi gagal',
                 'errors' => [
-                    'actual_progress' => ['Progress aktual harus lebih besar dari sebelumnya (' . $latestProgress . '%)']
+                    'actual_progress' => ['Progress aktual harus sama atau lebih besar dari sebelumnya (' . $latestProgress . '%)']
                 ],
             ], 422);
         }

@@ -143,6 +143,12 @@ class UserController extends Controller
         // Simpan level_user lama untuk membandingkan perubahan
         $oldLevelUser = $user->level_user;
         $newLevelUser = $validatedData['level_user'] ?? $oldLevelUser;
+        // Tangani password kosong agar tidak di-hash string kosong
+        if (array_key_exists('password', $validatedData)) {
+            if (empty($validatedData['password'])) {
+                unset($validatedData['password']);
+            }
+        }
 
         // Update user
         $user->update($validatedData);

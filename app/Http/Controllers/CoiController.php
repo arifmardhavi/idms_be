@@ -173,6 +173,27 @@ class CoiController extends Controller
         ], 200);
     }
 
+    public function showByTagNumber(string $tag_number_id)
+    {
+        $coi = Coi::with(['tag_number', 'plo'])
+            ->where('tag_number_id', $tag_number_id)
+            ->first(); // atau ->get() kalau ingin banyak
+
+        if (!$coi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'COI not found for this tag number.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'COI retrieved successfully.',
+            'data' => $coi,
+        ], 200);
+    }
+
+
     /**
      * Update the specified resource in storage.
      */
