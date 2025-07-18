@@ -27,11 +27,17 @@ class Lumpsum_progressController extends Controller
      */
     public function store(Request $request)
     {
+        // Ubah koma ke titik agar bisa divalidasi sebagai desimal
+        $request->merge([
+            'plan_progress' => str_replace(',', '.', $request->plan_progress),
+            'actual_progress' => str_replace(',', '.', $request->actual_progress),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'contract_id' => 'required|exists:contracts,id',
-            'week' => 'required',
-            'plan_progress' => 'required|string|max:3',
-            'actual_progress' => 'required|string|max:3',
+            'week' => 'required|integer|min:1',
+            'plan_progress' => 'required|numeric|min:0|max:100',
+            'actual_progress' => 'required|numeric|min:0|max:100',
             'progress_file' => 'required|file|mimes:pdf|max:30720',
         ]);
 
@@ -43,10 +49,10 @@ class Lumpsum_progressController extends Controller
         }
 
         $latestProgress = Lumpsum_progress::where('contract_id', $request->contract_id)
-                    ->latest('id')
-                    ->value('actual_progress');
+            ->latest('id')
+            ->value('actual_progress');
 
-        if ($latestProgress !== null && $request->actual_progress < $latestProgress) {
+        if ($latestProgress !== null && floatval($request->actual_progress) < floatval($latestProgress)) {
             return response()->json([
                 'message' => 'Validasi gagal',
                 'errors' => [
@@ -56,28 +62,28 @@ class Lumpsum_progressController extends Controller
         }
 
         $validatedData = $validator->validated();
+
         try {
             $file = $request->file('progress_file');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-            $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-            $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-            $version = 0; // Awal versi
-            // Format nama file
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $extension = $file->getClientOriginalExtension();
+            $dateNow = date('dmY');
+            $version = 0;
             $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
 
-            // Cek apakah file dengan nama ini sudah ada di folder tujuan
-            while (file_exists(public_path("contract/lumpsum/progress/".$filename))) {
+            while (file_exists(public_path("contract/lumpsum/progress/" . $filename))) {
                 $version++;
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
             }
-            // Store file in public/contract/lumpsum/progress
+
             $path = $file->move(public_path('contract/lumpsum/progress'), $filename);
-            if(!$path){
+            if (!$path) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File Progress failed add.',
                 ], 422);
-            }  
+            }
+
             $validatedData['progress_file'] = $filename;
             $progress = Lumpsum_progress::create($validatedData);
 
@@ -94,6 +100,7 @@ class Lumpsum_progressController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Display the specified resource.
@@ -133,11 +140,17 @@ class Lumpsum_progressController extends Controller
             ], 404);
         }
 
+        // Ubah koma menjadi titik agar bisa validasi numerik
+        $request->merge([
+            'plan_progress' => str_replace(',', '.', $request->plan_progress),
+            'actual_progress' => str_replace(',', '.', $request->actual_progress),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'contract_id' => 'required|exists:contracts,id',
-            'week' => 'required',
-            'plan_progress' => 'required|string|max:3',
-            'actual_progress' => 'required|string|max:3',
+            'week' => 'required|integer',
+            'plan_progress' => 'required|numeric|min:0|max:100',
+            'actual_progress' => 'required|numeric|min:0|max:100',
             'progress_file' => 'nullable|file|mimes:pdf|max:30720',
         ]);
 
@@ -148,47 +161,62 @@ class Lumpsum_progressController extends Controller
             ], 422);
         }
 
+        $latestProgress = Lumpsum_progress::where('contract_id', $request->contract_id)
+            ->where('id', '!=', $id) // Pastikan tidak membandingkan dengan dirinya sendiri
+            ->latest('id')
+            ->value('actual_progress');
+
+        if ($latestProgress !== null && floatval($request->actual_progress) < floatval($latestProgress)) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => [
+                    'actual_progress' => ['Progress aktual harus sama atau lebih besar dari sebelumnya (' . $latestProgress . '%)']
+                ],
+            ], 422);
+        }
+
         $validatedData = $validator->validated();
 
         try {
             if ($request->hasFile('progress_file')) {
                 $file = $request->file('progress_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $extension = $file->getClientOriginalExtension();
+                $dateNow = date('dmY');
+                $version = 0;
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
 
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/lumpsum/progress/".$filename))) {
+                while (file_exists(public_path("contract/lumpsum/progress/" . $filename))) {
                     $version++;
                     $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 }
-                // Store file in public/contract/lumpsum/progress
+
                 $path = $file->move(public_path('contract/lumpsum/progress'), $filename);
-                if(!$path){
+                if (!$path) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'File Progress failed update.',
+                        'message' => 'File Progress failed to update.',
                     ], 422);
-                }  
-                $validatedData['progress_file'] = $filename;
-                if($progress->progress_file){
+                }
+
+                // 🔥 Hapus file lama jika ada
+                if ($progress->progress_file) {
                     $progressBefore = public_path('contract/lumpsum/progress/' . $progress->progress_file);
                     if (file_exists($progressBefore)) {
-                        unlink($progressBefore); // Hapus file
+                        unlink($progressBefore);
                     }
                 }
+
+                $validatedData['progress_file'] = $filename;
             }
-            
-            if($progress->update($validatedData)){
+
+            if ($progress->update($validatedData)) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Progress Pekerjaan updated successfully.',
                     'data' => $progress,
                 ], 201);
-            }else{
+            } else {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to update Progress Pekerjaan.',

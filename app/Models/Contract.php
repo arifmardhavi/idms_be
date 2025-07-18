@@ -245,7 +245,7 @@ class Contract extends Model
         }
 
         return [
-            'sisa' => max(0, $sisaHari),
+            'sisa' => $sisaHari,
             'color' => $color
         ];
     }
@@ -269,7 +269,7 @@ class Contract extends Model
             ];
         }
 
-        $deviation = abs($actual - $plan);
+        $deviation = round($actual - $plan, 2); // hasil: 0.01 (float)
         if ($this->hasAmandemenUnuploaded()) {
             return [
                 'deviation' => $deviation,
@@ -278,9 +278,9 @@ class Contract extends Model
         }
 
 
-        if ($deviation == 0) {
+        if ($deviation >= 0) {
             $color = 'green';
-        } elseif ($deviation <= 20) {
+        } elseif ($deviation > -20) {
             $color = 'yellow';
         } else {
             $color = 'red';

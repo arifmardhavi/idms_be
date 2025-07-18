@@ -28,11 +28,17 @@ class Spk_progressController extends Controller
      */
     public function store(Request $request)
     {
+        // Ubah koma ke titik biar bisa valid desimal
+        $request->merge([
+            'plan_progress' => str_replace(',', '.', $request->plan_progress),
+            'actual_progress' => str_replace(',', '.', $request->actual_progress),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'spk_id' => 'required|exists:spks,id',
             'week' => 'required',
-            'plan_progress' => 'required|string|max:3',
-            'actual_progress' => 'required|string|max:3',
+            'plan_progress' => 'required|numeric|min:0|max:100',
+            'actual_progress' => 'required|numeric|min:0|max:100',
             'progress_file' => 'required|file|mimes:pdf|max:30720',
         ]);
 
@@ -47,7 +53,7 @@ class Spk_progressController extends Controller
                     ->latest('id')
                     ->value('actual_progress');
 
-        if ($latestProgress !== null && $request->actual_progress < $latestProgress) {
+        if ($latestProgress !== null && floatval($request->actual_progress) < floatval($latestProgress)) {
             return response()->json([
                 'message' => 'Validasi gagal',
                 'errors' => [
@@ -60,26 +66,25 @@ class Spk_progressController extends Controller
 
         try {
             $file = $request->file('progress_file');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-            $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-            $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-            $version = 0; // Awal versi
-            // Format nama file
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $extension = $file->getClientOriginalExtension();
+            $dateNow = date('dmY');
+            $version = 0;
             $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
 
-            // Cek apakah file dengan nama ini sudah ada di folder tujuan
-            while (file_exists(public_path("contract/spk/progress/".$filename))) {
+            while (file_exists(public_path("contract/spk/progress/" . $filename))) {
                 $version++;
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
             }
-            // Store file in public/contract/spk/progress
+
             $path = $file->move(public_path('contract/spk/progress'), $filename);
-            if(!$path){
+            if (!$path) {
                 return response()->json([
                     'success' => false,
                     'message' => 'File Progress failed add.',
                 ], 422);
-            }  
+            }
+
             $validatedData['progress_file'] = $filename;
             $spk_progress = Spk_progress::create($validatedData);
 
@@ -96,6 +101,7 @@ class Spk_progressController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Display the specified resource.
@@ -155,11 +161,17 @@ class Spk_progressController extends Controller
             ], 404);
         }
 
+        // 🔁 Ubah koma ke titik (kalau ada) biar valid numerik
+        $request->merge([
+            'plan_progress' => str_replace(',', '.', $request->plan_progress),
+            'actual_progress' => str_replace(',', '.', $request->actual_progress),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'spk_id' => 'required|exists:spks,id',
             'week' => 'required',
-            'plan_progress' => 'required|string|max:3',
-            'actual_progress' => 'required|string|max:3',
+            'plan_progress' => 'required|numeric|min:0|max:100',
+            'actual_progress' => 'required|numeric|min:0|max:100',
             'progress_file' => 'nullable|file|mimes:pdf|max:30720',
         ]);
 
@@ -170,47 +182,63 @@ class Spk_progressController extends Controller
             ], 422);
         }
 
+        $latestProgress = Spk_progress::where('spk_id', $request->spk_id)
+                    ->where('id', '!=', $id) // Pastikan tidak bandingkan dengan dirinya sendiri
+                    ->latest('id')
+                    ->value('actual_progress');
+        if ($latestProgress !== null && floatval($request->actual_progress) < floatval($latestProgress)) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => [
+                    'actual_progress' => ['Progress aktual harus sama atau lebih besar dari sebelumnya (' . $latestProgress . '%)']
+                ],
+            ], 422);
+        }
+
         $validatedData = $validator->validated();
 
         try {
+            // 🗂️ Handle file jika ada
             if ($request->hasFile('progress_file')) {
                 $file = $request->file('progress_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $extension = $file->getClientOriginalExtension();
+                $dateNow = date('dmY');
+                $version = 0;
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
 
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/spk/progress/".$filename))) {
+                while (file_exists(public_path("contract/spk/progress/" . $filename))) {
                     $version++;
                     $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 }
-                // Store file in public/contract/spk/progress
+
                 $path = $file->move(public_path('contract/spk/progress'), $filename);
-                if(!$path){
+                if (!$path) {
                     return response()->json([
                         'success' => false,
                         'message' => 'File Progress failed update.',
                     ], 422);
-                }  
-                $validatedData['progress_file'] = $filename;
-                if($spk_progress->progress_file){
+                }
+
+                // Ganti file lama (jika ada)
+                if ($spk_progress->progress_file) {
                     $spk_progressBefore = public_path('contract/spk/progress/' . $spk_progress->progress_file);
                     if (file_exists($spk_progressBefore)) {
-                        unlink($spk_progressBefore); // Hapus file
+                        unlink($spk_progressBefore);
                     }
                 }
+
+                $validatedData['progress_file'] = $filename;
             }
-            
-            if($spk_progress->update($validatedData)){
+
+            // 💾 Update progress
+            if ($spk_progress->update($validatedData)) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Progress Pekerjaan updated successfully.',
                     'data' => $spk_progress,
                 ], 201);
-            }else{
+            } else {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to update Progress Pekerjaan.',
@@ -224,6 +252,7 @@ class Spk_progressController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Remove the specified resource from storage.
