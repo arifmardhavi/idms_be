@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\TagNumberImport;
 use App\Models\Tag_number;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class Tag_numberController extends Controller
 {
@@ -304,5 +306,27 @@ class Tag_numberController extends Controller
                 'errors' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function import(Request $request) {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new TagNumberImport();
+        Excel::import($import, $request->file('file'));
+
+        if (!empty($import->errors)) {
+            return response()->json([
+                'status' => 'warning',
+                'message' => 'Beberapa data gagal diimport',
+                'errors' => $import->errors
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data berhasil diimport',
+        ]);
     }
 }

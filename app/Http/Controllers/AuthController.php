@@ -50,6 +50,7 @@ class AuthController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
+                'error' => 'username',
                 'message' => 'Username tidak terdaftar.',
                 'data' => null
             ], 404);
@@ -59,6 +60,7 @@ class AuthController extends Controller
         if ($user->status != 1) {
             return response()->json([
                 'success' => false,
+                'error' => 'status',
                 'message' => 'Akun tidak aktif.',
                 'data' => null
             ], 403);
@@ -68,6 +70,7 @@ class AuthController extends Controller
         if (!Hash::check($credentials['password'], $user->password)) {
             return response()->json([
                 'success' => false,
+                'error' => 'password',
                 'message' => 'Password salah.',
                 'data' => null
             ], 401);

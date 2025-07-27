@@ -88,6 +88,7 @@ Route::middleware(['auth:api', 'role:1,99'])->group(function () {
     Route::get('/tagnumbers/tag_number/{id}', [Tag_numberController::class, 'showByTagNumberId']); // show tag_number by ID with unit
     Route::get('/tagname', [Tag_numberController::class, 'showByTagNumber']); // show tag_number by tag_number
     Route::put('/tagnumbers/nonactive/{id}', [Tag_numberController::class, 'nonactive']); // nonactive tag_number
+    Route::post('/tagnumbers/import', [Tag_numberController::class, 'import']);
 
 
     // COI
