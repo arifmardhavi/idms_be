@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class HistoricalMemorandum extends Model
+class HistoricalMemorandum extends BaseModel
 {
     use HasFactory;
     protected $table = 'historical_memorandum';

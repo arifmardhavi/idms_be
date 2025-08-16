@@ -53,7 +53,7 @@ class Spk_progress extends Model
                 'week' => $weekNumber,
                 'start' => $weekStart->format('Y-m-d'),
                 'end' => $weekEnd->format('Y-m-d'),
-                'label' => "Week {$weekNumber} ({$weekStart->format('d M')} - {$weekEnd->format('d M Y')})",
+                'label' => "Week {$weekNumber}",
                 'value' => "{$weekStart->format('Y-m-d')}_{$weekEnd->format('Y-m-d')}",
             ];
 

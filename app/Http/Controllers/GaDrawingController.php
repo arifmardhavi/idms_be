@@ -192,6 +192,12 @@ class GaDrawingController extends Controller
                         'message' => 'GA Drawing failed upload.',
                     ], 422);
                 }
+                if($ga_drawing->drawing_file){
+                    $ga_drawingBefore = public_path('engineering_data/ga_drawing/' . $ga_drawing->drawing_file);
+                    if (file_exists($ga_drawingBefore)) {
+                        unlink($ga_drawingBefore); // Hapus file
+                    }
+                }
                 $validatedData['drawing_file'] = $filename;
             }
 

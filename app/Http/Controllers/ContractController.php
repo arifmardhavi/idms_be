@@ -65,6 +65,7 @@ class ContractController extends Controller
             'meeting_notes' => 'nullable|file|mimes:pdf|max:3072', 
             'pengawas' => 'required|in:0,1,2',
             'contract_status' => 'required|in:0,1',
+            'current_status' => 'nullable|string|max:500',
         ]);
         
         if ($validator->fails()) {
@@ -210,6 +211,7 @@ class ContractController extends Controller
             'meeting_notes' => 'nullable|file|mimes:pdf|max:3072',
             'pengawas' => 'required|in:0,1,2',  
             'contract_status' => 'required|in:0,1',
+            'current_status' => 'nullable|string|max:500',
         ]);
         
         if ($validator->fails()) {
@@ -359,7 +361,37 @@ class ContractController extends Controller
         }
     }
 
+    public function updateCurrentStatus(Request $request, string $id)
+    {
+        $contract = Contract::find($id);
+        if (!$contract) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Contract not found.',
+            ], 404);
+        }
 
+        $validator = Validator::make($request->all(), [
+            'current_status' => 'required|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed for current status',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validatedData = $validator->validated();
+        $contract->update($validatedData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Current status updated successfully.',
+            'data' => $contract,
+        ], 200);
+    }
 
     public function monitoring()
     {

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Coi extends Model
+class Coi extends BaseModel
 {
     use HasFactory;
     protected $fillable = ["plo_id", 'tag_number_id', 'no_certificate', 'issue_date', 'overdue_date', 'coi_certificate',"coi_old_certificate" , 'rla', 'rla_issue', 'rla_overdue', 'rla_certificate', 'rla_old_certificate', 're_engineer', 're_engineer_certificate'];

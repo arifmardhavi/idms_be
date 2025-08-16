@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Skhp extends Model
+class Skhp extends BaseModel
 {
     use HasFactory;
     protected $fillable = ["plo_id", 'tag_number_id', 'no_skhp', 'issue_date', 'overdue_date', 'file_skhp',"file_old_skhp"];

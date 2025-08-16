@@ -6,10 +6,10 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Contract extends Model
+class Contract extends BaseModel
 {
     use HasFactory;
-    protected $fillable = ['no_vendor', 'vendor_name', 'no_contract', 'contract_name', 'contract_type', 'contract_date', 'contract_price', 'contract_file', 'kom', 'contract_start_date', 'contract_end_date', 'meeting_notes', 'contract_status', 'initial_contract_price', 'contract_penalty', 'pengawas'];
+    protected $fillable = ['no_vendor', 'vendor_name', 'no_contract', 'contract_name', 'contract_type', 'contract_date', 'contract_price', 'contract_file', 'kom', 'contract_start_date', 'contract_end_date', 'meeting_notes', 'contract_status', 'initial_contract_price', 'contract_penalty', 'pengawas', 'current_status'];
     protected $appends = [
         'weeks',
         'durasi_mpp',
@@ -212,7 +212,7 @@ class Contract extends Model
                 'week' => $weekNumber,
                 'start' => $weekStart->format('Y-m-d'),
                 'end' => $weekEnd->format('Y-m-d'),
-                'label' => "Week {$weekNumber} ({$weekStart->format('d M')} - {$weekEnd->format('d M Y')})",
+                'label' => "Week {$weekNumber}",
                 'value' => "{$weekStart->format('Y-m-d')}_{$weekEnd->format('Y-m-d')}",
             ];
 

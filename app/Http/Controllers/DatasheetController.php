@@ -204,6 +204,12 @@ class DatasheetController extends Controller
                         'message' => 'Datasheet failed upload.',
                     ], 422);
                 }  
+                if($datasheet->datasheet_file){
+                    $datasheetBefore = public_path('engineering_data/datasheet/' . $datasheet->datasheet_file);
+                    if (file_exists($datasheetBefore)) {
+                        unlink($datasheetBefore); // Hapus file
+                    }
+                }
                 $validatedData['datasheet_file'] = $filename;
             } 
             

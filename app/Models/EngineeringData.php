@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class EngineeringData extends Model
+class EngineeringData extends BaseModel
 {
     use HasFactory;
     protected $table = 'engineering_data';

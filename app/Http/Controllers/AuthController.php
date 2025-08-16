@@ -120,7 +120,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Logout berhasil.',
             'data' => null
-        ]);
+        ], 200);
     }
 }
 

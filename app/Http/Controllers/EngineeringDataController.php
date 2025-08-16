@@ -29,7 +29,7 @@ class EngineeringDataController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'tag_number_id' => 'required|exists:tag_numbers,id',
+            'tag_number_id' => 'required|exists:tag_numbers,id|unique:engineering_data,tag_number_id',
             'drawing_file' => 'required|file|mimes:pdf,jpg,jpeg,png,svg,webp|max:20480',
         ]);
 
@@ -131,7 +131,7 @@ class EngineeringDataController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'tag_number_id' => 'sometimes|exists:tag_numbers,id',
+            'tag_number_id' => 'sometimes|exists:tag_numbers,id|unique:engineering_data,tag_number_id,' . $id,
         ]);
 
         if ($validator->fails()) {
