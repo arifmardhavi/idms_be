@@ -29,7 +29,8 @@ use App\Http\Controllers\{
     InternalInspectionController,
     LaporanInspectionController,
     LogActivityController,
-    OnstreamlInspectionController,
+    OnstreamInspectionController,
+    ProjectController,
     SurveillanceController
 };
 
@@ -39,6 +40,8 @@ use App\Http\Controllers\{
 |--------------------------------------------------------------------------
 */
 Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::get('/projects', [ProjectController::class, 'index']);
+Route::get('/projects/total', [ProjectController::class, 'totalSize']);
 
 /*
 |--------------------------------------------------------------------------
@@ -122,7 +125,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('laporan_inspection', LaporanInspectionController::class);
     Route::apiResource('internal_inspection', InternalInspectionController::class);
     Route::apiResource('external_inspection', ExternalInspectionController::class);
-    Route::apiResource('onstream_inspection', OnstreamlInspectionController::class);
+    Route::apiResource('onstream_inspection', OnstreamInspectionController::class);
     Route::apiResource('surveillance', SurveillanceController::class);
     Route::apiResource('breakdown_report', BreakdownReportController::class);
 
@@ -188,4 +191,15 @@ Route::middleware(['auth:api'])->group(function () {
 
     // CONTRACTS BY USER
     Route::get('/contracts/user', [ContractController::class, 'contractsByUser']);
+
+    //INTERNAL INSPECTION
+    Route::get('/internal_inspection/laporan_inspection/{id}', [InternalInspectionController::class, 'showByLaporanInspection']);
+    //EXTERNAL INSPECTION
+    Route::get('/external_inspection/laporan_inspection/{id}', [ExternalInspectionController::class, 'showByLaporanInspection']);
+    //ONSTREAM INSPECTION
+    Route::get('/onstream_inspection/laporan_inspection/{id}', [OnstreamInspectionController::class, 'showByLaporanInspection']);
+    //BREAKDOWN REPORT
+    Route::get('/breakdown_report/laporan_inspection/{id}', [BreakdownReportController::class, 'showByLaporanInspection']);
+    //SURVEILLANCE
+    Route::get('/surveillance/laporan_inspection/{id}', [SurveillanceController::class, 'showByLaporanInspection']);
 });

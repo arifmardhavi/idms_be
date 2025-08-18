@@ -46,8 +46,6 @@ class LogActivityController extends Controller
 
         // Format + hilangkan duplikat berdasarkan module + action
         $formatted = $logs
-            ->unique(fn ($log) => $log->module . '|' . $log->action)
-            ->values()
             ->map(function ($log) use ($countPerModule) {
                 return [
                     'id'              => $log->id,

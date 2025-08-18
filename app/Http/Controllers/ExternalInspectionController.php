@@ -31,90 +31,49 @@ class ExternalInspectionController extends Controller
             'judul' => 'required|string|max:255',
             'inspection_date' => 'required|date',
             'historical_memorandum_id' => 'nullable|exists:historical_memorandum,id',
-            'laporan_file' => 'nullable|array',
-            'laporan_file.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:204800',
+            'laporan_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:204800',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed for external Inspection',
+                'message' => 'Validation failed for External Inspection',
                 'errors' => $validator->errors(),
             ], 422);
         }
 
-        if (count($request->file('laporan_file')) > 10) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Maksimal upload 10 file.',
-            ], 422);
-        }
-
+        $validatedData = $validator->validated();
         try {
-            if($request->file('laporan_file')){
-                $result = [];
-                $failedFiles = [];
-                foreach ($request->file('laporan_file') as $file) {
-                    $originalName = $file->getClientOriginalName();
-    
-                    try {
-                        $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
-                        $extension = $file->getClientOriginalExtension();
-                        $dateNow = date('dmY');
-                        $version = 0;
-    
-                        $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                        while (file_exists(public_path("laporan_inspection/external_inspection/" . $filename))) {
-                            $version++;
-                            $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                        }
-    
-                        $path = $file->move(public_path('laporan_inspection/external_inspection'), $filename);
-                        if (!$path) {
-                            $failedFiles[] = [
-                                'name' => $originalName,
-                                'error' => 'Gagal memindahkan file ke direktori tujuan.'
-                            ];
-                            continue;
-                        }
-    
-                        $externalInspection = ExternalInspection::create([
-                            'laporan_inspection_id' => $request->laporan_inspection_id,
-                            'judul' => $request->judul,
-                            'inspection_date' => $request->inspection_date,
-                            'historical_memorandum_id' => $request->historical_memorandum_id,
-                            'laporan_file' => $filename,
-                        ]);
-    
-                        $result[] = $externalInspection;
-    
-                    } catch (\Throwable $fileError) {
-                        $failedFiles[] = [
-                            'name' => $originalName,
-                            'error' => $fileError->getMessage()
-                        ];
-                    }
+            if ($request->hasFile('laporan_file')) {
+                $file = $request->file('laporan_file');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("laporan_inspection/external_inspection/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 }
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Upload selesai.',
-                    'data' => $result,
-                    'failed_files' => $failedFiles,
-                ], 201);
-            }else{
-                $validatedData = $validator->validated();
-                $externalInspection = ExternalInspection::create($validatedData);
-                return response()->json([
-                    'success' => true,
-                    'message' => 'External Inspection created successfully.',
-                    'data' => $externalInspection,
-                ], 201);
+                // Store file in public/laporan_inspection/external_inspection/
+                $path = $file->move(public_path('laporan_inspection/external_inspection'), $filename);  
+                $validatedData['laporan_file'] = $filename;
             }
-            
-        } catch (\Exception $e) {
+
+            $externalInspection = ExternalInspection::create($validatedData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'External Inspection created successfully.',
+                'data' => $externalInspection,
+            ], 201);
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create external Inspection.',
+                'message' => 'Failed to create External Inspection.',
                 'errors' => $e->getMessage(),
             ], 500);
         }
@@ -138,6 +97,21 @@ class ExternalInspectionController extends Controller
             'data' => $externalInspection,
         ], 200);
     }
+    public function showByLaporanInspection(string $id)
+    {
+        $externalInspection = ExternalInspection::with('laporan_inspection', 'historical_memorandum')->where('laporan_inspection_id', $id)->get();
+        if (!$externalInspection) {
+            return response()->json([
+                'success' => false,
+                'message' => 'external Inspection not found.',
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'external Inspection retrieved successfully.',
+            'data' => $externalInspection,
+        ], 200);
+    }
 
     /**
      * Update the specified resource in storage.
@@ -148,7 +122,7 @@ class ExternalInspectionController extends Controller
         if (!$externalInspection) {
             return response()->json([
                 'success' => false,
-                'message' => 'external Inspection not found.',
+                'message' => 'External Inspection not found.',
             ], 404);
         }
 
@@ -162,7 +136,7 @@ class ExternalInspectionController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed for external Inspection',
+                'message' => 'Validation failed for External Inspection',
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -170,17 +144,31 @@ class ExternalInspectionController extends Controller
         $validatedData = $validator->validated();
 
         try {
+            // Jika historical_memorandum_id diisi, hapus file lama
+            if ($request->filled('historical_memorandum_id')) {
+                if ($externalInspection->laporan_file) {
+                    $externalInspectionBefore = public_path('laporan_inspection/external_inspection/' . $externalInspection->laporan_file);
+                    if (file_exists($externalInspectionBefore)) {
+                        unlink($externalInspectionBefore);
+                    }
+                }
+                $validatedData['laporan_file'] = null; // Set null karena pakai memorandum
+            }
+
+            // Jika ada file baru diupload
             if ($request->hasFile('laporan_file')) {
                 $file = $request->file('laporan_file');
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                 $extension = $file->getClientOriginalExtension();
                 $dateNow = date('dmY');
                 $version = 0;
+
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 while (file_exists(public_path("laporan_inspection/external_inspection/" . $filename))) {
                     $version++;
                     $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 }
+
                 $path = $file->move(public_path('laporan_inspection/external_inspection'), $filename);
                 if (!$path) {
                     return response()->json([
@@ -188,31 +176,39 @@ class ExternalInspectionController extends Controller
                         'message' => 'File failed upload.',
                     ], 422);
                 }
-                if($externalInspection->laporan_file){
+
+                // hapus file lama jika ada
+                if ($externalInspection->laporan_file) {
                     $externalInspectionBefore = public_path('laporan_inspection/external_inspection/' . $externalInspection->laporan_file);
                     if (file_exists($externalInspectionBefore)) {
-                        unlink($externalInspectionBefore); // Hapus file
+                        unlink($externalInspectionBefore);
                     }
                 }
+
+                // Jika ada file, maka hapus relasi historical memorandum
+                if ($externalInspection->historical_memorandum_id) {
+                    $validatedData['historical_memorandum_id'] = null;
+                }
+
                 $validatedData['laporan_file'] = $filename;
             }
 
             if ($externalInspection->update($validatedData)) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'external Inspection updated successfully.',
+                    'message' => 'External Inspection updated successfully.',
                     'data' => $externalInspection,
                 ], 200);
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update external Inspection.',
+                    'message' => 'Failed to update External Inspection.',
                 ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update external Inspection.',
+                'message' => 'Failed to update External Inspection.',
                 'errors' => $e->getMessage(),
             ], 500);
         }

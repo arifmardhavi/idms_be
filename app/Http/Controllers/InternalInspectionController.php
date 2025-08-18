@@ -31,8 +31,7 @@ class InternalInspectionController extends Controller
             'judul' => 'required|string|max:255',
             'inspection_date' => 'required|date',
             'historical_memorandum_id' => 'nullable|exists:historical_memorandum,id',
-            'laporan_file' => 'nullable|array',
-            'laporan_file.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:204800',
+            'laporan_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:204800',
         ]);
 
         if ($validator->fails()) {
@@ -43,76 +42,35 @@ class InternalInspectionController extends Controller
             ], 422);
         }
 
-        if ($request->file('laporan_file') && count($request->file('laporan_file')) > 10) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Maksimal upload 10 file.',
-            ], 422);
-        }
-
+        $validatedData = $validator->validated();
         try {
-            if($request->file('laporan_file')){
-                $result = [];
-                $failedFiles = [];
-                foreach ($request->file('laporan_file') as $file) {
-                    $originalName = $file->getClientOriginalName();
-    
-                    try {
-                        $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
-                        $extension = $file->getClientOriginalExtension();
-                        $dateNow = date('dmY');
-                        $version = 0;
-    
-                        $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                        while (file_exists(public_path("laporan_inspection/internal_inspection/" . $filename))) {
-                            $version++;
-                            $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                        }
-    
-                        $path = $file->move(public_path('laporan_inspection/internal_inspection'), $filename);
-                        if (!$path) {
-                            $failedFiles[] = [
-                                'name' => $originalName,
-                                'error' => 'Gagal memindahkan file ke direktori tujuan.'
-                            ];
-                            continue;
-                        }
-    
-                        $internalInspection = InternalInspection::create([
-                            'laporan_inspection_id' => $request->laporan_inspection_id,
-                            'judul' => $request->judul,
-                            'inspection_date' => $request->inspection_date,
-                            'historical_memorandum_id' => $request->historical_memorandum_id,
-                            'laporan_file' => $filename,
-                        ]);
-    
-                        $result[] = $internalInspection;
-    
-                    } catch (\Throwable $fileError) {
-                        $failedFiles[] = [
-                            'name' => $originalName,
-                            'error' => $fileError->getMessage()
-                        ];
-                    }
+            if ($request->hasFile('laporan_file')) {
+                $file = $request->file('laporan_file');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("laporan_inspection/internal_inspection/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 }
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Upload selesai.',
-                    'data' => $result,
-                    'failed_files' => $failedFiles,
-                ], 201);
-            }else{
-                $validatedData = $validator->validated();
-                $internalInspection = InternalInspection::create($validatedData);
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Internal Inspection created successfully.',
-                    'data' => $internalInspection,
-                ], 201);
+                // Store file in public/laporan_inspection/internal_inspection/
+                $path = $file->move(public_path('laporan_inspection/internal_inspection'), $filename);  
+                $validatedData['laporan_file'] = $filename;
             }
 
-            
-        } catch (\Exception $e) {
+            $internalInspection = InternalInspection::create($validatedData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Internal Inspection created successfully.',
+                'data' => $internalInspection,
+            ], 201);
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create Internal Inspection.',
@@ -127,6 +85,21 @@ class InternalInspectionController extends Controller
     public function show(string $id)
     {
         $internalInspection = InternalInspection::with('laporan_inspection', 'historical_memorandum')->find($id);
+        if (!$internalInspection) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal Inspection not found.',
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Internal Inspection retrieved successfully.',
+            'data' => $internalInspection,
+        ], 200);
+    }
+    public function showByLaporanInspection(string $id)
+    {
+        $internalInspection = InternalInspection::with('laporan_inspection', 'historical_memorandum')->where('laporan_inspection_id', $id)->get();
         if (!$internalInspection) {
             return response()->json([
                 'success' => false,
@@ -171,17 +144,31 @@ class InternalInspectionController extends Controller
         $validatedData = $validator->validated();
 
         try {
+            // Jika historical_memorandum_id diisi, hapus file lama
+            if ($request->filled('historical_memorandum_id')) {
+                if ($internalInspection->laporan_file) {
+                    $internalInspectionBefore = public_path('laporan_inspection/internal_inspection/' . $internalInspection->laporan_file);
+                    if (file_exists($internalInspectionBefore)) {
+                        unlink($internalInspectionBefore);
+                    }
+                }
+                $validatedData['laporan_file'] = null; // Set null karena pakai memorandum
+            }
+
+            // Jika ada file baru diupload
             if ($request->hasFile('laporan_file')) {
                 $file = $request->file('laporan_file');
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                 $extension = $file->getClientOriginalExtension();
                 $dateNow = date('dmY');
                 $version = 0;
+
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 while (file_exists(public_path("laporan_inspection/internal_inspection/" . $filename))) {
                     $version++;
                     $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 }
+
                 $path = $file->move(public_path('laporan_inspection/internal_inspection'), $filename);
                 if (!$path) {
                     return response()->json([
@@ -189,12 +176,20 @@ class InternalInspectionController extends Controller
                         'message' => 'File failed upload.',
                     ], 422);
                 }
-                if($internalInspection->laporan_file){
+
+                // hapus file lama jika ada
+                if ($internalInspection->laporan_file) {
                     $internalInspectionBefore = public_path('laporan_inspection/internal_inspection/' . $internalInspection->laporan_file);
                     if (file_exists($internalInspectionBefore)) {
-                        unlink($internalInspectionBefore); // Hapus file
+                        unlink($internalInspectionBefore);
                     }
                 }
+
+                // Jika ada file, maka hapus relasi historical memorandum
+                if ($internalInspection->historical_memorandum_id) {
+                    $validatedData['historical_memorandum_id'] = null;
+                }
+
                 $validatedData['laporan_file'] = $filename;
             }
 
@@ -218,6 +213,8 @@ class InternalInspectionController extends Controller
             ], 500);
         }
     }
+
+
 
     /**
      * Remove the specified resource from storage.

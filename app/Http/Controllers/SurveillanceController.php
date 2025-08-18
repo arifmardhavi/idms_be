@@ -31,8 +31,7 @@ class SurveillanceController extends Controller
             'judul' => 'required|string|max:255',
             'surveillance_date' => 'required|date',
             'historical_memorandum_id' => 'nullable|exists:historical_memorandum,id',
-            'laporan_file' => 'nullable|array',
-            'laporan_file.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:204800',
+            'laporan_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:204800',
         ]);
 
         if ($validator->fails()) {
@@ -43,75 +42,35 @@ class SurveillanceController extends Controller
             ], 422);
         }
 
-        if (count($request->file('laporan_file')) > 10) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Maksimal upload 10 file.',
-            ], 422);
-        }
-
+        $validatedData = $validator->validated();
         try {
-            if($request->file('laporan_file')){
-                $result = [];
-                $failedFiles = [];
-                foreach ($request->file('laporan_file') as $file) {
-                    $originalName = $file->getClientOriginalName();
-    
-                    try {
-                        $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
-                        $extension = $file->getClientOriginalExtension();
-                        $dateNow = date('dmY');
-                        $version = 0;
-    
-                        $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                        while (file_exists(public_path("laporan_inspection/surveillance/" . $filename))) {
-                            $version++;
-                            $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                        }
-    
-                        $path = $file->move(public_path('laporan_inspection/surveillance'), $filename);
-                        if (!$path) {
-                            $failedFiles[] = [
-                                'name' => $originalName,
-                                'error' => 'Gagal memindahkan file ke direktori tujuan.'
-                            ];
-                            continue;
-                        }
-    
-                        $surveillance = Surveillance::create([
-                            'laporan_inspection_id' => $request->laporan_inspection_id,
-                            'judul' => $request->judul,
-                            'surveillance_date' => $request->surveillance_date,
-                            'historical_memorandum_id' => $request->historical_memorandum_id,
-                            'laporan_file' => $filename,
-                        ]);
-    
-                        $result[] = $surveillance;
-    
-                    } catch (\Throwable $fileError) {
-                        $failedFiles[] = [
-                            'name' => $originalName,
-                            'error' => $fileError->getMessage()
-                        ];
-                    }
+            if ($request->hasFile('laporan_file')) {
+                $file = $request->file('laporan_file');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("laporan_inspection/surveillance/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 }
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Upload selesai.',
-                    'data' => $result,
-                    'failed_files' => $failedFiles,
-                ], 201);
-            }else{
-                $validatedData = $validator->validated();
-                $surveillance = Surveillance::create($validatedData);
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Surveillance created successfully.',
-                    'data' => $surveillance,
-                ], 201);
+                // Store file in public/laporan_inspection/surveillance/
+                $path = $file->move(public_path('laporan_inspection/surveillance'), $filename);  
+                $validatedData['laporan_file'] = $filename;
             }
-            
-        } catch (\Exception $e) {
+
+            $surveillance = Surveillance::create($validatedData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Surveillance created successfully.',
+                'data' => $surveillance,
+            ], 201);
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create Surveillance.',
@@ -126,6 +85,21 @@ class SurveillanceController extends Controller
     public function show(string $id)
     {
         $surveillance = Surveillance::with('laporan_inspection', 'historical_memorandum')->find($id);
+        if (!$surveillance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Surveillance not found.',
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Surveillance retrieved successfully.',
+            'data' => $surveillance,
+        ], 200);
+    }
+    public function showByLaporanInspection(string $id)
+    {
+        $surveillance = Surveillance::with('laporan_inspection', 'historical_memorandum')->where('laporan_inspection_id', $id)->get();
         if (!$surveillance) {
             return response()->json([
                 'success' => false,
@@ -170,17 +144,31 @@ class SurveillanceController extends Controller
         $validatedData = $validator->validated();
 
         try {
+            // Jika historical_memorandum_id diisi, hapus file lama
+            if ($request->filled('historical_memorandum_id')) {
+                if ($surveillance->laporan_file) {
+                    $surveillanceBefore = public_path('laporan_inspection/surveillance/' . $surveillance->laporan_file);
+                    if (file_exists($surveillanceBefore)) {
+                        unlink($surveillanceBefore);
+                    }
+                }
+                $validatedData['laporan_file'] = null; // Set null karena pakai memorandum
+            }
+
+            // Jika ada file baru diupload
             if ($request->hasFile('laporan_file')) {
                 $file = $request->file('laporan_file');
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                 $extension = $file->getClientOriginalExtension();
                 $dateNow = date('dmY');
                 $version = 0;
+
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 while (file_exists(public_path("laporan_inspection/surveillance/" . $filename))) {
                     $version++;
                     $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
                 }
+
                 $path = $file->move(public_path('laporan_inspection/surveillance'), $filename);
                 if (!$path) {
                     return response()->json([
@@ -188,12 +176,20 @@ class SurveillanceController extends Controller
                         'message' => 'File failed upload.',
                     ], 422);
                 }
-                if($surveillance->laporan_file){
+
+                // hapus file lama jika ada
+                if ($surveillance->laporan_file) {
                     $surveillanceBefore = public_path('laporan_inspection/surveillance/' . $surveillance->laporan_file);
                     if (file_exists($surveillanceBefore)) {
-                        unlink($surveillanceBefore); // Hapus file
+                        unlink($surveillanceBefore);
                     }
                 }
+
+                // Jika ada file, maka hapus relasi historical memorandum
+                if ($surveillance->historical_memorandum_id) {
+                    $validatedData['historical_memorandum_id'] = null;
+                }
+
                 $validatedData['laporan_file'] = $filename;
             }
 
