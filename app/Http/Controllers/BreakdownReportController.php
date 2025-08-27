@@ -97,6 +97,21 @@ class BreakdownReportController extends Controller
             'data' => $breakdownReport,
         ], 200);
     }
+    public function showByLaporanInspection(string $id)
+    {
+        $breakdownReport = BreakdownReport::with('laporan_inspection', 'historical_memorandum')->where('laporan_inspection_id', $id)->get();
+        if (!$breakdownReport) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Breakdown Report not found.',
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Breakdown Report retrieved successfully.',
+            'data' => $breakdownReport,
+        ], 200);
+    }
 
     /**
      * Update the specified resource in storage.
