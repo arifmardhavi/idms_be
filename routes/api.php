@@ -21,17 +21,36 @@ use App\Http\Controllers\{
     LampiranMemoController,
     AmandemenController,
     BreakdownReportController,
+    ContractJasaController,
     HistoricalMemorandumController,
     DatasheetController,
+    DeliveryMaterialController,
     GaDrawingController,
     EngineeringDataController,
+    EventReadinessController,
     ExternalInspectionController,
+    FabrikasiMaterialController,
     InternalInspectionController,
+    JobPlanJasaController,
+    JobPlanMaterialController,
+    LampiranMocController,
     LaporanInspectionController,
     LogActivityController,
+    MocController,
+    NotifJasaController,
+    NotifMaterialController,
     OnstreamInspectionController,
+    PoMaterialController,
+    PrJasaController,
+    PrMaterialController,
     ProjectController,
-    SurveillanceController
+    ReadinessJasaController,
+    ReadinessMaterialController,
+    RekomendasiJasaController,
+    RekomendasiMaterialController,
+    SurveillanceController,
+    TenderJasaController,
+    TenderMaterialController
 };
 
 /*
@@ -111,6 +130,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('plo', PloController::class);
     Route::apiResource('coi', CoiController::class);
     Route::apiResource('skhp', SkhpController::class);
+    Route::apiResource('moc', MocController::class);
     Route::apiResource('spk', SpkController::class);
     Route::apiResource('spk_progress', Spk_progressController::class);
     Route::apiResource('lumpsum_progress', Lumpsum_progressController::class);
@@ -128,6 +148,24 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('onstream_inspection', OnstreamInspectionController::class);
     Route::apiResource('surveillance', SurveillanceController::class);
     Route::apiResource('breakdown_report', BreakdownReportController::class);
+    Route::apiResource('event_readiness', EventReadinessController::class);
+    Route::apiResource('readiness_material', ReadinessMaterialController::class);
+    Route::apiResource('rekomendasi_material', RekomendasiMaterialController::class);
+    Route::apiResource('notif_material', NotifMaterialController::class);
+    Route::apiResource('job_plan_material', JobPlanMaterialController::class);
+    Route::apiResource('pr_material', PrMaterialController::class);
+    Route::apiResource('tender_material', TenderMaterialController::class);
+    Route::apiResource('po_material', PoMaterialController::class);
+    Route::apiResource('fabrikasi_material', FabrikasiMaterialController::class);
+    Route::apiResource('delivery_material', DeliveryMaterialController::class);
+    Route::apiResource('readiness_jasa', ReadinessJasaController::class);
+    Route::apiResource('rekomendasi_jasa', RekomendasiJasaController::class);
+    Route::apiResource('notif_jasa', NotifJasaController::class);
+    Route::apiResource('job_plan_jasa', JobPlanJasaController::class);
+    Route::apiResource('pr_jasa', PrJasaController::class);
+    Route::apiResource('tender_jasa', TenderJasaController::class);
+    Route::apiResource('contract_jasa', ContractJasaController::class);
+    
 
     /*
     |--------------------------------------------------------------------------
@@ -202,4 +240,24 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/breakdown_report/laporan_inspection/{id}', [BreakdownReportController::class, 'showByLaporanInspection']);
     //SURVEILLANCE
     Route::get('/surveillance/laporan_inspection/{id}', [SurveillanceController::class, 'showByLaporanInspection']);
+    //READINESS MATERIAL
+    Route::get('/readiness_material/event/{id}', [ReadinessMaterialController::class, 'showByEvent']);
+    //REKOMENDASI MATERIAL
+    Route::get('/rekomendasi_material/readiness/{id}', [RekomendasiMaterialController::class, 'showByReadiness']);
+    //NOTIF MATERIAL
+    Route::get('/notif_material/readiness/{id}', [NotifMaterialController::class, 'showByReadiness']);
+    //JOB PLAN MATERIAL
+    Route::get('/job_plan_material/readiness/{id}', [JobPlanMaterialController::class, 'showByReadiness']);
+    //PR MATERIAL
+    Route::get('/pr_material/readiness/{id}', [PrMaterialController::class, 'showByReadiness']);
+    //TENDER MATERIAL
+    Route::get('/tender_material/readiness/{id}', [TenderMaterialController::class, 'showByReadiness']);
+    //PO MATERIAL
+    Route::get('/po_material/readiness/{id}', [PoMaterialController::class, 'showByReadiness']);
+    //FABRIKASI MATERIAL
+    Route::get('/fabrikasi_material/readiness/{id}', [FabrikasiMaterialController::class, 'showByReadiness']);
+    //DELIVERY MATERIAL
+    Route::get('/delivery_material/readiness/{id}', [DeliveryMaterialController::class, 'showByReadiness']);
+    //READINESS JASA
+    Route::get('/readiness_jasa/event/{id}', [ReadinessJasaController::class, 'showByEvent']);
 });
