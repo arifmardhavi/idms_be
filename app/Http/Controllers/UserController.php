@@ -15,7 +15,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('contracts:id')->orderBy('id', 'desc')->get();
+        $users = User::with('contracts:id', 'openFileActivities')->orderBy('id', 'desc')->get();
         $data = $users->map(function ($user) {
             return [
                 'id' => $user->id,
@@ -27,6 +27,10 @@ class UserController extends Controller
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
                 'contracts' => $user->contracts->pluck('id')->toArray(), // hanya ambil ID dari kontrak
+                'total_file_open' => $user->total_file_open,
+                'file_open_per_feature' => $user->file_open_per_feature,
+                'total_activities' => $user->total_activities,
+                'activities_per_feature' => $user->activities_per_feature,
             ];
         });
         return response()->json([

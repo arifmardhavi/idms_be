@@ -40,6 +40,7 @@ use App\Http\Controllers\{
     NotifJasaController,
     NotifMaterialController,
     OnstreamInspectionController,
+    OpenFileActivityController,
     PoMaterialController,
     PrJasaController,
     PrMaterialController,
@@ -165,6 +166,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('pr_jasa', PrJasaController::class);
     Route::apiResource('tender_jasa', TenderJasaController::class);
     Route::apiResource('contract_jasa', ContractJasaController::class);
+    Route::apiResource('open_file_activity', OpenFileActivityController::class);
     
 
     /*
@@ -260,4 +262,6 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/delivery_material/readiness/{id}', [DeliveryMaterialController::class, 'showByReadiness']);
     //READINESS JASA
     Route::get('/readiness_jasa/event/{id}', [ReadinessJasaController::class, 'showByEvent']);
+    // OPEN FILE ACTIVITY
+    Route::get('/open_file_activity/user/{id}', [OpenFileActivityController::class, 'showByUserId']);
 });

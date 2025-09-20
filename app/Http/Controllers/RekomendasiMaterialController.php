@@ -222,8 +222,8 @@ class RekomendasiMaterialController extends Controller
 
         try {
             // Hapus file jika ada
-            if ($rekomendasi_material->file && file_exists(public_path("readiness_ta/material/rekomendasi/" . $rekomendasi_material->file))) {
-                unlink(public_path("readiness_ta/material/rekomendasi/" . $rekomendasi_material->file));
+            if ($rekomendasi_material->rekomendasi_file && file_exists(public_path("readiness_ta/material/rekomendasi/" . $rekomendasi_material->rekomendasi_file))) {
+                unlink(public_path("readiness_ta/material/rekomendasi/" . $rekomendasi_material->rekomendasi_file));
             }
 
             $rekomendasi_material->delete();

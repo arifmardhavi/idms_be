@@ -222,8 +222,8 @@ class RekomendasiJasaController extends Controller
 
         try {
             // Hapus file jika ada
-            if ($rekomendasi_jasa->file && file_exists(public_path("readiness_ta/jasa/rekomendasi/" . $rekomendasi_jasa->file))) {
-                unlink(public_path("readiness_ta/jasa/rekomendasi/" . $rekomendasi_jasa->file));
+            if ($rekomendasi_jasa->rekomendasi_file && file_exists(public_path("readiness_ta/jasa/rekomendasi/" . $rekomendasi_jasa->rekomendasi_file))) {
+                unlink(public_path("readiness_ta/jasa/rekomendasi/" . $rekomendasi_jasa->rekomendasi_file));
             }
 
             $rekomendasi_jasa->delete();
