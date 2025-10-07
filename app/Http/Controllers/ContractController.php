@@ -411,7 +411,7 @@ class ContractController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'current_status' => 'required|string|max:500',
+            'current_status' => 'sometimes|nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
