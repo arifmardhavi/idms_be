@@ -28,7 +28,7 @@ class ContractJasaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'readiness_jasa_id' => 'required|exists:readiness_jasas,id',
-            'contract_file' => 'required|file|mimes:pdf',
+            'contract_id' => 'nullable|exists:contracts,id',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 
@@ -42,26 +42,6 @@ class ContractJasaController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            if ($request->hasFile('contract_file')) {
-                $file = $request->file('contract_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/jasa/contract/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path("readiness_ta/jasa/contract"), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload Contract file.',
-                    ], 500);
-                }
-                $validatedData['contract_file'] = $filename;
-            }
             $contract_jasa = ContractJasa::create($validatedData);
 
             return response()->json([
@@ -116,7 +96,7 @@ class ContractJasaController extends Controller
 
         $validator = Validator::make($request->all(), [
             'readiness_jasa_id' => 'sometimes|exists:readiness_jasas,id',
-            'contract_file' => 'nullable|file|mimes:pdf',
+            'contract_id' => 'sometimes|nullable|exists:contracts,id',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 
@@ -130,30 +110,6 @@ class ContractJasaController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            if ($request->hasFile('contract_file')) {
-                $file = $request->file('contract_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/jasa/contract/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path("readiness_ta/jasa/contract"), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload Contract file.',
-                    ], 500);
-                }
-
-                if ($contract_jasa->contract_file && file_exists(public_path("readiness_ta/jasa/contract/" . $contract_jasa->contract_file))) {
-                    unlink(public_path("readiness_ta/jasa/contract/" . $contract_jasa->contract_file));
-                }
-                $validatedData['contract_file'] = $filename;
-            }
             $contract_jasa->update($validatedData);
             return response()->json([
                 'success' => true,

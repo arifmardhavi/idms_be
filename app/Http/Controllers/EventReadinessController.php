@@ -30,6 +30,7 @@ class EventReadinessController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'event_name' => 'required|string|unique:event_readinesses,event_name',
+            'tanggal_ta' => 'required|date',
         ]);
 
         if ($validator->fails()) {
@@ -93,6 +94,7 @@ class EventReadinessController extends Controller
 
         $validator = Validator::make($request->all(), [
             'event_name' => 'required|string|unique:event_readinesses,event_name,' . $id,
+            'tanggal_ta' => 'nullable|date',
         ]);
 
         if ($validator->fails()) {

@@ -12,12 +12,12 @@ class RekomendasiMaterial extends BaseModel
 
     public function readiness_material()
     {
-        return $this->belongsTo(ReadinessMaterial::class);
+        return $this->belongsTo(ReadinessMaterial::class, 'readiness_material_id');
     }
 
     public function historical_memorandum()
     {
-        return $this->belongsTo(HistoricalMemorandum::class);
+        return $this->belongsTo(HistoricalMemorandum::class, 'historical_memorandum_id');
     }
 
 }

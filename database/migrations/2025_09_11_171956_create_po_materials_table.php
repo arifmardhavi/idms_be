@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('po_materials', function (Blueprint $table) {
             $table->id();
             $table->foreignId('readiness_material_id')->constrained('readiness_materials')->onDelete('cascade');
-            $table->bigInteger('no_po');
-            $table->text('po_file');
-            $table->date('delivery_date');
-            $table->date('target_date');
+            $table->foreignId('contract_id')->nullable()->constrained('contracts')->onDelete('set null');
+            $table->bigInteger('no_po')->nullable();
+            $table->date('delivery_date')->nullable();
+            $table->date('target_date')->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();
         });

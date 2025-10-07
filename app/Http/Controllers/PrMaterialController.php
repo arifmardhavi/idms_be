@@ -27,9 +27,10 @@ class PrMaterialController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'readiness_material_id' => 'required|exists:readiness_materials,id',
-            'no_pr' => 'required|integer',
-            'target_date' => 'required|date',
+            'readiness_material_id' => 'required|exists:readiness_materials,id|unique:pr_materials,readiness_material_id',
+            'no_pr' => 'nullable|integer',
+            'target_date' => 'nullable|date',
+            'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 
         if ($validator->fails()) {
@@ -113,7 +114,7 @@ class PrMaterialController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'readiness_material_id' => 'sometimes|exists:readiness_materials,id',
+            'readiness_material_id' => 'sometimes|exists:readiness_materials,id|unique:pr_materials,readiness_material_id,' . $id,
             'no_pr' => 'sometimes|integer',
             'target_date' => 'sometimes|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah

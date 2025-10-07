@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('tender_jasas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('readiness_jasa_id')->constrained('readiness_jasas')->onDelete('cascade');
-            $table->text('description');
-            $table->date('target_date');
+            $table->text('description')->nullable();
+            $table->date('target_date')->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();
         });

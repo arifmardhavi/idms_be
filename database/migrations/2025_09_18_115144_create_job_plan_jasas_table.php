@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('job_plan_jasas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('readiness_jasa_id')->constrained('readiness_jasas')->onDelete('cascade');
-            $table->bigInteger('no_wo');
+            $table->bigInteger('no_wo')->nullable();
             $table->text('kak_file')->nullable();
             $table->text('boq_file')->nullable();
-            $table->bigInteger('durasi_preparation');
-            $table->date('target_date');
+            $table->bigInteger('durasi_preparation')->nullable();
+            $table->date('target_date')->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();
         });

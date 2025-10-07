@@ -12,11 +12,11 @@ class RekomendasiJasa extends BaseModel
 
     public function readiness_jasa()
     {
-        return $this->belongsTo(ReadinessJasa::class);
+        return $this->belongsTo(ReadinessJasa::class, 'readiness_jasa_id');
     }
 
     public function historical_memorandum()
     {
-        return $this->belongsTo(HistoricalMemorandum::class);
+        return $this->belongsTo(HistoricalMemorandum::class, 'historical_memorandum_id');
     }
 }

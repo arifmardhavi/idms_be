@@ -12,6 +12,6 @@ class TenderMaterial extends BaseModel
 
     public function readiness_material()
     {
-        return $this->belongsTo(ReadinessMaterial::class);
+        return $this->belongsTo(ReadinessMaterial::class, 'readiness_material_id');
     }
 }

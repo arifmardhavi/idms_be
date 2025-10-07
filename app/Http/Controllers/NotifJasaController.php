@@ -28,8 +28,8 @@ class NotifJasaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'readiness_jasa_id' => 'required|exists:readiness_jasas,id',
-            'no_notif' => 'required|integer',
-            'target_date' => 'required|date',
+            'no_notif' => 'nullable|integer',
+            'target_date' => 'nullable|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 

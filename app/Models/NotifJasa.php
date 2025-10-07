@@ -12,6 +12,6 @@ class NotifJasa extends BaseModel
 
     public function readiness_jasas()
     {
-        return $this->belongsTo(ReadinessJasa::class);
+        return $this->belongsTo(ReadinessJasa::class, 'readiness_jasa_id');
     }
 }

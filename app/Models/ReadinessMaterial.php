@@ -9,18 +9,18 @@ use Illuminate\Database\Eloquent\Model;
 class ReadinessMaterial extends BaseModel
 {
     use HasFactory;
-    protected $fillable = ['event_readiness_id','material_name', 'tanggal_ta', 'status'];
+    protected $fillable = ['event_readiness_id','material_name', 'type', 'status'];
     protected $appends = [
-        'last_target_status',
         'ta_status',
         'last_number_status',
         'prognosa',
+        'total_progress',
     ];
 
 
     public function event_readiness()
     {
-        return $this->belongsTo(EventReadiness::class);
+        return $this->belongsTo(EventReadiness::class, 'event_readiness_id');
     }
 
     public function rekomendasi_material()
@@ -58,80 +58,15 @@ class ReadinessMaterial extends BaseModel
 
 
     /**
-     * last_target_status:
-     * - jika tidak ada step terisi => null
-     * - days_remaining = diff ke target_date (step terakhir terisi)
-     * - color = rule berdasarkan nilai paling mendesak antara diffTarget dan diffTa (min)
-     * - tetap mengembalikan source = 'target_date' karena date yang dipakai adalah target_date
-     */
-    public function getLastTargetStatusAttribute()
-    {
-        // urutan dari belakang ke depan (prioritas step terakhir terisi)
-        $steps = [
-            $this->delivery_material,
-            $this->fabrikasi_material,
-            $this->po_material,
-            $this->tender_material,
-            $this->pr_material,
-            $this->job_plan_material,
-            $this->notif_material,
-            $this->rekomendasi_material,
-        ];
-
-        $lastTargetDate = null;
-        $stepUsed = null;
-        foreach ($steps as $step) {
-            if ($step && !empty($step->target_date)) {
-                $lastTargetDate = Carbon::parse($step->target_date);
-                $stepUsed = $step;
-                break;
-            }
-        }
-
-        // Jika tidak ada step terisi -> tetap null (tidak fallback ke tanggal_ta)
-        if (!$lastTargetDate) {
-            return null;
-        }
-
-        $now = Carbon::now();
-        $diffTarget = $now->diffInDays($lastTargetDate, false); // bisa negatif
-
-        // hitung diff tanggal_ta jika tersedia
-        $diffTa = null;
-        if (!empty($this->tanggal_ta)) {
-            $taDate = Carbon::parse($this->tanggal_ta);
-            $diffTa = $now->diffInDays($taDate, false);
-        }
-
-        // tentukan color berdasarkan nilai yang lebih mendesak (min)
-        $colorDiff = $diffTarget;
-        if ($diffTa !== null && $diffTa < $colorDiff) {
-            $colorDiff = $diffTa;
-        }
-        $color = $this->getColorByDiff($colorDiff);
-
-        return [
-            // nilai hari yang ditampilkan tetap dari target_date
-            'days_remaining' => $diffTarget,
-            'color' => $color,
-            'date_used' => $lastTargetDate->toDateString(),
-            'step_used' => $stepUsed ? class_basename($stepUsed) : null,
-            // opsional: sertakan kedua diff agar frontend bisa menampilkan detail
-            'diff_target' => $diffTarget,
-            'diff_ta' => $diffTa,
-        ];
-    }
-
-    /**
      * ta_status: hanya berdasar tanggal_ta (terpisah)
      */
     public function getTaStatusAttribute()
     {
-        if (empty($this->tanggal_ta)) {
+        if (empty($this->event_readiness->tanggal_ta)) {
             return null;
         }
 
-        $taDate = Carbon::parse($this->tanggal_ta);
+        $taDate = Carbon::parse($this->event_readiness->tanggal_ta);
         $diff = Carbon::now()->diffInDays($taDate, false);
 
         return [
@@ -239,8 +174,8 @@ class ReadinessMaterial extends BaseModel
         $color = null;
 
         // Prioritaskan tanggal_ta
-        if (!empty($this->tanggal_ta)) {
-            $taDate = Carbon::parse($this->tanggal_ta);
+        if (!empty($this->event_readiness->tanggal_ta)) {
+            $taDate = Carbon::parse($this->event_readiness->tanggal_ta);
             if ($po->gt($taDate)) {
                 $color = 'red';
             }
@@ -261,9 +196,69 @@ class ReadinessMaterial extends BaseModel
             'color' => $color,
             'delivery_date' => $po->toDateString(),
             'target_date' => $delivery->toDateString(),
-            'tanggal_ta' => $this->tanggal_ta,
+            'tanggal_ta' => $this->event_readiness->tanggal_ta,
         ];
     }
+
+    public function getTotalProgressAttribute()
+    {
+        // urutan step dan modelnya
+        $steps = [
+            'rekomendasi_material',
+            'notif_material',
+            'job_plan_material',
+            'pr_material',
+            'tender_material',
+            'po_material',
+            'fabrikasi_material',
+            'delivery_material',
+        ];
+
+        $lastStep = null;
+        $lastStatus = null;
+
+        $this->loadMissing([
+            'rekomendasi_material',
+            'notif_material',
+            'job_plan_material',
+            'pr_material',
+            'tender_material',
+            'po_material',
+            'fabrikasi_material',
+            'delivery_material',
+        ]);
+
+
+        // cari step terakhir yang ada datanya
+        foreach ($steps as $step) {
+            if ($this->$step) {
+                $lastStep = $step;
+                $lastStatus = $this->$step->status ?? null;
+            }
+        }
+
+        // kalau tidak ada step sama sekali
+        if (!$lastStep) {
+            return "0%";
+        }
+
+        // dapatkan posisi step terakhir
+        $stepIndex = array_search($lastStep, $steps) + 1; // +1 karena index mulai dari 0
+
+        // hitung nilai status (0 = 1, 1 = 0.5, selainnya = 0)
+        $statusValue = match($lastStatus) {
+            0 => 1,
+            1 => 0.5,
+            default => 0,
+        };
+
+        // hitung progress
+        $progress = (($stepIndex - 1) + $statusValue) / count($steps) * 100;
+
+        // format dengan 2 angka di belakang koma
+        return number_format($progress, 2) . '%';
+    }
+
 
 
 

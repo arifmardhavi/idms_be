@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('event_readiness_id')->constrained('event_readinesses')->onDelete('cascade');
             $table->string('material_name');
-            $table->date('tanggal_ta');
+            $table->integer('type')->default(0); // 0: LLDI, 1: Non LLDI
             $table->integer('status')->default(0);
             $table->timestamps();
         });

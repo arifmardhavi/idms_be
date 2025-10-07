@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('delivery_materials', function (Blueprint $table) {
             $table->id();
             $table->foreignId('readiness_material_id')->constrained('readiness_materials')->onDelete('cascade');
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->text('delivery_file')->nullable();
-            $table->date('target_date');
+            $table->date('target_date')->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();
         });

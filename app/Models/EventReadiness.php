@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class EventReadiness extends BaseModel
 {
     use HasFactory;
-    protected $fillable = ['event_name'];
+    protected $fillable = ['event_name', 'tanggal_ta'];
 
     public function readiness()
     {

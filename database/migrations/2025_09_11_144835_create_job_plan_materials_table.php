@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('job_plan_materials', function (Blueprint $table) {
             $table->id();
             $table->foreignId('readiness_material_id')->constrained('readiness_materials')->onDelete('cascade');
-            $table->bigInteger('no_wo');
+            $table->bigInteger('no_wo')->nullable();
             $table->text('kak_file')->nullable();
             $table->text('boq_file')->nullable();
-            $table->date('target_date');
+            $table->date('target_date')->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();
         });

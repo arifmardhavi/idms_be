@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('event_readiness_id')->constrained('event_readinesses')->onDelete('cascade');
             $table->string('jasa_name');
-            $table->date('tanggal_ta');
             $table->integer('status')->default(0);
             $table->timestamps();
         });

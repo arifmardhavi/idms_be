@@ -28,10 +28,10 @@ class PoMaterialController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'readiness_material_id' => 'required|exists:readiness_materials,id',
-            'no_po' => 'required|integer',
-            'po_file' => 'required|file',
-            'delivery_date' => 'required|date',
-            'target_date' => 'required|date',
+            'contract_id' => 'nullable|exists:contracts,id',
+            'no_po' => 'nullable|integer',
+            'delivery_date' => 'nullable|date',
+            'target_date' => 'nullable|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 
@@ -45,26 +45,6 @@ class PoMaterialController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            if($request->hasFile('po_file')){
-                $file = $request->file('po_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/material/po/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('readiness_ta/material/po'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload PO file.',
-                    ], 500);
-                }
-                $validatedData['po_file'] = $filename;
-            }
             $po_material = PoMaterial::create($validatedData);
 
             return response()->json([
@@ -132,8 +112,8 @@ class PoMaterialController extends Controller
         }
         $validator = Validator::make($request->all(), [
             'readiness_material_id' => 'sometimes|exists:readiness_materials,id',
+            'contract_id' => 'sometimes|nullable|exists:contracts,id',
             'no_po' => 'sometimes|integer',
-            'po_file' => 'sometimes|file',
             'delivery_date' => 'sometimes|date',
             'target_date' => 'sometimes|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
@@ -149,29 +129,6 @@ class PoMaterialController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            if($request->hasFile('po_file')){
-                $file = $request->file('po_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/material/po/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('readiness_ta/material/po'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload PO file.',
-                    ], 500);
-                }
-                if ($po_material->po_file && file_exists(public_path('readiness_ta/material/po/' . $po_material->po_file))) {
-                    unlink(public_path('readiness_ta/material/po/' . $po_material->po_file));
-                }
-                $validatedData['po_file'] = $filename;
-            }
             $po_material->update($validatedData);
             return response()->json([
                 'success' => true,

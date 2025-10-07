@@ -12,6 +12,6 @@ class PrJasa extends BaseModel
     
     public function readiness_jasa()
     {
-        return $this->belongsTo(ReadinessJasa::class);
+        return $this->belongsTo(ReadinessJasa::class, 'readiness_jasa_id');
     }
 }

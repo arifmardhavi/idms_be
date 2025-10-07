@@ -37,7 +37,6 @@ class ReadinessJasaController extends Controller
         $validator = Validator::make($request->all(), [
             'event_readiness_id' => 'required|exists:event_readinesses,id',
             'jasa_name' => 'required|string|max:100',
-            'tanggal_ta' => 'required|date',
             'status' => 'nullable|integer|in:0,1',
         ]);
 
@@ -92,11 +91,13 @@ class ReadinessJasaController extends Controller
     {
         $readiness_jasa = ReadinessJasa::with([
             'rekomendasi_jasa',
+            'rekomendasi_jasa.historical_memorandum',
             'notif_jasa',
             'job_plan_jasa',
             'pr_jasa',
             'tender_jasa',
             'contract_jasa',
+            'contract_jasa.contract',
         ])->where('event_readiness_id', $id)->get();
 
         if ($readiness_jasa->isEmpty()) {
@@ -130,7 +131,6 @@ class ReadinessJasaController extends Controller
 
         $validator = Validator::make($request->all(), [
             'jasa_name' => 'sometimes|string|max:100',
-            'tanggal_ta' => 'sometimes|date',
             'status' => 'sometimes|integer|in:0,1',
         ]);
 

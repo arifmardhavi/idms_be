@@ -28,8 +28,8 @@ class TenderJasaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'readiness_jasa_id' => 'required|exists:readiness_jasas,id',
-            'description' => 'required|string',
-            'target_date' => 'required|date',
+            'description' => 'nullable|string',
+            'target_date' => 'nullable|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 

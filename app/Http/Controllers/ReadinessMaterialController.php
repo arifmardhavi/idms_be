@@ -39,8 +39,8 @@ class ReadinessMaterialController extends Controller
         $validator = Validator::make($request->all(), [
             'event_readiness_id' => 'required|exists:event_readinesses,id',
             'material_name' => 'required|string|max:100',
-            'tanggal_ta' => 'required|date',
-            'status' => 'nullable|integer|in:0,1',
+            'type' => 'nullable|integer|in:0,1', // 0: LLDI, 1: Non LLDI
+            'status' => 'nullable|integer|in:0,1', // 0: sudah, 1: belum
         ]);
 
         if ($validator->fails()) {
@@ -92,7 +92,18 @@ class ReadinessMaterialController extends Controller
 
     public function showByEvent(string $id)
     {
-        $readiness_material = ReadinessMaterial::where('event_readiness_id', $id)->get();
+        $readiness_material = ReadinessMaterial::with(
+            'rekomendasi_material',
+            'rekomendasi_material.historical_memorandum',
+            'notif_material',
+            'job_plan_material',
+            'pr_material',
+            'tender_material',
+            'po_material',
+            'po_material.contract',
+            'fabrikasi_material',
+            'delivery_material'
+        )->orderBy('id', 'desc')->where('event_readiness_id', $id)->get();
 
         if (!$readiness_material) {
             return response()->json([
@@ -124,7 +135,7 @@ class ReadinessMaterialController extends Controller
 
         $validator = Validator::make($request->all(), [
             'material_name' => 'sometimes|string|max:100',
-            'tanggal_ta' => 'sometimes|date',
+            'type' => 'sometimes|integer|in:0,1', // 0: LLDI, 1: Non LLDI
             'status' => 'sometimes|integer|in:0,1',
         ]);
 

@@ -55,7 +55,7 @@ class ContractController extends Controller
             'vendor_name' => 'required|string|max:255' , 
             'no_contract'=> 'required|string|max:200|unique:contracts,no_contract', 
             'contract_name' => 'required|string|max:255',
-            'contract_type' => 'required|in:1,2,3', 
+            'contract_type' => 'required|in:1,2,3', // 1 = Lumpsum, 2 = Unit Price, 3 = PO Material
             'contract_date' => 'nullable|date|required_if:contract_type,!=3', // contract_date is required if contract_type is not 3
             'contract_price' => 'required|integer' , 
             'contract_file' => 'required|file|mimes:pdf|max:30720',
@@ -149,36 +149,75 @@ class ContractController extends Controller
      * Display the specified resource.
      */
     public function show(string $id)
-{
-    // Ambil contract + relasi termins dan masing-masing billing count
-    $contract = Contract::withCount(['termin', 'spk', 'amandemen'])
-        ->with(['termin' => function ($query) {
-            $query->withCount('termBilling');
-        }])
-        ->find($id);
+    {
+        // Ambil contract + relasi termins dan masing-masing billing count
+        $contract = Contract::withCount(['termin', 'spk', 'amandemen'])
+            ->with(['termin' => function ($query) {
+                $query->withCount('termBilling');
+            }])
+            ->find($id);
 
-    if (!$contract) {
+        if (!$contract) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Contract not found.',
+            ], 404);
+        }
+
+        // Hitung total billing dari semua termin
+        $billingCount = $contract->termin->sum('term_billing_count');
+
         return response()->json([
-            'success' => false,
-            'message' => 'Contract not found.',
-        ], 404);
+            'success' => true,
+            'message' => 'Contract retrieved successfully.',
+            'data' => [
+                ...$contract->toArray(),
+                'termin_count' => $contract->termin_count,
+                'billing_count' => $billingCount,
+                'spk_count' => $contract->spk_count,
+                'amandemen_count' => $contract->amandemen_count,
+            ],
+        ], 200);
     }
 
-    // Hitung total billing dari semua termin
-    $billingCount = $contract->termin->sum('term_billing_count');
+    function showByPoMaterialType()
+    {
+        $contracts = Contract::where('contract_type', 3)->where('contract_status', 1)->get();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Contract retrieved successfully.',
-        'data' => [
-            ...$contract->toArray(),
-            'termin_count' => $contract->termin_count,
-            'billing_count' => $billingCount,
-            'spk_count' => $contract->spk_count,
-            'amandemen_count' => $contract->amandemen_count,
-        ],
-    ], 200);
-}
+        if ($contracts->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No contracts found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Contracts retrieved successfully.',
+            'data' => $contracts,
+        ], 200);
+    }
+    function showByUnPoMaterialType()
+    {
+        $contracts = Contract::where('contract_type', '!=', 3)
+        ->where('contract_status', 1)
+        ->get();
+
+
+        if ($contracts->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No contracts found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Contracts retrieved successfully.',
+            'data' => $contracts,
+        ], 200);
+    }
+
 
 
     /**

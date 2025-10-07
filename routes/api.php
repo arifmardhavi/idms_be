@@ -219,6 +219,8 @@ Route::middleware(['auth:api'])->group(function () {
     // CONTRACT
     Route::get('/monitoring_contract', [ContractController::class, 'monitoring']);
     Route::put('contract/current_status/{id}', [ContractController::class, 'updateCurrentStatus']);
+    Route::get('contracts/po_material_type', [ContractController::class, 'showByPoMaterialType']);
+    Route::get('contracts/un_po_material_type', [ContractController::class, 'showByUnPoMaterialType']);
 
     // HISTORICAL MEMORANDUM LAMPIRAN
     Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId']);

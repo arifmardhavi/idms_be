@@ -31,7 +31,7 @@ class RekomendasiJasaController extends Controller
             'readiness_jasa_id' => 'required|exists:readiness_jasas,id',
             'historical_memorandum_id' => 'nullable|exists:historical_memorandum,id',
             'rekomendasi_file' => 'nullable|file',
-            'target_date' => 'required|date',
+            'target_date' => 'nullable|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: biru, 1: hijau, 2: kuning, 3: merah
         ]);
 
@@ -139,7 +139,7 @@ class RekomendasiJasaController extends Controller
             'readiness_jasa_id' => 'sometimes|exists:readiness_jasas,id',
             'historical_memorandum_id' => 'nullable|exists:historical_memorandum,id',
             'rekomendasi_file' => 'sometimes|file',
-            'target_date' => 'sometimes|date',
+            'target_date' => 'sometimes|nullable|date',
             'status' => 'sometimes|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 

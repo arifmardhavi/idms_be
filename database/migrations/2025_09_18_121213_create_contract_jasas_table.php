@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('contract_jasas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('readiness_jasa_id')->constrained('readiness_jasas')->onDelete('cascade');
-            $table->text('contract_file');
+            $table->foreignId('contract_id')->nullable()->constrained('contracts')->onDelete('set null');
             $table->integer('status')->default(0);
             $table->timestamps();
         });

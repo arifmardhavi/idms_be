@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('pr_jasas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('readiness_jasa_id')->constrained('readiness_jasas')->onDelete('cascade');
-            $table->bigInteger('no_pr');
-            $table->date('target_date');
+            $table->bigInteger('no_pr')->nullable();
+            $table->date('target_date')->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();
         });

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('readiness_jasa_id')->constrained('readiness_jasas')->onDelete('cascade');
             $table->foreignId('historical_memorandum_id')->nullable()->constrained('historical_memorandum')->onDelete('set null');
             $table->text('rekomendasi_file')->nullable();
-            $table->date('target_date');
+            $table->date('target_date')->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();
         });

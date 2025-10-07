@@ -28,10 +28,10 @@ class JobPlanMaterialController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'readiness_material_id' => 'required|exists:readiness_materials,id',
-            'no_wo' => 'required|integer',
+            'no_wo' => 'nullable|integer',
             'kak_file' => 'nullable|file',
             'boq_file' => 'nullable|file',
-            'target_date' => 'required|date',
+            'target_date' => 'nullable|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 
@@ -157,7 +157,7 @@ class JobPlanMaterialController extends Controller
             'no_wo' => 'sometimes|integer',
             'kak_file' => 'nullable|file',
             'boq_file' => 'nullable|file',
-            'target_date' => 'sometimes|date',
+            'target_date' => 'sometimes|nullable|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 

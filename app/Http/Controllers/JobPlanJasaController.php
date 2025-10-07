@@ -28,11 +28,11 @@ class JobPlanJasaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'readiness_jasa_id' => 'required|exists:readiness_jasas,id',
-            'no_wo' => 'required|integer',
+            'no_wo' => 'nullable|integer',
             'kak_file' => 'nullable|file',
             'boq_file' => 'nullable|file',
-            'durasi_preparation' => 'required|integer',
-            'target_date' => 'required|date',
+            'durasi_preparation' => 'nullable|integer',
+            'target_date' => 'nullable|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 
