@@ -189,4 +189,73 @@ class ReadinessJasaController extends Controller
             ], 500);
         }
     }
+
+    public function dashboard(string $id)
+    {
+        try {
+            $readiness_jasa = ReadinessJasa::with([
+                'rekomendasi_jasa',
+                'notif_jasa',
+                'job_plan_jasa',
+                'pr_jasa',
+                'tender_jasa',
+                'contract_jasa',
+            ])->where('event_readiness_id', $id)->get();
+
+            $steps = [
+                'rekomendasi_jasa',
+                'notif_jasa',
+                'job_plan_jasa',
+                'pr_jasa',
+                'tender_jasa',
+                'contract_jasa',
+            ];
+
+            // Hitung jumlah data di setiap step (hanya step terakhir)
+            $stepCounts = array_fill_keys($steps, 0);
+
+            foreach ($readiness_jasa as $jasa) {
+                $lastStep = null;
+                foreach ($steps as $step) {
+                    if ($jasa->$step) {
+                        $lastStep = $step;
+                    }
+                }
+
+                if ($lastStep) {
+                    $stepCounts[$lastStep]++;
+                }
+            }
+
+            // Hitung rata-rata total progress keseluruhan
+            $totalProgressValues = $readiness_jasa->map(function ($item) {
+                return (float) str_replace('%', '', $item->total_progress);
+            });
+
+            $averageProgress = $totalProgressValues->count() > 0
+                ? number_format($totalProgressValues->avg(), 2) . '%'
+                : '0.00%';
+
+            // Tambahkan total data keseluruhan
+            $totalData = $readiness_jasa->count();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dashboard Readiness TA Jasa summary retrieved successfully.',
+                'data' => [
+                    'steps' => $stepCounts,
+                    'average_total_progress' => $averageProgress,
+                    'total_data' => $totalData,
+                ],
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load dashboard data.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

@@ -234,6 +234,10 @@ Route::middleware(['auth:api'])->group(function () {
     // CONTRACTS BY USER
     Route::get('/contracts/user', [ContractController::class, 'contractsByUser']);
 
+    // DASHBOARD READINESS MATERIAL
+    Route::get('/readiness_material/dashboard/{id}', [ReadinessMaterialController::class, 'dashboard']);
+    // DASHBOARD READINESS JASA
+    Route::get('/readiness_jasa/dashboard/{id}', [ReadinessJasaController::class, 'dashboard']);
     //INTERNAL INSPECTION
     Route::get('/internal_inspection/laporan_inspection/{id}', [InternalInspectionController::class, 'showByLaporanInspection']);
     //EXTERNAL INSPECTION
@@ -266,4 +270,6 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/readiness_jasa/event/{id}', [ReadinessJasaController::class, 'showByEvent']);
     // OPEN FILE ACTIVITY
     Route::get('/open_file_activity/user/{id}', [OpenFileActivityController::class, 'showByUserId']);
+   
+
 });
