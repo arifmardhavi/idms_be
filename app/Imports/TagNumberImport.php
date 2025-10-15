@@ -18,26 +18,27 @@ class TagNumberImport implements ToCollection, WithHeadingRow
     {
         // Load reference data to reduce queries
         $units = Unit::pluck('id', 'unit_name')->mapWithKeys(fn($id, $unit_name) => [strtolower($unit_name) => $id]);
-        $categories = Category::pluck('id', 'category_name')->mapWithKeys(fn($id, $category_name) => [strtolower($category_name) => $id]);
+        // $categories = Category::pluck('id', 'category_name')->mapWithKeys(fn($id, $category_name) => [strtolower($category_name) => $id]);
         $types = Type::pluck('id', 'type_name')->mapWithKeys(fn($id, $type_name) => [strtolower($type_name) => $id]);
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 1; // karena heading row di baris pertama
 
             $unitName = strtolower(trim($row['unit']));
-            $categoryName = strtolower(trim($row['kategori']));
+            // $categoryName = strtolower(trim($row['kategori']));
             $typeName = strtolower(trim($row['tipe']));
             $tagNumberValue = trim($row['tag_number']);
 
             $unitId = $units[$unitName] ?? null;
-            $categoryId = $categories[$categoryName] ?? null;
+            // $categoryId = $categories[$categoryName] ?? null;
             $typeId = $types[$typeName] ?? null;
 
             // Cek validitas relasi
-            if (!$unitId || !$categoryId || !$typeId) {
+            // if (!$unitId || !$categoryId || !$typeId) {
+            if (!$unitId || !$typeId) {
                 $this->errors[] = [
                     'row' => $rowNumber,
-                    'message' => "Unit/Tipe/Kategori tidak ditemukan di baris $rowNumber.",
+                    'message' => "Unit/Tipe tidak ditemukan di baris $rowNumber.",
                 ];
                 continue;
             }
@@ -54,9 +55,9 @@ class TagNumberImport implements ToCollection, WithHeadingRow
             // Simpan jika valid dan tidak duplikat
             TagNumber::create([
                 'unit_id' => $unitId,
-                'category_id' => $categoryId,
+                // 'category_id' => $categoryId,
                 'type_id' => $typeId,
-                'tag_number' => $tagNumberValue,
+                'tag_number' => strtoupper($tagNumberValue),
                 'status' => $row['status'] ?? 1,
                 'description' => $row['deskripsi'] ?? null,
             ]);
