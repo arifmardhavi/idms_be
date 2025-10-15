@@ -318,6 +318,9 @@ class Contract extends BaseModel
 
         return [
             'sisa' => $sisaNilai,
+            'nilai' => $nilaiKontrak,
+            'denda' => $denda,
+            'totalPenagihan' => $totalPenagihan,
             'color' => $color
         ];
     }
