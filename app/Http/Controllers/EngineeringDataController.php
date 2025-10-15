@@ -30,7 +30,7 @@ class EngineeringDataController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'tag_number_id' => 'required|exists:tag_numbers,id|unique:engineering_data,tag_number_id',
-            'drawing_file' => 'required|file|mimes:pdf,jpg,jpeg,png,svg,webp|max:20480',
+            'drawing_file' => 'sometimes|nullable|file|mimes:pdf,jpg,jpeg,png,svg,webp|max:20480',
         ]);
 
         if ($validator->fails()) {
@@ -50,7 +50,7 @@ class EngineeringDataController extends Controller
             ]);
 
             // Jika berhasil, simpan drawing
-            if ($engineeringData) {
+            if ($engineeringData && isset($validatedData['drawing_file'])) {
                 $file = $request->file('drawing_file');
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
                 $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
@@ -70,11 +70,11 @@ class EngineeringDataController extends Controller
                 }  
                 $validatedData['drawing_file'] = $filename;
                 $validatedData['engineering_data_id'] = $engineeringData->id; // Set engineering_data_id
+                
+                $gaDrawing = GaDrawing::create($validatedData);
             }
-            
-            $gaDrawing = GaDrawing::create($validatedData);
 
-            if ($engineeringData && $gaDrawing) {
+            if ($engineeringData) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Engineering data and drawing uploaded successfully',

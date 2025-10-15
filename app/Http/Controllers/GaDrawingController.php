@@ -47,7 +47,7 @@ class GaDrawingController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'no_dokumen' => 'nullable|string|max:255|unique:ga_drawings,no_dokumen', // Validasi no_dokumen unik
+            'no_dokumen' => 'nullable|string|max:255', // Validasi no_dokumen unik
             'engineering_data_id' => 'required|exists:engineering_data,id',
             'date_drawing' => 'nullable|date', // Tambahkan validasi untuk tanggal drawing
             'drawing_file' => 'required|array',
@@ -160,7 +160,7 @@ class GaDrawingController extends Controller
             ], 404);
         }
         $validator = Validator::make($request->all(), [
-            'no_dokumen' => 'nullable|string|max:255|unique:ga_drawings,no_dokumen,' . $id, // Validasi no_dokumen unik kecuali untuk ID yang sama
+            'no_dokumen' => 'nullable|string|max:255',
             'engineering_data_id' => 'required|exists:engineering_data,id',
             'drawing_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,zip,rar|max:20480',
             'date_drawing' => 'nullable|date', // Tambahkan validasi untuk tanggal drawing

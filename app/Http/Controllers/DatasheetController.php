@@ -165,7 +165,7 @@ class DatasheetController extends Controller
             ], 404);
         }
         $validator = Validator::make($request->all(), [
-            'no_dokumen' => 'nullable|string|max:255|unique:datasheets,no_dokumen,' . $id,
+            'no_dokumen' => 'nullable|string|max:255',
             'engineering_data_id' => 'sometimes|required|exists:engineering_data,id',
             'datasheet_file' => 'sometimes|required|file|mimes:pdf,jpg,jpeg,png,svg,webp|max:204800',
             'date_datasheet' => 'nullable|date',
