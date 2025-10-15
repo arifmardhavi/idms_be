@@ -125,7 +125,7 @@ class TermBillingController extends Controller
         $validator = Validator::make($request->all(), [
             'termin_id' => 'required|exists:termins,id',
             'billing_value' => 'required|string|max:100',
-            'payment_document' => 'required|file|mimes:pdf|max:3072',
+            'payment_document' => 'sometimes|nullable|file|mimes:pdf|max:3072',
         ]);
 
         if ($validator->fails()) {
@@ -138,34 +138,36 @@ class TermBillingController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            $file = $request->file('payment_document');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-            $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-            $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-            $version = 0; // Awal versi
-            // Format nama file
-            $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-            // Cek apakah file dengan nama ini sudah ada di folder tujuan
-            while (file_exists(public_path("contract/payment/".$filename))) {
-                $version++;
+            if($request->hasFile('payment_document')){
+                $file = $request->file('payment_document');
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                $version = 0; // Awal versi
+                // Format nama file
                 $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-            }
-            // Store file in public/contract/payment
-            $path = $file->move(public_path('contract/payment'), $filename);
-            if(!$path){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Payment Document failed update.',
-                ], 422);
-            }  
-            $validatedData['payment_document'] = $filename;
+
+                // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                while (file_exists(public_path("contract/payment/".$filename))) {
+                    $version++;
+                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                }
+                // Store file in public/contract/payment
+                $path = $file->move(public_path('contract/payment'), $filename);
+                if(!$path){
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Payment Document failed update.',
+                    ], 422);
+                }  
+                $validatedData['payment_document'] = $filename;
                 if($termBilling->payment_document){
                     $termBillingBefore = public_path('contract/payment/' . $termBilling->payment_document);
                     if (file_exists($termBillingBefore)) {
                         unlink($termBillingBefore); // Hapus file
                     }
                 }
+            }
             
             if($termBilling->update($validatedData)){
                 return response()->json([
