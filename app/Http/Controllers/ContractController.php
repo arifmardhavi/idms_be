@@ -436,36 +436,56 @@ class ContractController extends Controller
     {
         $today = Carbon::today();
 
-         $contracts = Contract::all();
-         $count = $contracts->count();
+        $contracts = Contract::all();
+        $count = $contracts->count();
 
+        // Hitung total berdasarkan status & tipe
         $blue = Contract::where('contract_status', 0)->count(); // kontrak selesai
 
         $green = 0;
         $yellow = 0;
         $red = 0;
         $active = 0;
+        $selesai = 0;
         $lumpsum = 0;
         $unit_price = 0;
+        $po_material = 0;
+
+        // Tambahan untuk kontrak aktif per tipe
+        $activeLumpsum = 0;
+        $activeUnitPrice = 0;
+        $activePoMaterial = 0;
 
         foreach ($contracts as $contract) {
-            // Skip kontrak yang sudah selesai (status 0) agar tidak dihitung ganda
+            // Hitung berdasarkan tipe kontrak
             if ($contract->contract_type == 1) {
                 $lumpsum++;
-            }else{
+            } elseif ($contract->contract_type == 2) {
                 $unit_price++;
-            }
-            if ($contract->contract_status == 0) {
-                continue;
+            } elseif ($contract->contract_type == 3) {
+                $po_material++;
             }
 
+            // Jika kontrak aktif (status = 1)
             if ($contract->contract_status == 1) {
                 $active++;
+                if ($contract->contract_type == 1) {
+                    $activeLumpsum++;
+                } elseif ($contract->contract_type == 2) {
+                    $activeUnitPrice++;
+                } elseif ($contract->contract_type == 3) {
+                    $activePoMaterial++;
+                }
             }
 
+            // Lewati kontrak yang selesai
+            if ($contract->contract_status == 0) {
+                $selesai++;
+            }
 
+            // Hitung warna durasi MPP global
             $endDate = Carbon::parse($contract->contract_end_date);
-            $weeksDiff = $today->diffInWeeks($endDate, false); // false agar bisa negatif
+            $weeksDiff = $today->diffInWeeks($endDate, false);
 
             if ($weeksDiff >= 4) {
                 $green++;
@@ -476,60 +496,81 @@ class ContractController extends Controller
             }
         }
 
-        // monitoring progress pekerjaan 
+        // Monitoring progress pekerjaan
         $statusCounts = [
             'blue' => 0,   // Kontrak selesai
             'green' => 0,  // Deviasi 0%
             'yellow' => 0, // Deviasi ≤ 20%
-            'red' => 0,  // Deviasi > 20%
+            'red' => 0,    // Deviasi > 20%
             'black' => 0,  // Belum upload amandemen
         ];
 
         foreach ($contracts as $contract) {
-            $color = $contract->monitoring_progress['color'];
+            $color = $contract->monitoring_progress['color'] ?? null;
+            if (isset($statusCounts[$color])) {
+                $statusCounts[$color]++;
+            }
+        }
 
-            switch ($color) {
-                case 'blue':
-                    $statusCounts['blue']++;
-                    break;
-                case 'green':
-                    $statusCounts['green']++;
-                    break;
-                case 'yellow':
-                    $statusCounts['yellow']++;
-                    break;
-                case 'red':
-                    $statusCounts['red']++;
-                    break;
-                case 'black':
-                    $statusCounts['black']++;
-                    break;
+        // Bagian Tambahan: Data untuk 3 Pie Chart
+        $activeContracts = $contracts->where('contract_status', 1);
+
+        // Durasi MPP untuk Lumpsum & Unit Price
+        $durasiLumpsumUnit = ['green' => 0, 'yellow' => 0, 'red' => 0];
+        // Durasi MPP untuk PO Material
+        $durasiPoMaterial = ['green' => 0, 'yellow' => 0, 'red' => 0];
+        // Sisa Nilai Kontrak (Lumpsum & Unit Price)
+        $sisaNilaiLumpsumUnit = ['green' => 0, 'yellow' => 0, 'red' => 0];
+
+        foreach ($activeContracts as $contract) {
+            $durasi = $contract->durasi_mpp['color'];
+            $sisaNilai = $contract->sisa_nilai['color'];
+
+            // Durasi MPP (Lumpsum + Unit Price)
+            if (in_array($contract->contract_type, [1, 2]) && isset($durasiLumpsumUnit[$durasi])) {
+                $durasiLumpsumUnit[$durasi]++;
+            }
+
+            // Durasi MPP (PO Material)
+            if ($contract->contract_type == 3 && isset($durasiPoMaterial[$durasi])) {
+                $durasiPoMaterial[$durasi]++;
+            }
+
+            // Sisa Nilai (Lumpsum + Unit Price)
+            if (in_array($contract->contract_type, [1, 2]) && isset($sisaNilaiLumpsumUnit[$sisaNilai])) {
+                $sisaNilaiLumpsumUnit[$sisaNilai]++;
             }
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Monitoring durasi MPP berhasil.',
+            'message' => 'Monitoring data berhasil diambil.',
             'data' => [
-                'total_contract' => $count, 
+                'total_contract' => $count,
                 'total_active_contract' => $active,
+                'total_selesai_contract' => $selesai,
                 'total_lumpsum_contract' => $lumpsum,
                 'total_unit_price_contract' => $unit_price,
+                'total_po_material_contract' => $po_material,
+                // Tambahan field baru
+                'active_lumpsum_contract' => $activeLumpsum,
+                'active_unit_price_contract' => $activeUnitPrice,
+                'active_po_material_contract' => $activePoMaterial,
                 'monitoring_durasi_mpp' => [
                     'blue' => $blue,
                     'green' => $green,
                     'yellow' => $yellow,
                     'red' => $red,
                 ],
-                'monitoring_progress_pekerjaan' => [
-                    'blue' => $statusCounts['blue'],
-                    'green' => $statusCounts['green'],
-                    'yellow' => $statusCounts['yellow'],
-                    'red' => $statusCounts['red'],
-                    'black' => $statusCounts['black'],
-                ],
+                'monitoring_progress_pekerjaan' => $statusCounts,
+                'monitoring_durasi_mpp_lumpsum_unit' => $durasiLumpsumUnit,
+                'monitoring_durasi_mpp_po_material' => $durasiPoMaterial,
+                'monitoring_sisa_nilai_lumpsum_unit' => $sisaNilaiLumpsumUnit,
             ]
         ], 200);
     }
+
+
+
 
 }
