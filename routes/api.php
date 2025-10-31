@@ -41,6 +41,7 @@ use App\Http\Controllers\{
     NotifMaterialController,
     OnstreamInspectionController,
     OpenFileActivityController,
+    P_IdController,
     PoMaterialController,
     PrJasaController,
     PrMaterialController,
@@ -167,6 +168,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('tender_jasa', TenderJasaController::class);
     Route::apiResource('contract_jasa', ContractJasaController::class);
     Route::apiResource('open_file_activity', OpenFileActivityController::class);
+    Route::apiResource('p_id', P_IdController::class);
     
 
     /*
