@@ -49,6 +49,7 @@ class DatasheetController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'nama_dokumen' => 'nullable|string|max:255',
             'no_dokumen' => 'nullable|string|max:255|unique:datasheets,no_dokumen', // Validasi no_dokumen unik
             'engineering_data_id' => 'required|exists:engineering_data,id',
             'date_datasheet' => 'nullable|date',
@@ -165,6 +166,7 @@ class DatasheetController extends Controller
             ], 404);
         }
         $validator = Validator::make($request->all(), [
+            'nama_dokumen' => 'nullable|string|max:255',
             'no_dokumen' => 'nullable|string|max:255',
             'engineering_data_id' => 'sometimes|required|exists:engineering_data,id',
             'datasheet_file' => 'sometimes|required|file|mimes:pdf,jpg,jpeg,png,svg,webp|max:204800',

@@ -10,6 +10,7 @@ class Datasheet extends BaseModel
     use HasFactory;
     protected $table = 'datasheets';
     protected $fillable = [
+        'nama_dokumen',
         'no_dokumen',
         'engineering_data_id',
         'datasheet_file',
