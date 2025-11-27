@@ -13,7 +13,11 @@ class ContractController extends Controller
      */
     public function index()
     {
-        $contract = Contract::all();
+        $contract = Contract::all()
+            ->sortBy(function ($item) {
+                return $item->durasi_mpp['sisa'];  
+            })
+            ->values(); 
 
         return response()->json([
             'success' => true,
@@ -21,6 +25,7 @@ class ContractController extends Controller
             'data' => $contract,
         ], 200);
     }
+
 
     /**
      * Display contracts related to the logged-in vendor user.

@@ -226,4 +226,40 @@ class HistoricalMemorandumController extends Controller
             ], 500);
         }
     }
+
+    public function downloadHistoricalMemorandumFiles(Request $request)
+    {
+        $ids = $request->input('ids');  // Mendapatkan IDs dari frontend
+        
+        // Ambil data Historical Memorandum berdasarkan ID yang dipilih
+        $historical_memorandums = HistoricalMemorandum::whereIn('id', $ids)->get();
+        
+        // Buat file ZIP untuk menyimpan memorandum file
+        $zip = new \ZipArchive();
+        $zipFilePath = public_path('file_historical_memorandum.zip');
+
+        if (file_exists($zipFilePath)) {
+            unlink($zipFilePath);
+        }
+    
+        if ($zip->open($zipFilePath, \ZipArchive::CREATE) !== TRUE) {
+            return response()->json(['success' => false, 'message' => 'Gagal membuat file ZIP.']);
+        }
+    
+        foreach ($historical_memorandums as $historical_memorandum) {
+            // Cek jika file memorandum ada dan file tersebut valid
+            if ($historical_memorandum->memorandum_file) {
+                $filePath = public_path('historical_memorandum/' . $historical_memorandum->memorandum_file);
+                if (file_exists($filePath)) {
+                    // Menambahkan file ke dalam ZIP
+                    $zip->addFile($filePath, basename($filePath));  
+                }
+            }
+        }
+    
+        $zip->close();
+    
+        // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
+        return response()->json(['success' => true, 'url' => url('file_historical_memorandum.zip')]);
+    }
 }

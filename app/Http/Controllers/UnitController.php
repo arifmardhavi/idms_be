@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DynamicExport;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UnitController extends Controller
 {
@@ -183,5 +185,76 @@ class UnitController extends Controller
                 'errors' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function exportUnit(){
+        $data = Unit::all()->map(function($item){
+            return [
+                'unit_name' => $item->unit_name,
+                'unit_type' => $item->unit_type == 1 ? 'Pipa Penyalur' : 'Instalasi',
+                'description' => $item->description,
+                'status' => $item->status == 1 ? 'Active' : 'Nonactive',
+            ];
+        })->toArray();
+        $columns = [
+            'unit_name' => 'Nama Unit',
+            'unit_type' => 'Tipe Unit',
+            'description' => 'Deskripsi',
+            'status' => 'Status',
+        ];
+        $options = [
+            'headerRows' => [
+                ['PT Kilang Pertamina International'],
+                ['Laporan Kontrak - Periode: 2025'],
+                // custom grouping: shorter row will auto-merge to remaining columns
+                ['Informasi Kontrak', '', '', 'Tanggal Kontrak', '', '', '', ''],
+            ],
+            'filter' => true,
+            'freezeHeader' => false,
+            'styles' => [
+                'font' => ['name' => 'Calibri', 'size' => 11]
+            ],
+            // manual number & date formats (key-based)
+            // 'numberFormat' => [
+            //     'nilai_kontrak' => '#,##0',        // integer rupiah
+            //     'deviasi' => '0.00',               // numeric with decimals
+            // ],
+            // 'dateFormat' => [
+            //     'start_date' => NumberFormat::FORMAT_DATE_DDMMYYYY,
+            //     'end_date' => NumberFormat::FORMAT_DATE_DDMMYYYY,
+            // ],
+            // conditional styling: highlight overdue
+            'conditional' => [
+                [
+                    'column' => 'status',
+                    'condition' => function($v){ return $v !== 'Active'; },
+                    'style' => [
+                        'font' => ['color' => ['argb' => 'FFFFFFFF'], 'bold' => true],
+                        'fill' => ['fillType' => 'solid', 'color' => ['argb' => 'FFCC0000']],
+                    ],
+                ],
+                // [
+                //     'column' => 'deviasi',
+                //     'condition' => function($v){ return is_numeric($v) && $v < -20; },
+                //     'style' => [
+                //         'font' => ['color' => ['argb' => 'FF000000']],
+                //         'fill' => ['fillType' => 'solid', 'color' => ['argb' => 'FFFFC000']],
+                //     ],
+                // ],
+            ],
+            // columnWidth: manual by key or letter
+            // 'columnWidth' => [
+            //     'no_contract' => 20,
+            //     'vendor' => 30,
+            //     'A' => 10, // also allowed
+            // ],
+            // auto width: enable combined ShouldAutoSize + custom
+            'autoWidth' => true,
+            'autoWidthMax' => 50,
+            // border
+            'border' => ['onlyHeader' => true, 'onlyData' => true],
+        ];
+        return Excel::download(new DynamicExport($data, $columns, $options), 'Unit-report.xlsx');
+
     }
 }

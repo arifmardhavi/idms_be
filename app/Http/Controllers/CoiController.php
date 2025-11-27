@@ -16,7 +16,7 @@ class CoiController extends Controller
      */
     public function index()
     {
-        $coi = Coi::with(['tag_number', 'plo', 'plo.unit'])->orderBy('id', 'desc')->get();
+        $coi = Coi::with(['tag_number', 'plo', 'plo.unit'])->orderBy('overdue_date', 'asc')->get();
 
         return response()->json([
             'success' => true,

@@ -189,4 +189,40 @@ class LampiranMemoController extends Controller
             ], 500);
         }
     }
+
+    public function downloadLampiranMemoFiles(Request $request)
+    {
+        $ids = $request->input('ids');  // Mendapatkan IDs dari frontend
+        
+        // Ambil data Historical Memorandum berdasarkan ID yang dipilih
+        $lampiranMemos = LampiranMemo::whereIn('id', $ids)->get();
+        
+        // Buat file ZIP untuk menyimpan memorandum file
+        $zip = new \ZipArchive();
+        $zipFilePath = public_path('file_lampiran_memo.zip');
+
+        if (file_exists($zipFilePath)) {
+            unlink($zipFilePath);
+        }
+    
+        if ($zip->open($zipFilePath, \ZipArchive::CREATE) !== TRUE) {
+            return response()->json(['success' => false, 'message' => 'Gagal membuat file ZIP.']);
+        }
+    
+        foreach ($lampiranMemos as $lampiranMemo) {
+            // Cek jika file lampiran memorandum ada dan file tersebut valid
+            if ($lampiranMemo->lampiran_memo) {
+                $filePath = public_path('historical_memorandum/lampiran/' . $lampiranMemo->lampiran_memo);
+                if (file_exists($filePath)) {
+                    // Menambahkan file ke dalam ZIP
+                    $zip->addFile($filePath, basename($filePath));  
+                }
+            }
+        }
+    
+        $zip->close();
+    
+        // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
+        return response()->json(['success' => true, 'url' => url('file_lampiran_memo.zip')]);
+    }
 }

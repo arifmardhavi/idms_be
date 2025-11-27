@@ -14,7 +14,7 @@ class SkhpController extends Controller
      */
     public function index()
     {
-        $skhp = Skhp::with(['tag_number', 'plo', 'plo.unit'])->orderBy('id', 'desc')->get();
+        $skhp = Skhp::with(['tag_number', 'plo', 'plo.unit'])->orderBy('overdue_date', 'asc')->get();
 
         return response()->json([
             'success' => true,

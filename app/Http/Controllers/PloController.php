@@ -14,7 +14,7 @@ class PloController extends Controller
      */
     public function index()
     {
-        $plo = Plo::with('unit')->orderBy('id', 'desc')->get();
+        $plo = Plo::with('unit')->orderBy('overdue_date', 'asc')->get();
 
         return response()->json([
             'success' => true,
