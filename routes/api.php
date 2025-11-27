@@ -50,6 +50,7 @@ use App\Http\Controllers\{
     ReadinessMaterialController,
     RekomendasiJasaController,
     RekomendasiMaterialController,
+    SertifikatKalibrasiController,
     SurveillanceController,
     TenderJasaController,
     TenderMaterialController
@@ -92,6 +93,7 @@ Route::middleware(['auth:api'])->group(function () {
     */
     Route::middleware(['role:1,99'])->group(function () {
         Route::apiResource('units', UnitController::class)->only(['store', 'update', 'destroy']);
+        Route::get('exportunits', [UnitController::class, 'exportUnit']);
         Route::apiResource('categories', CategoryController::class)->only(['store', 'update', 'destroy']);
         Route::apiResource('types', TypeController::class)->only(['store', 'update', 'destroy']);
         Route::apiResource('tagnumbers', Tag_numberController::class)->only(['store', 'update', 'destroy']);
@@ -132,6 +134,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('plo', PloController::class);
     Route::apiResource('coi', CoiController::class);
     Route::apiResource('skhp', SkhpController::class);
+    Route::apiResource('sertifikat_kalibrasi', SertifikatKalibrasiController::class);
     Route::apiResource('moc', MocController::class);
     Route::apiResource('spk', SpkController::class);
     Route::apiResource('spk_progress', Spk_progressController::class);
@@ -195,6 +198,11 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/skhp/download', [SkhpController::class, 'downloadskhpCertificates']);
     Route::put('/skhp/deletefile/{id}', [SkhpController::class, 'deleteFileskhp']);
     Route::get('/skhp_countduedays', [SkhpController::class, 'countskhpDueDays']);
+    
+    // SERTIFIKAT KALIBRASI
+    Route::post('/sertifikat_kalibrasi/download', [SertifikatKalibrasiController::class, 'downloadSertifikatKalibrasiCertificates']);
+    Route::put('/sertifikat_kalibrasi/deletefile/{id}', [SertifikatKalibrasiController::class, 'deleteFileSertifikatKalibrasi']);
+    Route::get('/sertifikat_kalibrasi_countduedays', [SertifikatKalibrasiController::class, 'countSertifikatKalibrasiDueDays']);
 
     // REPORT PLO 
     Route::get('/report_plos/{id}', [ReportPloController::class, 'showWithPloId']);
@@ -224,8 +232,10 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('contracts/po_material_type', [ContractController::class, 'showByPoMaterialType']);
     Route::get('contracts/un_po_material_type', [ContractController::class, 'showByUnPoMaterialType']);
 
-    // HISTORICAL MEMORANDUM LAMPIRAN
+    // HISTORICAL MEMORANDUM & LAMPIRAN
     Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId']);
+    Route::post('/lampiran_memo/download', [LampiranMemoController::class, 'downloadLampiranMemoFiles']);
+    Route::post('/historical_memorandum/download', [HistoricalMemorandumController::class, 'downloadHistoricalMemorandumFiles']);
 
     // GA DRAWING
     Route::get('/ga_drawing/engineering/{id}', [GaDrawingController::class, 'showWithEngineeringDataId']);
