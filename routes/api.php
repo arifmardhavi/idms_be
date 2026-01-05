@@ -41,8 +41,10 @@ use App\Http\Controllers\{
     NotifMaterialController,
     OnstreamInspectionController,
     OpenFileActivityController,
+    OverhaulController,
     P_IdController,
     PoMaterialController,
+    PreventiveController,
     PrJasaController,
     PrMaterialController,
     ProjectController,
@@ -50,6 +52,7 @@ use App\Http\Controllers\{
     ReadinessMaterialController,
     RekomendasiJasaController,
     RekomendasiMaterialController,
+    ReportCoiController,
     SertifikatKalibrasiController,
     SurveillanceController,
     TenderJasaController,
@@ -141,6 +144,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('lumpsum_progress', Lumpsum_progressController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('report_plo', ReportPloController::class);
+    Route::apiResource('report_coi', ReportCoiController::class);
     Route::apiResource('lampiran_memo', LampiranMemoController::class);
     Route::apiResource('amandemen', AmandemenController::class);
     Route::apiResource('historical_memorandum', HistoricalMemorandumController::class);
@@ -151,6 +155,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('internal_inspection', InternalInspectionController::class);
     Route::apiResource('external_inspection', ExternalInspectionController::class);
     Route::apiResource('onstream_inspection', OnstreamInspectionController::class);
+    Route::apiResource('overhaul', OverhaulController::class);
+    Route::apiResource('preventive', PreventiveController::class);
     Route::apiResource('surveillance', SurveillanceController::class);
     Route::apiResource('breakdown_report', BreakdownReportController::class);
     Route::apiResource('event_readiness', EventReadinessController::class);
@@ -206,6 +212,8 @@ Route::middleware(['auth:api'])->group(function () {
 
     // REPORT PLO 
     Route::get('/report_plos/{id}', [ReportPloController::class, 'showWithPloId']);
+    // REPORT COI 
+    Route::get('/report_cois/{id}', [ReportCoiController::class, 'showWithCoiId']);
 
     // TERMIN
     Route::get('/termin/contract/{id}', [TerminController::class, 'showByContract']);
@@ -260,6 +268,10 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/breakdown_report/laporan_inspection/{id}', [BreakdownReportController::class, 'showByLaporanInspection']);
     //SURVEILLANCE
     Route::get('/surveillance/laporan_inspection/{id}', [SurveillanceController::class, 'showByLaporanInspection']);
+    //PREVENTIVE
+    Route::get('/preventive/laporan_inspection/{id}', [PreventiveController::class, 'showByLaporanInspection']);
+    //OVERHAUL
+    Route::get('/overhaul/laporan_inspection/{id}', [OverhaulController::class, 'showByLaporanInspection']);
     //READINESS MATERIAL
     Route::get('/readiness_material/event/{id}', [ReadinessMaterialController::class, 'showByEvent']);
     //REKOMENDASI MATERIAL
