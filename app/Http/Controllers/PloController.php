@@ -268,33 +268,35 @@ class PloController extends Controller
     
                     // Simpan nama file ke data yang divalidasi
                     $validatedData['rla_certificate'] = $filename;
-                }
+                }else{
 
-                $file = $request->file('rla_certificate');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("plo/rla/".$filename))) {
-                    $version++;
+                    $file = $request->file('rla_certificate');
+                    $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
+                    $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
+                    $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
+                    $version = 0; // Awal versi
+                    // Format nama file
                     $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+    
+                    // Cek apakah file dengan nama ini sudah ada di folder tujuan
+                    while (file_exists(public_path("plo/rla/".$filename))) {
+                        $version++;
+                        $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                    }
+    
+                    // Pindahkan file ke folder tujuan dengan nama unik
+                    $path = $file->move(public_path('plo/rla'), $filename);
+                    if(!$path){
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'RLA Certificate failed upload.',
+                        ], 422);
+                    }
+    
+                    // Simpan nama file ke data yang divalidasi
+                    $validatedData['rla_certificate'] = $filename;
                 }
 
-                // Pindahkan file ke folder tujuan dengan nama unik
-                $path = $file->move(public_path('plo/rla'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'RLA Certificate failed upload.',
-                    ], 422);
-                }
-
-                // Simpan nama file ke data yang divalidasi
-                $validatedData['rla_certificate'] = $filename;
             }
 
             $plo->update($validatedData);
