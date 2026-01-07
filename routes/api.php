@@ -32,6 +32,7 @@ use App\Http\Controllers\{
     FabrikasiMaterialController,
     InternalInspectionController,
     IzinDisnakerController,
+    IzinOperasiController,
     IzinUsahaController,
     JobPlanJasaController,
     JobPlanMaterialController,
@@ -56,6 +57,7 @@ use App\Http\Controllers\{
     RekomendasiMaterialController,
     ReportCoiController,
     ReportIzinDisnakerController,
+    ReportIzinOperasiController,
     SertifikatKalibrasiController,
     SurveillanceController,
     TenderJasaController,
@@ -184,6 +186,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('izin_usaha', IzinUsahaController::class);
     Route::apiResource('izin_disnaker', IzinDisnakerController::class);
     Route::apiResource('report_izin_disnaker', ReportIzinDisnakerController::class);
+    Route::apiResource('izin_operasi', IzinOperasiController::class);
+    Route::apiResource('report_izin_operasi', ReportIzinOperasiController::class);
     
 
     /*
@@ -200,7 +204,11 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('/coi/deletefile/{id}', [CoiController::class, 'deleteFileCoi']);
     Route::get('/coi_countduedays', [CoiController::class, 'countCoiDueDays']);
     Route::get('/coi/tag_number/{id}', [CoiController::class, 'showByTagNumber']);
-
+    // IZIN OPERASI
+    Route::post('/izin_operasi/download', [IzinOperasiController::class, 'downloadIzinOperasiCertificates']);
+    Route::put('/izin_operasi/deletefile/{id}', [IzinOperasiController::class, 'deleteFileIzinOperasi']);
+    Route::get('/izin_operasi_countduedays', [IzinOperasiController::class, 'countIzinOperasiDueDays']);
+    Route::get('/izin_operasi/tag_number/{id}', [IzinOperasiController::class, 'showByTagNumber']);
     // PLO
     Route::put('/plo/deletefile/{id}', [PloController::class, 'deleteFilePlo']);
     Route::post('/plo/download', [PloController::class, 'downloadPloCertificates']);
@@ -226,6 +234,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/report_izin_disnakers/{id}', [ReportIzinDisnakerController::class, 'showWithIzinDisnakerId']);
     // REPORT COI 
     Route::get('/report_cois/{id}', [ReportCoiController::class, 'showWithCoiId']);
+    // REPORT IZIN OPERASI 
+    Route::get('/report_izin_operasis/{id}', [ReportIzinOperasiController::class, 'showWithIzinOperasiId']);
 
     // TERMIN
     Route::get('/termin/contract/{id}', [TerminController::class, 'showByContract']);
