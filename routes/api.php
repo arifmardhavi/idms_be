@@ -46,6 +46,7 @@ use App\Http\Controllers\{
     OpenFileActivityController,
     OverhaulController,
     P_IdController,
+    PirController,
     PoMaterialController,
     PreventiveController,
     PrJasaController,
@@ -188,6 +189,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('report_izin_disnaker', ReportIzinDisnakerController::class);
     Route::apiResource('izin_operasi', IzinOperasiController::class);
     Route::apiResource('report_izin_operasi', ReportIzinOperasiController::class);
+    Route::apiResource('pir', PirController::class);
     
 
     /*
