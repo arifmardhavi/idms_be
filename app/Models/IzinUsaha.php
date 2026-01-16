@@ -10,6 +10,7 @@ class IzinUsaha extends BaseModel
     use HasFactory;
 
     protected $fillable = [
+        'no_izin_usaha',
         'judul',
         'tanggal_izin_usaha',
         'izin_usaha_file',

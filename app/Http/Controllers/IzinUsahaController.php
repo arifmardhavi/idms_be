@@ -27,6 +27,7 @@ class IzinUsahaController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'no_izin_usaha' => 'required|string|max:200|unique:izin_usahas,no_izin_usaha',
             'judul' => 'required|string|max:255',
             'tanggal_izin_usaha' => 'required|date',
             'izin_usaha_file' => 'required|file|mimes:pdf',
@@ -117,6 +118,7 @@ class IzinUsahaController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
+            'no_izin_usaha' => 'sometimes|required|string|max:200|unique:izin_usahas,no_izin_usaha,' . $id,
             'judul' => 'sometimes|required|string|max:255',
             'tanggal_izin_usaha' => 'sometimes|required|date',
             'izin_usaha_file' => 'sometimes|required|file|mimes:pdf',
