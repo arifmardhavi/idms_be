@@ -53,7 +53,13 @@ class HistoricalMemorandumController extends Controller
             'perihal' => 'required|string|max:255',
             'tipe_memorandum' => 'required',
             'tanggal_terbit' => 'required|date',
-            'memorandum_file' => 'required|file|mimes:pdf|max:30720', // 30 MB
+            'memorandum_file' => [
+                'required',
+                'file',
+                'max:30720',
+                'mimes:pdf',
+                'mimetypes:application/pdf'
+            ],
         ]);
 
         if ($validator->fails()) {
@@ -150,7 +156,13 @@ class HistoricalMemorandumController extends Controller
             'perihal' => 'required|string|max:255',
             'tipe_memorandum' => 'required',
             'tanggal_terbit' => 'required|date',
-            'memorandum_file' => 'nullable|file|mimes:pdf|max:30720', // 30 MB
+            'memorandum_file' => [
+                'nullable',
+                'file',
+                'max:30720',
+                'mimes:pdf',
+                'mimetypes:application/pdf'
+            ],
         ]);
 
         if ($validator->fails()) {
