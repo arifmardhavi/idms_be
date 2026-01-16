@@ -15,6 +15,7 @@ class EngineeringData extends BaseModel
     protected $appends = [
         'ga_drawings_count',
         'datasheets_count',
+        'mdr_count',
     ];
     public function getGaDrawingsCountAttribute()
     {
@@ -23,6 +24,10 @@ class EngineeringData extends BaseModel
     public function getDatasheetsCountAttribute()
     {
         return $this->datasheets()->count();
+    }
+    public function getMdrCountAttribute()
+    {
+        return $this->mdrFolders()->count();
     }
 
     public function tagNumber()
@@ -36,6 +41,10 @@ class EngineeringData extends BaseModel
     public function datasheets()
     {
         return $this->hasMany(Datasheet::class, 'engineering_data_id');
+    }
+    public function mdrFolders()
+    {
+        return $this->hasMany(MdrFolder::class, 'engineering_data_id');
     }
     protected static function boot()
     {

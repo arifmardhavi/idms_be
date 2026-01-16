@@ -39,6 +39,8 @@ use App\Http\Controllers\{
     LampiranMocController,
     LaporanInspectionController,
     LogActivityController,
+    MdrFolderController,
+    MdrItemController,
     MocController,
     NotifJasaController,
     NotifMaterialController,
@@ -190,7 +192,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('izin_operasi', IzinOperasiController::class);
     Route::apiResource('report_izin_operasi', ReportIzinOperasiController::class);
     Route::apiResource('pir', PirController::class);
-    
+    Route::apiResource('mdr_folder', MdrFolderController::class);
+    Route::apiResource('mdr_item', MdrItemController::class);
 
     /*
     |--------------------------------------------------------------------------
@@ -206,19 +209,19 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('/coi/deletefile/{id}', [CoiController::class, 'deleteFileCoi']);
     Route::get('/coi_countduedays', [CoiController::class, 'countCoiDueDays']);
     Route::get('/coi/tag_number/{id}', [CoiController::class, 'showByTagNumber']);
-    // IZIN OPERASI
-    Route::post('/izin_operasi/download', [IzinOperasiController::class, 'downloadIzinOperasiCertificates']);
-    Route::put('/izin_operasi/deletefile/{id}', [IzinOperasiController::class, 'deleteFileIzinOperasi']);
-    Route::get('/izin_operasi_countduedays', [IzinOperasiController::class, 'countIzinOperasiDueDays']);
-    Route::get('/izin_operasi/tag_number/{id}', [IzinOperasiController::class, 'showByTagNumber']);
+    // IZIN DISNAKER
+    Route::post('/izin_disnaker/download', [IzinDisnakerController::class, 'downloadIzinDisnakerCertificates']);
+    Route::put('/izin_disnaker/deletefile/{id}', [IzinDisnakerController::class, 'deleteFileIzinDisnaker']);
+    Route::get('/izin_disnaker_countduedays', [IzinDisnakerController::class, 'countIzinDisnakerDueDays']);
+    Route::get('/izin_disnaker/tag_number/{id}', [IzinDisnakerController::class, 'showByTagNumber']);
     // PLO
     Route::put('/plo/deletefile/{id}', [PloController::class, 'deleteFilePlo']);
     Route::post('/plo/download', [PloController::class, 'downloadPloCertificates']);
     Route::get('/plo_countduedays', [PloController::class, 'countPloDueDays']);
-    // IZN DISNAKER
-    Route::put('/izin_disnaker/deletefile/{id}', [IzinDisnakerController::class, 'deleteFileIzinDisnaker']);
-    Route::post('/izin_disnaker/download', [IzinDisnakerController::class, 'downloadIzinDisnakerCertificates']);
-    Route::get('/izin_disnaker_countduedays', [IzinDisnakerController::class, 'countIzinDisnakerDueDays']);
+    // IZIN OPERASI
+    Route::put('/izin_operasi/deletefile/{id}', [IzinOperasiController::class, 'deleteFileIzinOperasi']);
+    Route::post('/izin_operasi/download', [IzinOperasiController::class, 'downloadIzinOperasiCertificates']);
+    Route::get('/izin_operasi_countduedays', [IzinOperasiController::class, 'countIzinOperasiDueDays']);
 
     // SKHP
     Route::post('/skhp/download', [SkhpController::class, 'downloadskhpCertificates']);
@@ -274,6 +277,10 @@ Route::middleware(['auth:api'])->group(function () {
 
     // DATASHEET
     Route::get('/datasheet/engineering/{id}', [DatasheetController::class, 'showWithEngineeringDataId']);
+    
+    // MDR
+    Route::get('/mdr_folder/engineering/{id}', [MdrFolderController::class, 'showByEngineering']);
+    Route::get('/mdr_item/folder/{id}', [MdrItemController::class, 'showByFolder']);
 
     // CONTRACTS BY USER
     Route::get('/contracts/user', [ContractController::class, 'contractsByUser']);
