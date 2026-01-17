@@ -9,7 +9,6 @@ class SertifikatKalibrasi extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'plo_id',
         'tag_number_id',
         'no_sertifikat_kalibrasi',
         'issue_date',
@@ -17,7 +16,7 @@ class SertifikatKalibrasi extends Model
         'file_sertifikat_kalibrasi',
         'file_old_sertifikat_kalibrasi',
     ];
-    protected $appends = ['due_days'];
+    protected $appends = ['due_days', 'type_id', 'category_id', 'unit_id'];
 
     public function getDueDaysAttribute()
     {
@@ -40,9 +39,16 @@ class SertifikatKalibrasi extends Model
     {
         return $this->belongsTo(Tag_number::class);
     }
-
-    public function plo()
+    public function getTypeIdAttribute()
     {
-        return $this->belongsTo(Plo::class);
+        return $this->tag_number ? $this->tag_number->type_id : null;
+    }
+    public function getCategoryIdAttribute()
+    {
+        return $this->tag_number ? $this->tag_number->type->category_id : null;
+    }
+    public function getUnitIdAttribute()
+    {
+        return $this->tag_number ? $this->tag_number->unit_id : null;
     }
 }

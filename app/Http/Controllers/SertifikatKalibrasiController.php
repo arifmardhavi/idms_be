@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\SertifikatKalibrasiResource;
 use App\Models\SertifikatKalibrasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -13,12 +14,12 @@ class SertifikatKalibrasiController extends Controller
      */
     public function index()
     {
-        $sertifikat_kalibrasi = SertifikatKalibrasi::with(['tag_number', 'plo', 'plo.unit'])->orderBy('overdue_date', 'asc')->get();
+        $sertifikat_kalibrasi = SertifikatKalibrasi::orderBy('overdue_date', 'asc')->get();
 
         return response()->json([
             'success' => true,
             'message' => 'sertifikat kalibrasi retrieved successfully.',
-            'data' => $sertifikat_kalibrasi,
+            'data' => SertifikatKalibrasiResource::collection($sertifikat_kalibrasi),
         ], 200);
     }
 
@@ -28,7 +29,6 @@ class SertifikatKalibrasiController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'plo_id' => 'required|exists:plos,id',
             'tag_number_id' => 'required|exists:tag_numbers,id|unique:sertifikat_kalibrasis,tag_number_id',
             'no_sertifikat_kalibrasi' => 'required|string|max:255',
             'issue_date' => 'required|date',
@@ -70,7 +70,7 @@ class SertifikatKalibrasiController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'sertifikat kalibrasi created successfully.',
-                'data' => $sertifikat_kalibrasi,
+                'data' => new SertifikatKalibrasiResource($sertifikat_kalibrasi),
             ], 201);
         } catch (\Throwable $e) {
             return response()->json([
@@ -86,7 +86,7 @@ class SertifikatKalibrasiController extends Controller
      */
     public function show(string $id)
     {
-        $sertifikat_kalibrasi = SertifikatKalibrasi::with(['tag_number', 'plo'])->find($id);
+        $sertifikat_kalibrasi = SertifikatKalibrasi::find($id);
 
         if (!$sertifikat_kalibrasi) {
             return response()->json([
@@ -98,7 +98,7 @@ class SertifikatKalibrasiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'sertifikat kalibrasi retrieved successfully.',
-            'data' => $sertifikat_kalibrasi,
+            'data' => new SertifikatKalibrasiResource($sertifikat_kalibrasi),
         ], 200);
     }
 
@@ -117,7 +117,6 @@ class SertifikatKalibrasiController extends Controller
         }
         
         $validator = Validator::make($request->all(), [
-            'plo_id' => 'required|exists:plos,id',
             'tag_number_id' => 'required|exists:tag_numbers,id|unique:sertifikat_kalibrasis,tag_number_id,' . $id,
             'no_sertifikat_kalibrasi' => 'required|string|max:255',
             'issue_date' => 'required|date',
@@ -180,7 +179,7 @@ class SertifikatKalibrasiController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'sertifikat kalibrasi updated successfully.',
-                'data' => $sertifikat_kalibrasi,
+                'data' => new SertifikatKalibrasiResource($sertifikat_kalibrasi->fresh()),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
