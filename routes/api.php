@@ -133,6 +133,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/tagname', [Tag_numberController::class, 'showByTagNumber']);
     Route::put('/tagnumbers/nonactive/{id}', [Tag_numberController::class, 'nonactive']);
     Route::post('/tagnumbers/import', [Tag_numberController::class, 'import']);
+    Route::post('/tagnumbers/import_update', [Tag_numberController::class, 'importUpdate']);
 
     /*
     |--------------------------------------------------------------------------
