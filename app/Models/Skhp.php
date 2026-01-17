@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Skhp extends BaseModel
 {
     use HasFactory;
-    protected $fillable = ["plo_id", 'tag_number_id', 'no_skhp', 'issue_date', 'overdue_date', 'file_skhp',"file_old_skhp"];
-    protected $appends = ['due_days'];
+    protected $fillable = [ 'tag_number_id', 'no_skhp', 'issue_date', 'overdue_date', 'file_skhp',"file_old_skhp"];
+    protected $appends = ['due_days', 'type_id', 'category_id', 'unit_id'];
 
     public function getDueDaysAttribute()
     {
@@ -33,8 +33,17 @@ class Skhp extends BaseModel
         return $this->belongsTo(Tag_number::class);
     }
 
-    public function plo()
+    public function getTypeIdAttribute()
     {
-        return $this->belongsTo(Plo::class);
+        return $this->tag_number ? $this->tag_number->type_id : null;
+    }
+
+    public function getCategoryIdAttribute()
+    {
+        return $this->tag_number ? $this->tag_number->type->category_id : null;
+    }
+    public function getUnitIdAttribute()
+    {
+        return $this->tag_number ? $this->tag_number->unit_id : null;
     }
 }

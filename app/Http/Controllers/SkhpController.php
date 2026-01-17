@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\SkhpResource;
 use App\Models\Skhp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,12 +15,12 @@ class SkhpController extends Controller
      */
     public function index()
     {
-        $skhp = Skhp::with(['tag_number', 'plo', 'plo.unit'])->orderBy('overdue_date', 'asc')->get();
+        $skhp = Skhp::orderBy('overdue_date', 'asc')->get();
 
         return response()->json([
             'success' => true,
             'message' => 'skhp retrieved successfully.',
-            'data' => $skhp,
+            'data' => SkhpResource::collection($skhp),
         ], 200);
     }
 
@@ -29,7 +30,6 @@ class SkhpController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'plo_id' => 'required|exists:plos,id',
             'tag_number_id' => 'required|exists:tag_numbers,id|unique:skhps,tag_number_id',
             'no_skhp' => 'required|string|max:255',
             'issue_date' => 'required|date',
@@ -71,7 +71,7 @@ class SkhpController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'skhp created successfully.',
-                'data' => $skhp,
+                'data' => new SkhpResource($skhp),
             ], 201);
         } catch (\Throwable $e) {
             return response()->json([
@@ -87,7 +87,7 @@ class SkhpController extends Controller
      */
     public function show(string $id)
     {
-        $skhp = Skhp::with(['tag_number', 'plo'])->find($id);
+        $skhp = Skhp::find($id);
 
         if (!$skhp) {
             return response()->json([
@@ -99,7 +99,7 @@ class SkhpController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'skhp retrieved successfully.',
-            'data' => $skhp,
+            'data' => new SkhpResource($skhp),
         ], 200);
     }
 
@@ -118,7 +118,6 @@ class SkhpController extends Controller
         }
         
         $validator = Validator::make($request->all(), [
-            'plo_id' => 'required|exists:plos,id',
             'tag_number_id' => 'required|exists:tag_numbers,id|unique:skhps,tag_number_id,' . $id,
             'no_skhp' => 'required|string|max:255',
             'issue_date' => 'required|date',
@@ -181,7 +180,7 @@ class SkhpController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'skhp updated successfully.',
-                'data' => $skhp,
+                'data' => new SkhpResource($skhp->fresh()),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
