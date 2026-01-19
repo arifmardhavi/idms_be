@@ -30,6 +30,7 @@ use App\Http\Controllers\{
     EventReadinessController,
     ExternalInspectionController,
     FabrikasiMaterialController,
+    HistoricalEquipmentController,
     InternalInspectionController,
     IzinDisnakerController,
     IzinOperasiController,
@@ -195,6 +196,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('pir', PirController::class);
     Route::apiResource('mdr_folder', MdrFolderController::class);
     Route::apiResource('mdr_item', MdrItemController::class);
+    Route::apiResource('historical_equipment', HistoricalEquipmentController::class);
 
     /*
     |--------------------------------------------------------------------------
