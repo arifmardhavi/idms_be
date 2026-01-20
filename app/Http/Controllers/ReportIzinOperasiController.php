@@ -24,7 +24,7 @@ class ReportIzinOperasiController extends Controller
 
     public function showWithIzinOperasiId($id)
     {
-        $reportIzinOperasi = ReportIzinOperasi::with(['izin_operasi', 'izin_operasi.plo', 'izin_operasi.plo.unit'])->where('izin_operasi_id', $id)->get();
+        $reportIzinOperasi = ReportIzinOperasi::with(['izin_operasi', 'izin_operasi.unit'])->where('izin_operasi_id', $id)->get();
 
         if ($reportIzinOperasi->isEmpty()) {
             return response()->json([
