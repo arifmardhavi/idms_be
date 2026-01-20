@@ -123,7 +123,9 @@ class HistoricalEquipmentController extends Controller
             }
         }
 
-
+        // SORT TAHUN (2026, 2025, 2024)
+        ksort($result);
+        
         /**
          * =========================
          * FINAL RESPONSE
