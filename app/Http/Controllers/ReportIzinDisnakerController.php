@@ -21,7 +21,7 @@ class ReportIzinDisnakerController extends Controller
 
     public function showWithIzinDisnakerId($id)
     {
-        $reportIzinDisnaker = ReportIzinDisnaker::with(['izinDisnaker', 'izinDisnaker.unit'])
+        $reportIzinDisnaker = ReportIzinDisnaker::with(['izinDisnaker', 'izinDisnaker.plo.unit'])
             ->where('izin_disnaker_id', $id)
             ->get();
 
