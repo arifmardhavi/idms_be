@@ -22,6 +22,7 @@ use App\Http\Controllers\{
     AmandemenController,
     BreakdownReportController,
     ContractJasaController,
+    ContractNewController,
     HistoricalMemorandumController,
     DatasheetController,
     DeliveryMaterialController,
@@ -65,7 +66,9 @@ use App\Http\Controllers\{
     SertifikatKalibrasiController,
     SurveillanceController,
     TenderJasaController,
-    TenderMaterialController
+    TenderMaterialController,
+    TerminNewController,
+    TerminReceiptController
 };
 
 /*
@@ -197,6 +200,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('mdr_folder', MdrFolderController::class);
     Route::apiResource('mdr_item', MdrItemController::class);
     Route::apiResource('historical_equipment', HistoricalEquipmentController::class);
+    Route::apiResource('contract_new', ContractNewController::class);
+    Route::apiResource('termin_new', TerminNewController::class);
+    Route::apiResource('termin_receipt', TerminReceiptController::class);
 
     /*
     |--------------------------------------------------------------------------
@@ -247,6 +253,10 @@ Route::middleware(['auth:api'])->group(function () {
 
     // TERMIN
     Route::get('/termin/contract/{id}', [TerminController::class, 'showByContract']);
+    // TERMIN NEW
+    Route::get('/termin_new/contract/{id}', [TerminNewController::class, 'showByContract']);
+    // TERMIN RECEIPT
+    Route::get('/termin_receipt/contract/{id}', [TerminReceiptController::class, 'showByContract']);
 
     // TERM BILLING
     Route::get('/termbilling/contract/{id}', [TermBillingController::class, 'showByContract']);
@@ -269,6 +279,10 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('contract/current_status/{id}', [ContractController::class, 'updateCurrentStatus']);
     Route::get('contracts/po_material_type', [ContractController::class, 'showByPoMaterialType']);
     Route::get('contracts/un_po_material_type', [ContractController::class, 'showByUnPoMaterialType']);
+
+    // CONTRACT NEW
+    Route::put('contract_new/current_status/{id}', [ContractNewController::class, 'updateCurrentStatus']);
+    Route::get('contract_new/lumpsum_progress/{id}', [ContractNewController::class, 'contractLumpsumProgress']);
 
     // HISTORICAL MEMORANDUM & LAMPIRAN
     Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId']);
