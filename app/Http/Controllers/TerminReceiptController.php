@@ -44,7 +44,7 @@ class TerminReceiptController extends Controller
         $validatedData = $validator->validated();
 
         if ($request->hasFile('receipt_file')) {
-            $validatedData['receipt_file'] = FileHelper::uploadWithVersion($request->file('receipt_file'), 'contract_new/receipt');
+            $validatedData['receipt_file'] = FileHelper::uploadWithVersion($request->file('receipt_file'), 'contract_new/lumpsum/receipt');
         }
 
         $termin_receipt = TerminReceiptNew::create($validatedData);

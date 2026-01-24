@@ -48,7 +48,7 @@ class TerminNewController extends Controller
 
         try {
             if ($request->hasFile('receipt_file')) {
-                $validatedData['receipt_file'] = FileHelper::uploadWithVersion($request->file('receipt_file'), 'contract_new/receipt');
+                $validatedData['receipt_file'] = FileHelper::uploadWithVersion($request->file('receipt_file'), 'contract_new/lumpsum/receipt');
             }
 
             $termin = TerminNew::create($validatedData);
@@ -138,9 +138,9 @@ class TerminNewController extends Controller
 
         try {
             if ($request->hasFile('receipt_file')) {
-                $validatedData['receipt_file'] = FileHelper::uploadWithVersion($request->file('receipt_file'), 'contract_new/receipt');
+                $validatedData['receipt_file'] = FileHelper::uploadWithVersion($request->file('receipt_file'), 'contract_new/lumpsum/receipt');
                 if ($termin->receipt_file) {
-                    FileHelper::deleteFile($termin->receipt_file, 'contract_new/receipt');
+                    FileHelper::deleteFile($termin->receipt_file, 'contract_new/lumpsum/receipt');
                 }
             }
 
@@ -176,7 +176,7 @@ class TerminNewController extends Controller
 
         try {
             if ($termin->receipt_file) {
-                FileHelper::deleteFile($termin->receipt_file, 'contract_new/receipt');
+                FileHelper::deleteFile($termin->receipt_file, 'contract_new/lumpsum/receipt');
             }
             $termin->delete();
             return response()->json([
