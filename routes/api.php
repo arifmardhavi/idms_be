@@ -41,6 +41,7 @@ use App\Http\Controllers\{
     LampiranMocController,
     LaporanInspectionController,
     LogActivityController,
+    LumpsumProgressNewController,
     MdrFolderController,
     MdrItemController,
     MocController,
@@ -64,6 +65,7 @@ use App\Http\Controllers\{
     ReportIzinDisnakerController,
     ReportIzinOperasiController,
     SertifikatKalibrasiController,
+    SpkNewController,
     SurveillanceController,
     TenderJasaController,
     TenderMaterialController,
@@ -203,7 +205,10 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('contract_new', ContractNewController::class);
     Route::apiResource('termin_new', TerminNewController::class);
     Route::apiResource('termin_receipt', TerminReceiptController::class);
-
+    Route::apiResource('lumpsum_progress_new', LumpsumProgressNewController::class);
+    Route::apiResource('spk_new', SpkNewController::class);
+    // Route::apiResource('spk_progress', Spk_progressController::class);
+    
     /*
     |--------------------------------------------------------------------------
     | Custom Feature Routes
@@ -263,6 +268,8 @@ Route::middleware(['auth:api'])->group(function () {
 
     // SPK
     Route::get('/spk/contract/{id}', [SpkController::class, 'showByContract']);
+    // SPK NEW
+    Route::get('/spk_new/contract/{id}', [SpkNewController::class, 'showByContract']);
 
     // PROGRESS SPK
     Route::get('/spk_progress/spk/{id}', [Spk_progressController::class, 'showBySpk']);
@@ -270,20 +277,22 @@ Route::middleware(['auth:api'])->group(function () {
 
     // PROGRESS LUMPSUM
     Route::get('/lumpsum_progress/contract/{id}', [Lumpsum_progressController::class, 'showByContract']);
-
+    // PROGRESS LUMPSUM NEW
+    Route::get('/lumpsum_progress_new/contract/{id}', [LumpsumProgressNewController::class, 'showByContract']);
+    
     // AMANDEMEN
     Route::get('/amandemen/contract/{id}', [AmandemenController::class, 'showByContract']);
-
+    
     // CONTRACT
     Route::get('/monitoring_contract', [ContractController::class, 'monitoring']);
     Route::put('contract/current_status/{id}', [ContractController::class, 'updateCurrentStatus']);
     Route::get('contracts/po_material_type', [ContractController::class, 'showByPoMaterialType']);
     Route::get('contracts/un_po_material_type', [ContractController::class, 'showByUnPoMaterialType']);
-
+    
     // CONTRACT NEW
     Route::put('contract_new/current_status/{id}', [ContractNewController::class, 'updateCurrentStatus']);
     Route::get('contract_new/lumpsum_progress/{id}', [ContractNewController::class, 'contractLumpsumProgress']);
-
+    
     // HISTORICAL MEMORANDUM & LAMPIRAN
     Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId']);
     Route::post('/lampiran_memo/download', [LampiranMemoController::class, 'downloadLampiranMemoFiles']);
