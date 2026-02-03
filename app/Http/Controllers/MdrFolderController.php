@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\MdrResource;
 use App\Models\MdrFolder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -13,11 +14,11 @@ class MdrFolderController extends Controller
      */
     public function index()
     {
-        $mdrFolders = MdrFolder::with('engineeringData')->get();
+        $mdrFolders = MdrFolder::with('mdrItems')->get();
         return response()->json([
             'success' => true,
             'message' => 'MDR Folders retrieved successfully.',
-            'data' => $mdrFolders,
+            'data' => MdrResource::collection($mdrFolders),
         ], 200);
     }
 

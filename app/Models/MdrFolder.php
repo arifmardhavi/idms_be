@@ -18,4 +18,9 @@ class MdrFolder extends Model
         return $this->belongsTo(EngineeringData::class);
     }
 
+    public function mdrItems()
+    {
+        return $this->hasMany(MdrItem::class);
+    }
+
 }
