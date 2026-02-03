@@ -18,7 +18,7 @@ class MdrResource extends JsonResource
             'id' => $this->id,
             'engineering_data_id' => $this->engineering_data_id,
             'folder_name' => $this->folder_name,
-            'files' => $this->whenLoaded('mdrItems')->pluck('file_name'),
+            'files' => $this->whenLoaded('mdrItems'),
         ];
     }
 }
