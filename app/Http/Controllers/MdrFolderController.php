@@ -58,7 +58,7 @@ class MdrFolderController extends Controller
 
     // Get a specific MDR Folder
     public function showByEngineering($id){
-        $mdrFolder = MdrFolder::where('engineering_data_id', $id)->get();
+        $mdrFolder = MdrFolder::with('mdrItems')->where('engineering_data_id', $id)->get();
 
         if (!$mdrFolder) {
             return response()->json([
