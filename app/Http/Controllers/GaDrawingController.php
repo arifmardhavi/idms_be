@@ -98,6 +98,7 @@ class GaDrawingController extends Controller
 
                     $drawing = GaDrawing::create([
                         'engineering_data_id' => $request->engineering_data_id,
+                        'nama_dokumen' => $request->nama_dokumen,
                         'no_dokumen' => $request->no_dokumen,
                         'date_drawing' => $request->date_drawing,
                         'drawing_file' => $filename,
@@ -257,7 +258,7 @@ class GaDrawingController extends Controller
                     'message' => 'Failed to delete GA Drawing.',
                 ], 422);
             }
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

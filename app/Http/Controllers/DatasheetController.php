@@ -102,6 +102,7 @@ class DatasheetController extends Controller
 
                     $datasheet = Datasheet::create([
                         'engineering_data_id' => $request->engineering_data_id,
+                        'nama_dokumen' => $request->nama_dokumen,
                         'no_dokumen' => $request->no_dokumen,
                         'date_datasheet' => $request->date_datasheet,
                         'datasheet_file' => $filename,
@@ -194,7 +195,7 @@ class DatasheetController extends Controller
                 // $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
                 while (file_exists(public_path("engineering_data/datasheet/".$filename))) {
                     $version++; // Increment versi
-                    $filename =  $originalName . '_' . 'datasheet_' . $cleanTagNumber . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru 
+                    $filename =  $originalName . '_' . 'datasheet_' . $cleanTagNumber . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru
                 }
                 if ($datasheet->datasheet_file) {
                     unlink(public_path("engineering_data/datasheet/".$datasheet->datasheet_file)); // Hapus file lama jika ada
@@ -205,7 +206,7 @@ class DatasheetController extends Controller
                         'success' => false,
                         'message' => 'Datasheet failed upload.',
                     ], 422);
-                }  
+                }
                 if($datasheet->datasheet_file){
                     $datasheetBefore = public_path('engineering_data/datasheet/' . $datasheet->datasheet_file);
                     if (file_exists($datasheetBefore)) {
@@ -213,8 +214,8 @@ class DatasheetController extends Controller
                     }
                 }
                 $validatedData['datasheet_file'] = $filename;
-            } 
-            
+            }
+
             if ($datasheet->update($validatedData)) {
                 return response()->json([
                     'success' => true,
@@ -269,7 +270,7 @@ class DatasheetController extends Controller
                     'message' => 'Failed to delete Datasheet.',
                 ], 422);
             }
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -278,5 +279,5 @@ class DatasheetController extends Controller
             ], 500);
         }
     }
-                
+
 }

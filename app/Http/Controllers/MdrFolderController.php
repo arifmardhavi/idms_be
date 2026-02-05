@@ -70,7 +70,7 @@ class MdrFolderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'MDR Folder retrieved successfully.',
-            'data' => $mdrFolder,
+            'data' => MdrResource::collection($mdrFolder),
         ], 200);
     }
 
@@ -87,7 +87,7 @@ class MdrFolderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'MDR Folder retrieved successfully.',
-            'data' => $mdrFolder,
+            'data' => new MdrResource($mdrFolder),
         ], 200);
     }
 
@@ -120,7 +120,7 @@ class MdrFolderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'MDR Folder updated successfully.',
-                'data' => $mdrFolder,
+                'data' => new MdrResource($mdrFolder->fresh()),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
