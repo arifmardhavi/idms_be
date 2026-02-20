@@ -104,6 +104,44 @@ class ContractNewController extends Controller
     }
 
     /**
+     * Display the specified by PO resource.
+     */
+    public function showByPoMaterialType()
+    {
+        $contract = ContractNew::where('contract_type', 3)->where('contract_status', 1)->get();
+        if ($contract->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'contract not found.',
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'contract retrieved successfully.',
+            'data' => ContractResource::collection($contract),
+        ], 200);
+    }
+
+    /**
+     * Display the specified by Un PO resource.
+     */
+    public function showByUnPoMaterialType()
+    {
+        $contract = ContractNew::where('contract_type', '!=', 3)->where('contract_status', 1)->get();
+        if ($contract->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'contract not found.',
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'contract retrieved successfully.',
+            'data' => ContractResource::collection($contract),
+        ], 200);
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
