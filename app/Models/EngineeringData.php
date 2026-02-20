@@ -13,10 +13,15 @@ class EngineeringData extends BaseModel
         'tag_number_id',
     ];
     protected $appends = [
+        'unit',
         'ga_drawings_count',
         'datasheets_count',
         'mdr_count',
     ];
+    public function getUnitAttribute()
+    {
+        return $this->tagNumber->unit->unit_name ?? null;
+    }
     public function getGaDrawingsCountAttribute()
     {
         return $this->gaDrawings()->count();

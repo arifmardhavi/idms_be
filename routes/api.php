@@ -20,6 +20,7 @@ use App\Http\Controllers\{
     ReportPloController,
     LampiranMemoController,
     AmandemenController,
+    AmandemenNewController,
     BreakdownReportController,
     ContractJasaController,
     ContractNewController,
@@ -45,6 +46,7 @@ use App\Http\Controllers\{
     MdrFolderController,
     MdrItemController,
     MocController,
+    NibController,
     NotifJasaController,
     NotifMaterialController,
     OnstreamInspectionController,
@@ -66,6 +68,7 @@ use App\Http\Controllers\{
     ReportIzinOperasiController,
     SertifikatKalibrasiController,
     SpkNewController,
+    SpkProgressNewController,
     SurveillanceController,
     TenderJasaController,
     TenderMaterialController,
@@ -207,7 +210,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('termin_receipt', TerminReceiptController::class);
     Route::apiResource('lumpsum_progress_new', LumpsumProgressNewController::class);
     Route::apiResource('spk_new', SpkNewController::class);
-    // Route::apiResource('spk_progress', Spk_progressController::class);
+    Route::apiResource('spk_progress_new', SpkProgressNewController::class);
+    Route::apiResource('amandemen_new', AmandemenNewController::class);
+    Route::apiResource('nib', NibController::class);
     
     /*
     |--------------------------------------------------------------------------
@@ -260,11 +265,11 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/termin/contract/{id}', [TerminController::class, 'showByContract']);
     // TERMIN NEW
     Route::get('/termin_new/contract/{id}', [TerminNewController::class, 'showByContract']);
-    // TERMIN RECEIPT
-    Route::get('/termin_receipt/contract/{id}', [TerminReceiptController::class, 'showByContract']);
-
+    
     // TERM BILLING
     Route::get('/termbilling/contract/{id}', [TermBillingController::class, 'showByContract']);
+    // TERMIN RECEIPT
+    Route::get('/termin_receipt/contract/{id}', [TerminReceiptController::class, 'showByContract']);
 
     // SPK
     Route::get('/spk/contract/{id}', [SpkController::class, 'showByContract']);
@@ -274,6 +279,9 @@ Route::middleware(['auth:api'])->group(function () {
     // PROGRESS SPK
     Route::get('/spk_progress/spk/{id}', [Spk_progressController::class, 'showBySpk']);
     Route::get('/spk_progress/contract/{id}', [Spk_progressController::class, 'showByContract']);
+    // PROGRESS SPK NEW
+    Route::get('/spk_progress_new/spk/{id}', [SpkProgressNewController::class, 'showBySpk']);
+    Route::get('/spk_progress_new/contract/{id}', [SpkProgressNewController::class, 'showByContract']);
 
     // PROGRESS LUMPSUM
     Route::get('/lumpsum_progress/contract/{id}', [Lumpsum_progressController::class, 'showByContract']);
@@ -282,6 +290,8 @@ Route::middleware(['auth:api'])->group(function () {
     
     // AMANDEMEN
     Route::get('/amandemen/contract/{id}', [AmandemenController::class, 'showByContract']);
+    // AMANDEMEN NEW
+    Route::get('/amandemen_new/contract/{id}', [AmandemenNewController::class, 'showByContract']);
     
     // CONTRACT
     Route::get('/monitoring_contract', [ContractController::class, 'monitoring']);
@@ -292,6 +302,8 @@ Route::middleware(['auth:api'])->group(function () {
     // CONTRACT NEW
     Route::put('contract_new/current_status/{id}', [ContractNewController::class, 'updateCurrentStatus']);
     Route::get('contract_new/lumpsum_progress/{id}', [ContractNewController::class, 'contractLumpsumProgress']);
+    Route::get('contract_new/po_material_type', [ContractNewController::class, 'showByPoMaterialType']);
+    Route::get('contract_new/un_po_material_type', [ContractNewController::class, 'showByUnPoMaterialType']);
     
     // HISTORICAL MEMORANDUM & LAMPIRAN
     Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId']);

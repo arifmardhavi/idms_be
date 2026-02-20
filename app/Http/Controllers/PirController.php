@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\Pir;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -29,7 +30,8 @@ class PirController extends Controller
         $validator = Validator::make($request->all(), [
             'judul' => 'required|string|max:255',
             'tanggal_pir' => 'required|date',
-            'pir_file' => 'required|file|mimes:pdf',
+            'historical_memorandum_id' => 'nullable|exists:historical_memorandum,id',
+            'pir_file' => 'nullable|file|mimes:pdf',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -43,29 +45,7 @@ class PirController extends Controller
 
         try {
             if ($request->hasFile('pir_file')) {
-                $file = $request->file('pir_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("pir/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/pir/
-                $path = $file->move(public_path('pir'), $filename);  
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'File failed upload.',
-                    ], 422);
-                }
-                
-                $validatedData['pir_file'] = $filename;                
+                $validatedData['pir_file'] = FileHelper::uploadWithVersion($request->file('pir_file'), 'pir');  
             }
 
             $pir = Pir::create($validatedData);
@@ -119,7 +99,8 @@ class PirController extends Controller
         $validator = Validator::make($request->all(), [
             'judul' => 'sometimes|required|string|max:255',
             'tanggal_pir' => 'sometimes|required|date',
-            'pir_file' => 'sometimes|required|file|mimes:pdf',
+            'historical_memorandum_id' => 'nullable|exists:historical_memorandum,id',
+            'pir_file' => 'sometimes|nullable|file|mimes:pdf',
         ]);
 
         if ($validator->fails()) {
@@ -133,39 +114,22 @@ class PirController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            if ($request->hasFile('pir_file')) {
-                $file = $request->file('pir_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("pir/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/pir/
-                $path = $file->move(public_path('pir'), $filename);
-                
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'File failed upload.',
-                    ], 422);
-                }
-
-                // hapus file lama jika ada
+            // Jika historical_memorandum_id diisi, hapus file lama
+            if ($request->filled('historical_memorandum_id')) {
                 if ($pir->pir_file) {
-                    $pirBefore = public_path('pir/' . $pir->pir_file);
-                    if (file_exists($pirBefore)) {
-                        unlink($pirBefore);
-                    }
+                    FileHelper::deleteFile($pir->pir_file, 'pir');
+                    $validatedData['pir_file'] = null;
                 }
-                
-                $validatedData['pir_file'] = $filename;                
+            }
+
+            // Jika ada file baru yang diupload, ganti file lama
+            if ($request->hasFile('pir_file')) {
+                $validatedData['pir_file'] = FileHelper::uploadWithVersion($request->file('pir_file'), 'pir');  
+                // Delete old file if exists
+                if ($pir->pir_file) {
+                    FileHelper::deleteFile($pir->pir_file, 'pir');
+                }
+                $validatedData['historical_memorandum_id'] = null; // Set null karena pakai file baru              
             }
 
             $pir->update($validatedData);
