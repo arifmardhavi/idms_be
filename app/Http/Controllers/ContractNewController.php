@@ -304,37 +304,190 @@ class ContractNewController extends Controller
         }
 
         $totalWeeks = $start->diffInWeeks($end) + 1;
-        // $weeks = [];
-        // $weekNumber = 1;
-
-        // while ($start->lte($end)) {
-        //     $weekStart = $start->copy();
-        //     $weekEnd = $weekStart->copy()->addDays(6);
-        //     if ($weekEnd->gt($end)) {
-        //         $weekEnd = $end->copy();
-        //     }
-
-        //     $weeks[] = [
-        //         'week' => $weekNumber,
-        //         'start' => $weekStart->format('Y-m-d'),
-        //         'end' => $weekEnd->format('Y-m-d'),
-        //         'label' => "Week {$weekNumber}",
-        //         'value' => "{$weekStart->format('Y-m-d')}_{$weekEnd->format('Y-m-d')}",
-        //     ];
-
-        //     $weekNumber++;
-        //     $start = $weekStart->addDays(7);
-        // }
-        // $totalWeeks = $weekNumber - 1;
 
         $contract->total_weeks = $totalWeeks;
-        // $contract->weeks = $weeks;
-        // $contract->save();
 
         return response()->json([
             'success' => true,
             'message' => 'contract retrieved successfully.',
             'data' => new ContractDateRangeResource($contract),
+        ], 200);
+    }
+
+    public function downloadContractFile(string $id)
+    {
+        $contract = ContractNew::find($id);
+
+        if (!$contract) {
+            return response()->json([
+                'success' => false,
+                'message' => 'contract not found.',
+            ], 404);
+        }
+
+        if (!$contract->contract_file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'contract file not found.',
+            ], 404);
+        }
+
+        try {
+            $filePath = public_path('contract_new/' . $contract->contract_file);
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File does not exist in storage.',
+                ], 404);
+            }
+
+            return response()->download($filePath);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to download contract file.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+
+    }
+
+    public function monitoringContract(string $id)
+    {
+        $today = Carbon::today();
+
+        $contracts = ContractNew::all();
+        $count = $contracts->count();
+
+        // Hitung total berdasarkan status & tipe
+        $blue = ContractNew::where('contract_status', 0)->count(); // kontrak selesai
+
+        $green = 0;
+        $yellow = 0;
+        $red = 0;
+        $active = 0;
+        $selesai = 0;
+        $lumpsum = 0;
+        $unit_price = 0;
+        $po_material = 0;
+
+        // Tambahan untuk kontrak aktif per tipe
+        $activeLumpsum = 0;
+        $activeUnitPrice = 0;
+        $activePoMaterial = 0;
+
+        foreach ($contracts as $contract) {
+            // Hitung berdasarkan tipe kontrak
+            if ($contract->contract_type == 1) {
+                $lumpsum++;
+            } elseif ($contract->contract_type == 2) {
+                $unit_price++;
+            } elseif ($contract->contract_type == 3) {
+                $po_material++;
+            }
+
+            // Jika kontrak aktif (status = 1)
+            if ($contract->contract_status == 1) {
+                $active++;
+                if ($contract->contract_type == 1) {
+                    $activeLumpsum++;
+                } elseif ($contract->contract_type == 2) {
+                    $activeUnitPrice++;
+                } elseif ($contract->contract_type == 3) {
+                    $activePoMaterial++;
+                }
+            }
+
+            // Lewati kontrak yang selesai
+            if ($contract->contract_status == 0) {
+                $selesai++;
+            }
+
+            // Hitung warna durasi MPP global
+            $endDate = Carbon::parse($contract->contract_end_date);
+            $weeksDiff = $today->diffInWeeks($endDate, false);
+
+            if ($weeksDiff >= 4) {
+                $green++;
+            } elseif ($weeksDiff > 0 && $weeksDiff < 4) {
+                $yellow++;
+            } else {
+                $red++;
+            }
+        }
+
+        // Monitoring progress pekerjaan
+        $statusCounts = [
+            'blue' => 0,   // Kontrak selesai
+            'green' => 0,  // Deviasi 0%
+            'yellow' => 0, // Deviasi ≤ 20%
+            'red' => 0,    // Deviasi > 20%
+            'black' => 0,  // Belum upload amandemen
+        ];
+
+        foreach ($contracts as $contract) {
+            $color = $contract->monitoring_progress['color'] ?? null;
+            if (isset($statusCounts[$color])) {
+                $statusCounts[$color]++;
+            }
+        }
+
+        // Bagian Tambahan: Data untuk 3 Pie Chart
+        $activeContracts = $contracts->where('contract_status', 1);
+
+        // Durasi MPP untuk Lumpsum & Unit Price
+        $durasiLumpsumUnit = ['green' => 0, 'yellow' => 0, 'red' => 0];
+        // Durasi MPP untuk PO Material
+        $durasiPoMaterial = ['green' => 0, 'yellow' => 0, 'red' => 0];
+        // Sisa Nilai Kontrak (Lumpsum & Unit Price)
+        $sisaNilaiLumpsumUnit = ['green' => 0, 'yellow' => 0, 'red' => 0];
+
+        foreach ($activeContracts as $contract) {
+            $durasi = $contract->durasi_mpp['color'];
+            $sisaNilai = $contract->sisa_nilai['color'];
+
+            // Durasi MPP (Lumpsum + Unit Price)
+            if (in_array($contract->contract_type, [1, 2]) && isset($durasiLumpsumUnit[$durasi])) {
+                $durasiLumpsumUnit[$durasi]++;
+            }
+
+            // Durasi MPP (PO Material)
+            if ($contract->contract_type == 3 && isset($durasiPoMaterial[$durasi])) {
+                $durasiPoMaterial[$durasi]++;
+            }
+
+            // Sisa Nilai (Lumpsum + Unit Price)
+            if (in_array($contract->contract_type, [1, 2]) && isset($sisaNilaiLumpsumUnit[$sisaNilai])) {
+                $sisaNilaiLumpsumUnit[$sisaNilai]++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Monitoring data berhasil diambil.',
+            'data' => [
+                'total_contract' => $count,
+                'total_active_contract' => $active,
+                'total_selesai_contract' => $selesai,
+                'total_lumpsum_contract' => $lumpsum,
+                'total_unit_price_contract' => $unit_price,
+                'total_po_material_contract' => $po_material,
+                // Tambahan field baru
+                'active_lumpsum_contract' => $activeLumpsum,
+                'active_unit_price_contract' => $activeUnitPrice,
+                'active_po_material_contract' => $activePoMaterial,
+                'monitoring_durasi_mpp' => [
+                    'blue' => $blue,
+                    'green' => $green,
+                    'yellow' => $yellow,
+                    'red' => $red,
+                ],
+                'monitoring_progress_pekerjaan' => $statusCounts,
+                'monitoring_durasi_mpp_lumpsum_unit' => $durasiLumpsumUnit,
+                'monitoring_durasi_mpp_po_material' => $durasiPoMaterial,
+                'monitoring_sisa_nilai_lumpsum_unit' => $sisaNilaiLumpsumUnit,
+            ]
         ], 200);
     }
 }
