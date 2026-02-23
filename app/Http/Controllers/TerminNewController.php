@@ -33,8 +33,8 @@ class TerminNewController extends Controller
             'contract_new_id' => 'required|exists:contract_news,id',
             'termin' => 'required|string|max:100',
             'description' => 'nullable|string|max:200',
-            'receipt_nominal' => 'nullable|integer',
-            'receipt_file' => 'nullable|file|mimes:pdf|max:5120',
+            // 'receipt_nominal' => 'nullable|integer',
+            // 'receipt_file' => 'nullable|file|mimes:pdf|max:5120',
         ]);
 
         if ($validator->fails()) {
@@ -47,9 +47,9 @@ class TerminNewController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            if ($request->hasFile('receipt_file')) {
-                $validatedData['receipt_file'] = FileHelper::uploadWithVersion($request->file('receipt_file'), 'contract_new/lumpsum/receipt');
-            }
+            // if ($request->hasFile('receipt_file')) {
+            //     $validatedData['receipt_file'] = FileHelper::uploadWithVersion($request->file('receipt_file'), 'contract_new/lumpsum/receipt');
+            // }
 
             $termin = TerminNew::create($validatedData);
 
@@ -123,8 +123,8 @@ class TerminNewController extends Controller
             'contract_new_id' => 'required|exists:contracts,id',
             'termin' => 'sometimes|required|string|max:100',
             'description' => 'sometimes|nullable|string|max:200',
-            'receipt_nominal' => 'sometimes|nullable|integer',
-            'receipt_file' => 'sometimes|nullable|file|mimes:pdf|max:5120',
+            // 'receipt_nominal' => 'sometimes|nullable|integer',
+            // 'receipt_file' => 'sometimes|nullable|file|mimes:pdf|max:5120',
         ]);
 
         if ($validator->fails()) {
@@ -137,12 +137,12 @@ class TerminNewController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            if ($request->hasFile('receipt_file')) {
-                $validatedData['receipt_file'] = FileHelper::uploadWithVersion($request->file('receipt_file'), 'contract_new/lumpsum/receipt');
-                if ($termin->receipt_file) {
-                    FileHelper::deleteFile($termin->receipt_file, 'contract_new/lumpsum/receipt');
-                }
-            }
+            // if ($request->hasFile('receipt_file')) {
+            //     $validatedData['receipt_file'] = FileHelper::uploadWithVersion($request->file('receipt_file'), 'contract_new/lumpsum/receipt');
+            //     if ($termin->receipt_file) {
+            //         FileHelper::deleteFile($termin->receipt_file, 'contract_new/lumpsum/receipt');
+            //     }
+            // }
 
             $termin->update($validatedData);
 
@@ -175,9 +175,9 @@ class TerminNewController extends Controller
         }
 
         try {
-            if ($termin->receipt_file) {
-                FileHelper::deleteFile($termin->receipt_file, 'contract_new/lumpsum/receipt');
-            }
+            // if ($termin->receipt_file) {
+            //     FileHelper::deleteFile($termin->receipt_file, 'contract_new/lumpsum/receipt');
+            // }
             $termin->delete();
             return response()->json([
                 'success' => true,

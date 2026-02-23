@@ -19,8 +19,8 @@ class TerminResource extends JsonResource
             'contract_new_id' => $this->contract_new_id,
             'termin' => $this->termin,
             'description' => $this->description,
-            'receipt_nominal' => $this->receipt_nominal,
-            'receipt_file' => $this->receipt_file,
+            // 'receipt_nominal' => $this->receipt_nominal,
+            // 'receipt_file' => $this->receipt_file,
         ];
     }
 }
