@@ -17,7 +17,7 @@ class HistoricalEquipmentController extends Controller
     {
         $result = [];
 
-    //    memo 
+        //    memo 
         $memos = HistoricalMemorandum::select(
                 'id',
                 'tag_number_id',
@@ -101,6 +101,27 @@ class HistoricalEquipmentController extends Controller
                         'tanggal_report' => $item->{$config['date']},
                         'historical_memorandum_id' => $item->historical_memorandum_id,
                         'laporan_file' => $item->laporan_file,
+                    ];
+                }
+            }
+        }
+
+        // generate full year
+        if (!empty($result)) 
+        {
+
+            $years = array_keys($result);
+
+            $minYear = min($years);
+            $currentYear = Carbon::now()->year;
+
+            for ($year = $minYear; $year <= $currentYear; $year++) {
+
+                if (!isset($result[$year])) {
+                    $result[$year] = [
+                        'tahun' => $year,
+                        'memo' => [],
+                        'laporan' => []
                     ];
                 }
             }
