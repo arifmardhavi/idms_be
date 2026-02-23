@@ -18,7 +18,8 @@ class AmandemenNew extends Model
         'amandemen_price', 
         'amandemen_end_date', 
         'amandemen_penalty', 
-        'amandemen_termin'
+        'amandemen_termin',
+        'contract_price_before_amandemen',
     ];
 
     public function contractNew()

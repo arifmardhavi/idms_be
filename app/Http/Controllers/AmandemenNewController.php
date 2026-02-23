@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\FileHelper;
+use App\Http\Resources\AmandemenResource;
 use App\Models\AmandemenNew;
 use App\Models\ContractNew;
 use Carbon\Carbon;
@@ -20,7 +21,7 @@ class AmandemenNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Amandemen News retrieved successfully.',
-            'data' => $amandemenNews,
+            'data' => AmandemenResource::collection($amandemenNews),
         ]);
     }
 
@@ -122,7 +123,7 @@ class AmandemenNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Amandemen New created successfully.',
-            'data' => $amandemenNew,
+            'data' => new AmandemenResource($amandemenNew),
         ]);
     }
 
@@ -142,7 +143,7 @@ class AmandemenNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Amandemen New retrieved successfully.',
-            'data' => $amandemenNew,
+            'data' => new AmandemenResource($amandemenNew),
         ]);
     }
     
@@ -162,7 +163,7 @@ class AmandemenNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Amandemen New retrieved successfully.',
-            'data' => $amandemenNew,
+            'data' => AmandemenResource::collection($amandemenNew),
         ]);
     }
 
@@ -277,7 +278,7 @@ class AmandemenNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Amandemen New updated successfully.',
-            'data' => $amandemenNew,
+            'data' => new AmandemenResource($amandemenNew->fresh()),
         ]);
 
     }
