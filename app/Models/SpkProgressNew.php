@@ -17,38 +17,16 @@ class SpkProgressNew extends Model
         'progress_file',
     ];
 
-    protected $appends = ['total_weeks'];
+    protected $appends = ['spk_name'];
 
     public function spkNew()
     {
         return $this->belongsTo(SpkNew::class);
     }
-
-    public function getTotalWeeksAttribute()
+   
+    public function getSpkNameAttribute()
     {
-        if (!$this->spkNew) {
-            return 0;
-        }
-
-        $start = Carbon::parse($this->spkNew->spk_start_date);
-        $end = Carbon::parse($this->spkNew->spk_end_date);
-
-        // Geser ke hari Jumat pertama
-        if (!$start->isFriday()) {
-            $start = $start->next(Carbon::FRIDAY);
-        }
-
-        $weekCount = 0;
-
-        while ($start->lte($end)) {
-            $weekCount++;
-            $start->addDays(7);
-        }
-
-        return $weekCount;
+        return $this->spkNew ? $this->spkNew->spk_name : null;
     }
-
-
-    
 
 }

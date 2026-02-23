@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\FileHelper;
+use App\Http\Resources\SpkResource;
 use App\Models\SpkNew;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -19,7 +20,7 @@ class SpkNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'spk retrieved successfully.',
-            'data' => $spk,
+            'data' => SpkResource::collection($spk),
         ]);
     }
 
@@ -59,7 +60,7 @@ class SpkNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'spk created successfully.',
-            'data' => $spk,
+            'data' => new SpkResource($spk),
         ]);
     }
 
@@ -80,7 +81,7 @@ class SpkNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'spk retrieved successfully.',
-            'data' => $spk,
+            'data' => new SpkResource($spk),
         ]);
     }
     public function showByContract(string $id)
@@ -97,7 +98,7 @@ class SpkNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'spk retrieved successfully.',
-            'data' => $spk,
+            'data' => SpkResource::collection($spk),
         ]);
     }
 
@@ -155,7 +156,7 @@ class SpkNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'spk updated successfully.',
-            'data' => $spk,
+            'data' => new SpkResource($spk->fresh()),
         ]);
     }
 
