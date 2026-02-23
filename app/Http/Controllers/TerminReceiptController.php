@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\FileHelper;
+use App\Http\Resources\TerminReceiptResource;
 use App\Models\TerminReceiptNew;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -19,7 +20,7 @@ class TerminReceiptController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Termin Receipt retrieved successfully.',
-            'data' => $termin_receipt,
+            'data' => TerminReceiptResource::collection($termin_receipt),
         ]);
     }
 
@@ -52,7 +53,7 @@ class TerminReceiptController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Termin Receipt created successfully.',
-            'data' => $termin_receipt,
+            'data' => new TerminReceiptResource($termin_receipt),
         ]);
     }
 
@@ -73,25 +74,23 @@ class TerminReceiptController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Termin Receipt retrieved successfully.',
-            'data' => $termin_receipt,
+            'data' => new TerminReceiptResource($termin_receipt),
         ]);
     }
-    public function showByTermin(string $id)
-    {
-        $termin_receipt = TerminReceiptNew::where('termin_new_id', $id)->get();
 
-        if (!$termin_receipt) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Termin Receipt not found.',
-            ], 404);
-        }
+    public function showByContract(string $id)
+    {
+        $termin_receipt = TerminReceiptNew::with('termin_new')
+        ->whereHas('termin_new', function ($query) use ($id) {
+            $query->where('contract_new_id', $id);
+        })
+        ->get();
 
         return response()->json([
             'success' => true,
             'message' => 'Termin Receipt retrieved successfully.',
-            'data' => $termin_receipt,
-        ]);
+            'data' => TerminReceiptResource::collection($termin_receipt),
+        ], 200);
     }
 
     /**
@@ -134,7 +133,7 @@ class TerminReceiptController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Termin Receipt updated successfully.',
-            'data' => $termin_receipt,
+            'data' => new TerminReceiptResource($termin_receipt->fresh()),
         ]);
     }
 

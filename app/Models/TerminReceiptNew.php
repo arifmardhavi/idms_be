@@ -13,8 +13,15 @@ class TerminReceiptNew extends Model
         'receipt_nominal',
         'receipt_file',
     ];
+
+    protected $appends = ['termin'];
     public function terminNew()
     {
         return $this->belongsTo(TerminNew::class);
+    }
+
+    public function getTerminAttribute()
+    {
+        return $this->terminNew->termin;
     }
 }
