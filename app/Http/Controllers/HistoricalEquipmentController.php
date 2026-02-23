@@ -6,6 +6,7 @@ use App\Models\HistoricalMemorandum;
 use App\Models\LaporanInspection;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class HistoricalEquipmentController extends Controller
 {
@@ -16,11 +17,7 @@ class HistoricalEquipmentController extends Controller
     {
         $result = [];
 
-        /**
-         * =========================
-         * 1. MEMO
-         * =========================
-         */
+    //    memo 
         $memos = HistoricalMemorandum::select(
                 'id',
                 'tag_number_id',
@@ -53,11 +50,7 @@ class HistoricalEquipmentController extends Controller
             ];
         }
 
-        /**
-         * =========================
-         * 2. LAPORAN INSPECTION
-         * =========================
-         */
+        // laporan inspection 
         $laporans = LaporanInspection::with([
             'tagNumber:id,tag_number',
             'internalInspection',
@@ -109,12 +102,11 @@ class HistoricalEquipmentController extends Controller
                         'historical_memorandum_id' => $item->historical_memorandum_id,
                         'laporan_file' => $item->laporan_file,
                     ];
-
                 }
             }
         }
 
-        // SORT LAPORAN PER TAHUN BERDASARKAN TANGGAL TERBARU
+        // sort laporan per tahun 
         foreach ($result as $tahun => $data) {
             if (!empty($data['laporan'])) {
                 usort($result[$tahun]['laporan'], function ($a, $b) {
@@ -123,20 +115,40 @@ class HistoricalEquipmentController extends Controller
             }
         }
 
-        // SORT TAHUN (2026, 2025, 2024)
-        ksort($result);
-        
-        /**
-         * =========================
-         * FINAL RESPONSE
-         * =========================
-         */
+        // sort tahun terbaru terlebih dahulu
+        krsort($result);
+
+        // PAGINATION 
+        $page = request()->get('page', 1);
+        $perPage = request()->get('per_page', 3);
+
+        $collection = collect(array_values($result));
+
+        $pagedData = $collection->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $pagination = new LengthAwarePaginator(
+            $pagedData,
+            $collection->count(),
+            $perPage,
+            $page,
+            [
+                'path' => request()->url(),
+                'query' => request()->query()
+            ]
+        );
+
+        // RESPONSE AKHIR
         return response()->json([
             'success' => true,
             'message' => 'Historical Equipment retrieved successfully.',
-            'data' => array_values($result)
+            'data' => $pagination->items(),
+            'meta' => [
+                'current_page' => $pagination->currentPage(),
+                'last_page' => $pagination->lastPage(),
+                'per_page' => $pagination->perPage(),
+                'total' => $pagination->total(),
+            ]
         ], 200);
-
     }
 
 
