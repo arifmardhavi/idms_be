@@ -17,7 +17,7 @@ class HistoricalEquipmentController extends Controller
     {
         $result = [];
 
-        //    memo 
+        //    memo
         $memos = HistoricalMemorandum::select(
                 'id',
                 'tag_number_id',
@@ -50,7 +50,7 @@ class HistoricalEquipmentController extends Controller
             ];
         }
 
-        // laporan inspection 
+        // laporan inspection
         $laporans = LaporanInspection::with([
             'tagNumber:id,tag_number',
             'internalInspection',
@@ -95,6 +95,7 @@ class HistoricalEquipmentController extends Controller
                     }
 
                     $result[$tahun]['laporan'][] = [
+                        'id' => $item->id,
                         'tag_number' => $laporan->tag_number_id,
                         'menu' => $menuName,
                         'judul' => $item->judul,
@@ -107,7 +108,7 @@ class HistoricalEquipmentController extends Controller
         }
 
         // generate full year
-        if (!empty($result)) 
+        if (!empty($result))
         {
 
             $years = array_keys($result);
@@ -127,7 +128,7 @@ class HistoricalEquipmentController extends Controller
             }
         }
 
-        // sort laporan per tahun 
+        // sort laporan per tahun
         foreach ($result as $tahun => $data) {
             if (!empty($data['laporan'])) {
                 usort($result[$tahun]['laporan'], function ($a, $b) {
@@ -139,7 +140,7 @@ class HistoricalEquipmentController extends Controller
         // sort tahun terbaru terlebih dahulu
         krsort($result);
 
-        // PAGINATION 
+        // PAGINATION
         $page = request()->get('page', 1);
         $perPage = request()->get('per_page', 3);
 
