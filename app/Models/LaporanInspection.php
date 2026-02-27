@@ -51,6 +51,11 @@ class LaporanInspection extends BaseModel
         return $this->hasMany(Preventive::class);
     }
 
+    public function onstream()
+    {
+        return $this->hasMany(OnstreamInspection::class);
+    }
+
     /* ======================
      | ACCESSORS
      ====================== */
