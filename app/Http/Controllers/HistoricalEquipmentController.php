@@ -59,6 +59,7 @@ class HistoricalEquipmentController extends Controller
             'surveillance',
             'overhaul',
             'preventive',
+            'onstream'
         ])->get();
 
         foreach ($laporans as $laporan) {
@@ -70,6 +71,7 @@ class HistoricalEquipmentController extends Controller
                 'Surveillance'        => ['data' => $laporan->surveillance,        'date' => 'surveillance_date'],
                 'Overhaul'            => ['data' => $laporan->overhaul,            'date' => 'overhaul_date'],
                 'Preventive'          => ['data' => $laporan->preventive,          'date' => 'preventive_date'],
+                'Onstream'            => ['data' => $laporan->onstream,            'date' => 'inspection_date'],
             ];
 
             foreach ($menus as $menuName => $config) {
@@ -95,7 +97,7 @@ class HistoricalEquipmentController extends Controller
                     }
 
                     $result[$tahun]['laporan'][] = [
-                        'id' => $item->id,
+                        'id' => $item->laporan_inspection_id,
                         'tag_number' => $laporan->tag_number_id,
                         'menu' => $menuName,
                         'judul' => $item->judul,
