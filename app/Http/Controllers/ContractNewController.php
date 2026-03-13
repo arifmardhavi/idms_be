@@ -31,22 +31,39 @@ class ContractNewController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'no_vendor' => 'required|string',
-            'vendor_name' => 'required|string',
-            'no_contract' => 'required|string|unique:contract_news,no_contract',
-            'contract_name' => 'required|string',
-            'contract_type' => 'required|integer|in:1,2,3', // 1 = Lumpsum, 2 = Unit Price, 3 = PO Material
-            'contract_date' => 'nullable|date',
-            'contract_price' => 'required|integer',
-            'contract_start_date' => 'nullable|date',
-            'contract_end_date' => 'nullable|date',
-            'meeting_notes' => 'nullable|file|mimes:pdf|max:5120', // Maksimal 5MB
-            'pengawas' => 'required|integer',
-            'contract_status' => 'nullable|integer|in:0,1', // 0 = Aktif, 1 = Selesai
-            'contract_file' => 'required|file|mimes:pdf|max:30720', // Maksimal 30MB
+        if ($request->contract_type == 3 || $request->contract_type == 4){
+            $validator = Validator::make($request->all(), [
+                'no_vendor' => 'required|string',
+                'vendor_name' => 'required|string',
+                'no_contract' => 'required|string|unique:contract_news,no_contract',
+                'contract_name' => 'required|string',
+                'pengawas' => 'required|integer',
+                'contract_type' => 'required|integer|in:3,4', // 3 = PO Material, 4 = PO Jasa
+                'contract_price' => 'required|integer',
+                'contract_start_date' => 'required|date',
+                'contract_end_date' => 'required|date|after_or_equal:contract_start_date',
+                'contract_file' => 'required|file|mimes:pdf|max:51200', // Maksimal 50MB
+                'contract_status' => 'nullable|integer|in:0,1', // 0 = Aktif, 1 = Selesai
 
-        ]);
+            ]);
+        }else{
+            $validator = Validator::make($request->all(), [
+                'no_vendor' => 'required|string',
+                'vendor_name' => 'required|string',
+                'no_contract' => 'required|string|unique:contract_news,no_contract',
+                'contract_name' => 'required|string',
+                'contract_type' => 'required|integer|in:1,2', // 1 = Lumpsum, 2 = Unit Price, 3 = PO Material, 4 = PO Jasa
+                'contract_date' => 'required|date',
+                'contract_price' => 'required|integer',
+                'contract_start_date' => 'nullable|date',
+                'contract_end_date' => 'nullable|date',
+                'meeting_notes' => 'nullable|file|mimes:pdf|max:5120', // Maksimal 5MB
+                'pengawas' => 'required|integer',
+                'contract_status' => 'required|integer|in:0,1', // 0 = Aktif, 1 = Selesai
+                'contract_file' => 'required|file|mimes:pdf|max:30720', // Maksimal 30MB
+
+            ]);
+        }
 
         if ($validator->fails()) {
             return response()->json([
@@ -108,7 +125,7 @@ class ContractNewController extends Controller
      */
     public function showByPoMaterialType()
     {
-        $contract = ContractNew::where('contract_type', 3)->where('contract_status', 1)->get();
+        $contract = ContractNew::where('contract_type', 3)->get();
         if ($contract->isEmpty()) {
             return response()->json([
                 'success' => false,
@@ -127,7 +144,7 @@ class ContractNewController extends Controller
      */
     public function showByUnPoMaterialType()
     {
-        $contract = ContractNew::where('contract_type', '!=', 3)->where('contract_status', 1)->get();
+        $contract = ContractNew::where('contract_type', '!=', 3)->get();
         if ($contract->isEmpty()) {
             return response()->json([
                 'success' => false,
@@ -154,22 +171,40 @@ class ContractNewController extends Controller
             ], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'no_vendor' => 'sometimes|required|string',
-            'vendor_name' => 'sometimes|required|string',
-            'no_contract' => 'sometimes|required|string|unique:contract_news,no_contract,' .$id,
-            'contract_name' => 'sometimes|required|string',
-            'contract_type' => 'sometimes|required|string|in:1,2,3', // 1 = Lumpsum, 2 = Unit Price, 3 = PO Material
-            'contract_date' => 'nullable|date',
-            'contract_price' => 'sometimes|required|integer',
-            'contract_start_date' => 'nullable|date',
-            'contract_end_date' => 'nullable|date',
-            'meeting_notes' => 'nullable|file|mimes:pdf|max:5120', // Maksimal 5MB
-            'pengawas' => 'sometimes|required|integer',
-            'contract_status' => 'sometimes|required|integer|in:0,1', // 0 = Aktif, 1 = Selesai
-            'contract_file' => 'nullable|file|mimes:pdf|max:30720', // Maksimal 30MB
+        if ($contract->contract_status == 3 || $contract->contract_status == 4){ 
+            $validator = Validator::make($request->all(), [
+                'no_vendor' => 'sometimes|required|string',
+                'vendor_name' => 'sometimes|required|string',
+                'no_contract' => 'sometimes|required|string|unique:contract_news,no_contract,' .$id,
+                'contract_name' => 'sometimes|required|string',
+                'pengawas' => 'sometimes|required|integer',
+                'contract_type' => 'sometimes|required|string|in:1,2,3,4', // 1 = Lumpsum, 2 = Unit Price, 3 = PO Material, 4 = PO Jasa
+                'contract_price' => 'sometimes|required|integer',
+                'contract_start_date' => 'nullable|date',
+                'contract_end_date' => 'nullable|date',
+                'contract_file' => 'nullable|file|mimes:pdf|max:30720', // Maksimal 30MB
+                'contract_status' => 'sometimes|required|integer|in:0,1', // 0 = Aktif, 1 = Selesai
 
-        ]);
+            ]);
+        }else{
+            $validator = Validator::make($request->all(), [
+                'no_vendor' => 'sometimes|required|string',
+                'vendor_name' => 'sometimes|required|string',
+                'no_contract' => 'sometimes|required|string|unique:contract_news,no_contract,' .$id,
+                'contract_name' => 'sometimes|required|string',
+                'pengawas' => 'sometimes|required|integer',
+                'contract_type' => 'sometimes|required|string|in:1,2,3,4', // 1 = Lumpsum, 2 = Unit Price, 3 = PO Material, 4 = PO Jasa
+                'contract_date' => 'nullable|date',
+                'contract_price' => 'sometimes|required|integer',
+                'contract_start_date' => 'nullable|date',
+                'contract_end_date' => 'nullable|date',
+                'contract_file' => 'nullable|file|mimes:pdf|max:30720', // Maksimal 30MB
+                'meeting_notes' => 'nullable|file|mimes:pdf|max:5120', // Maksimal 5MB
+                'contract_status' => 'sometimes|required|integer|in:0,1', // 0 = Aktif, 1 = Selesai
+    
+            ]);
+        }
+
 
         if ($validator->fails()) {
             return response()->json([
