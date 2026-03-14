@@ -18,7 +18,15 @@ class ContractNewController extends Controller
      */
     public function index()
     {
-        $contracts = ContractNew::all();
+        $contracts = ContractNew::with([
+            'termin',
+            'lumpsum_progress',
+            'spk',
+            'amandemen'
+        ])
+        ->withSum('terminReceipt as total_penagihan', 'receipt_nominal')
+        ->get();
+
         return response()->json([
             'success' => true,
             'message' => 'contract retrieved successfully.',
@@ -125,7 +133,14 @@ class ContractNewController extends Controller
      */
     public function showByPoMaterialType()
     {
-        $contract = ContractNew::where('contract_type', 3)->get();
+        $contract = ContractNew::where('contract_type', 3)
+        ->with([
+            'termin',
+            'lumpsum_progress',
+            'spk'
+        ])
+        ->withSum('terminReceipt as total_penagihan', 'receipt_nominal')
+        ->get();
         if ($contract->isEmpty()) {
             return response()->json([
                 'success' => false,
@@ -144,7 +159,15 @@ class ContractNewController extends Controller
      */
     public function showByUnPoMaterialType()
     {
-        $contract = ContractNew::where('contract_type', '!=', 3)->get();
+        $contract = ContractNew::where('contract_type', '!=', 3)
+        ->with([
+            'termin',
+            'lumpsum_progress',
+            'spk'
+        ])
+        ->withSum('terminReceipt as total_penagihan', 'receipt_nominal')
+        ->get();
+
         if ($contract->isEmpty()) {
             return response()->json([
                 'success' => false,
@@ -273,7 +296,7 @@ class ContractNewController extends Controller
             }
 
             if ($contract->meeting_notes) {
-                FileHelper::deleteFile($contract->contract_file, 'contract_new/meeting_notes');
+                FileHelper::deleteFile($contract->meeting_notes, 'contract_new/meeting_notes');
             }
 
             $contract->delete();
@@ -388,11 +411,17 @@ class ContractNewController extends Controller
 
     }
 
-    public function monitoringContract(string $id)
+    public function monitoringContract()
     {
         $today = Carbon::today();
 
-        $contracts = ContractNew::all();
+        $contracts = ContractNew::with([
+            'termin',
+            'lumpsum_progress',
+            'spk'
+        ])
+        ->withSum('terminReceipt as total_penagihan', 'receipt_nominal')
+        ->get();
         $count = $contracts->count();
 
         // Hitung total berdasarkan status & tipe
@@ -437,6 +466,7 @@ class ContractNewController extends Controller
             // Lewati kontrak yang selesai
             if ($contract->contract_status == 0) {
                 $selesai++;
+                continue;
             }
 
             // Hitung warna durasi MPP global

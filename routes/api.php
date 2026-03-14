@@ -300,7 +300,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('contracts/un_po_material_type', [ContractController::class, 'showByUnPoMaterialType']);
     
     // CONTRACT NEW
-    Route::get('contract_new/monitoring_contract', [ContractNewController::class, 'monitoringContract']);
+    Route::get('monitoring_contract_new', [ContractNewController::class, 'monitoringContract']);
     Route::put('contract_new/current_status/{id}', [ContractNewController::class, 'updateCurrentStatus']);
     Route::get('contract_new/lumpsum_progress/{id}', [ContractNewController::class, 'contractLumpsumProgress']);
     Route::get('contract_new/po_material_type', [ContractNewController::class, 'showByPoMaterialType']);

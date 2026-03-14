@@ -20,4 +20,9 @@ class TerminNew extends Model
     {
         return $this->belongsTo(ContractNew::class);
     }
+
+    public function receipts()
+    {
+        return $this->hasMany(TerminReceiptNew::class, 'termin_new_id');
+    }
 }

@@ -24,6 +24,7 @@ class ContractResource extends JsonResource
             'contract_date' => $this->contract_date,
             'contract_price' => $this->contract_price,
             'contract_file' => $this->contract_file,
+            'kom' => $this->kom,
             'contract_start_date' => $this->contract_start_date,
             'contract_end_date' => $this->contract_end_date,
             'meeting_notes' => $this->meeting_notes,

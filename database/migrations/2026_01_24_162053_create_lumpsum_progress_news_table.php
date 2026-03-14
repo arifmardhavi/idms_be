@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('contract_new_id')->constrained()->onDelete('cascade'); // Relation to contract_news
             $table->integer('week')->unsigned();
-            $table->decimal('plan', 3, 2);
-            $table->decimal('actual', 3, 2);
+            $table->decimal('plan', 5, 2);
+            $table->decimal('actual', 5, 2);
             $table->string('progress_file');
             $table->timestamps();
         });

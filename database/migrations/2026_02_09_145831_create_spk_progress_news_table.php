@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('spk_new_id')->constrained('spk_news')->onDelete('cascade');
             $table->tinyInteger('week')->unsigned();
-            $table->decimal('plan', 3, 2);
-            $table->decimal('actual', 3, 2);
+            $table->decimal('plan', 5, 2);
+            $table->decimal('actual', 5, 2);
             $table->string('progress_file');
             $table->timestamps();
         });
