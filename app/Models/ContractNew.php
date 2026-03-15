@@ -41,7 +41,6 @@ class ContractNew extends Model
         'plan_progress',
         'actual_progress',
         'deviation_progress',
-        'monitoring_progress',
     ];
 
     /*
@@ -156,6 +155,7 @@ class ContractNew extends Model
 
         if ($this->contract_status == 0) {
             $color = 'blue';
+            $sisaHari = 0;
         } elseif ($sisaHari <= 0 && !$adaAmandemen) {
             $color = 'red';
         } elseif ($sisaHari <= 28 && !$adaPenagihan) {
@@ -177,7 +177,7 @@ class ContractNew extends Model
         });
     }
 
-    public function getMonitoringProgressAttribute()
+    public function getDeviationProgressAttribute()
     {
         if ($this->contract_type == 2) {
             $plan = $this->latestPlanProgressSpk() ?? 0;    // asumsikan return persentase 0-100
@@ -302,10 +302,5 @@ class ContractNew extends Model
         return $this->lumpsum_progress()
             ->latest()
             ->value('plan') ?? 0;
-    }
-
-    public function getDeviationProgressAttribute()
-    {
-        return $this->actual_progress - $this->plan_progress;
     }
 }
