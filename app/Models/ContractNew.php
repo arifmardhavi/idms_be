@@ -180,8 +180,8 @@ class ContractNew extends Model
     public function getDeviationProgressAttribute()
     {
         if ($this->contract_type == 2) {
-            $plan = $this->latestPlanProgressSpk() ?? 0;    // asumsikan return persentase 0-100
-            $actual = $this->latestActualProgressSpk() ?? 0; // asumsikan return persentase 0-100
+            $plan = $this->plan_progress ?? 0;    // asumsikan return persentase 0-100
+            $actual = $this->actual_progress ?? 0; // asumsikan return persentase 0-100
         } else {
             $plan = $this->lumpsum_progress()->latest()->value('plan') ?? 0;    // asumsikan return persentase 0-100
             $actual = $this->lumpsum_progress()->latest()->value('actual') ?? 0; // asumsikan return persentase 0-100
