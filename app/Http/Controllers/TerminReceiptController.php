@@ -80,8 +80,8 @@ class TerminReceiptController extends Controller
 
     public function showByContract(string $id)
     {
-        $termin_receipt = TerminReceiptNew::with('termin_new')
-        ->whereHas('termin_new', function ($query) use ($id) {
+        $termin_receipt = TerminReceiptNew::with('terminNew')
+        ->whereHas('terminNew', function ($query) use ($id) {
             $query->where('contract_new_id', $id);
         })
         ->get();

@@ -277,20 +277,22 @@ class ContractNew extends Model
     public function getActualProgressAttribute()
     {
         if ($this->contract_type == 2) {
-            return $this->allSpkProgress()->latest()->value('actual') ?? 0;
-        }else{
-            return $this->lumpsum_progress()->latest()->value('actual') ?? 0;
+            return $this->allSpkProgress()
+                ->latest('spk_progress_news.created_at')
+                ->value('actual') ?? 0;
+        } else {
+            return $this->lumpsum_progress()
+                ->latest()
+                ->value('actual') ?? 0;
         }
-
-        return $this->lumpsum_progress()
-            ->latest()
-            ->value('actual') ?? 0;
     }
 
     public function getPlanProgressAttribute()
     {
         if ($this->contract_type == 2) {
-            return $this->allSpkProgress()->latest()->value('plan') ?? 0;
+            return $this->allSpkProgress()
+                ->latest('spk_progress_news.created_at')
+                ->value('plan') ?? 0;
         }
 
         if ($this->relationLoaded('lumpsum_progress')) {

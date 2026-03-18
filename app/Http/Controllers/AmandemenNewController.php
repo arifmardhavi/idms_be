@@ -150,7 +150,7 @@ class AmandemenNewController extends Controller
     /**
      * Display the specified resource.
      */
-    public function showbByContract(string $id)
+    public function showByContract(string $id)
     {
         $amandemenNew = AmandemenNew::where('contract_new_id', $id)->get();
         if (!$amandemenNew) {
