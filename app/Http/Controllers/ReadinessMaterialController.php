@@ -39,6 +39,7 @@ class ReadinessMaterialController extends Controller
         $validator = Validator::make($request->all(), [
             'event_readiness_id' => 'required|exists:event_readinesses,id',
             'material_name' => 'required|string|max:100',
+            'price_estimate' => 'nullable|integer',
             'type' => 'nullable|integer|in:0,1', // 0: LLDI, 1: Non LLDI
             'status' => 'nullable|integer|in:0,1', // 0: sudah, 1: belum
         ]);
@@ -135,6 +136,7 @@ class ReadinessMaterialController extends Controller
 
         $validator = Validator::make($request->all(), [
             'material_name' => 'sometimes|string|max:100',
+            'price_estimate' => 'sometimes|nullable|integer',
             'type' => 'sometimes|integer|in:0,1', // 0: LLDI, 1: Non LLDI
             'status' => 'sometimes|integer|in:0,1',
         ]);
@@ -193,6 +195,40 @@ class ReadinessMaterialController extends Controller
                 'errors' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * additional function to create or update current status of readiness material
+     */
+    public function updateCurrentStatus(Request $request, string $id )
+    {
+        $readiness_material = ReadinessMaterial::find($id);
+        if (!$readiness_material) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Readiness TA Material not found.',
+            ], 404);
+        }
+        $validator = Validator::make($request->all(), [
+            'current_status' => 'sometimes|nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed for current status',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validatedData = $validator->validated();
+        $readiness_material->update($validatedData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Current status updated successfully.',
+            'data' => $readiness_material,
+        ], 200);
     }
 
     /**

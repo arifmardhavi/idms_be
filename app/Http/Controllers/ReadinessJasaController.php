@@ -37,6 +37,7 @@ class ReadinessJasaController extends Controller
         $validator = Validator::make($request->all(), [
             'event_readiness_id' => 'required|exists:event_readinesses,id',
             'jasa_name' => 'required|string|max:100',
+            'price_estimate' => 'nullable|integer',
             'status' => 'nullable|integer|in:0,1',
         ]);
 
@@ -131,6 +132,7 @@ class ReadinessJasaController extends Controller
 
         $validator = Validator::make($request->all(), [
             'jasa_name' => 'sometimes|string|max:100',
+            'price_estimate' => 'sometimes|nullable|integer',
             'status' => 'sometimes|integer|in:0,1',
         ]);
 
@@ -188,6 +190,40 @@ class ReadinessJasaController extends Controller
                 'errors' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * additional function to create or update current status of readiness jasa
+     */
+    public function updateCurrentStatus(Request $request, string $id )
+    {
+        $readiness_jasa = ReadinessJasa::find($id);
+        if (!$readiness_jasa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Readiness TA Jasa not found.',
+            ], 404);
+        }
+        $validator = Validator::make($request->all(), [
+            'current_status' => 'sometimes|nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed for current status',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validatedData = $validator->validated();
+        $readiness_jasa->update($validatedData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Current status updated successfully.',
+            'data' => $readiness_jasa,
+        ], 200);
     }
 
     public function dashboard(string $id)

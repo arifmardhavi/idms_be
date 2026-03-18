@@ -31,7 +31,6 @@ class PoMaterialController extends Controller
             'contract_id' => 'nullable|exists:contracts,id',
             'no_po' => 'nullable|integer',
             'delivery_date' => 'nullable|date',
-            'target_date' => 'nullable|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 
@@ -115,7 +114,6 @@ class PoMaterialController extends Controller
             'contract_id' => 'sometimes|nullable|exists:contracts,id',
             'no_po' => 'sometimes|integer',
             'delivery_date' => 'sometimes|date',
-            'target_date' => 'sometimes|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 

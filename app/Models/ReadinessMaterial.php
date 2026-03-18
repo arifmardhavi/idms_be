@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 class ReadinessMaterial extends BaseModel
 {
     use HasFactory;
-    protected $fillable = ['event_readiness_id','material_name', 'type', 'status'];
+    protected $fillable = ['event_readiness_id','material_name', 'price_estimate', 'type', 'status', 'current_status'];
     protected $appends = [
         'ta_status',
         'last_number_status',
         'prognosa',
         'total_progress',
+        'nilai_po',
     ];
 
 
@@ -66,6 +67,13 @@ class ReadinessMaterial extends BaseModel
             return null;
         }
 
+        if ($this->status === 0) { // sudah selesai
+            return [
+                'days_remaining' => 0,
+                'color' => 'blue',
+            ];
+        }
+
         $taDate = Carbon::parse($this->event_readiness->tanggal_ta);
         $diff = Carbon::now()->diffInDays($taDate, false);
 
@@ -99,6 +107,51 @@ class ReadinessMaterial extends BaseModel
         return 'red';
     }
 
+    public function getPrognosaAttribute()
+    {
+        $steps = [
+            'delivery_material'  => 'target_date',
+            'fabrikasi_material' => 'target_date',
+            'po_material'        => 'delivery_date',
+            'tender_material'    => 'target_date',
+        ];
+
+        foreach ($steps as $relation => $field) {
+
+            if ($this->$relation && !empty($this->$relation->$field)) {
+
+                $date = Carbon::parse($this->$relation->$field);
+
+                if (empty($this->event_readiness->tanggal_ta)) {
+                    return [
+                        'date' => $date->toDateString(),
+                        'color' => null,
+                        'tanggal_ta' => null
+                    ];
+                }
+
+
+                $taDate = Carbon::parse($this->event_readiness->tanggal_ta);
+
+                if ($date->gt($taDate)) {
+                    $color = 'red';
+                } elseif ($date->eq($taDate)) {
+                    $color = 'yellow';
+                } else {
+                    $color = 'green';
+                }
+
+                return [
+                    'date' => $date->toDateString(),
+                    'color' => $color,
+                    'tanggal_ta' => $taDate->toDateString(),
+                ];
+            }
+        }
+
+        return null;
+    }
+
 
     public function getLastNumberStatusAttribute()
     {
@@ -119,6 +172,15 @@ class ReadinessMaterial extends BaseModel
         }
 
         return null; // kalau semua kosong
+    }
+
+    public function getNilaiPoAttribute()
+    {
+        if (empty($this->po_material?->contract_id) || $this->po_material?->contract_id === null) {
+            return $this->price_estimate;
+        }
+
+        return $this->po_material?->contract?->contract_price ?? $this->price_estimate;
     }
 
     protected static function boot()
@@ -155,50 +217,50 @@ class ReadinessMaterial extends BaseModel
         });
     }
 
-    public function getPrognosaAttribute()
-    {
-        $poDate = $this->po_material?->delivery_date; // step 6
-        $deliveryTarget = $this->delivery_material?->target_date; // step 8
+    // public function getPrognosaAttribute()
+    // {
+    //     $poDate = $this->po_material?->delivery_date; // step 6
+    //     $deliveryTarget = $this->delivery_material?->target_date; // step 8
 
-        if (empty($poDate) || empty($deliveryTarget)) {
-            return null; // belum bisa dihitung
-        }
+    //     if (empty($poDate) || empty($deliveryTarget)) {
+    //         return null; // belum bisa dihitung
+    //     }
 
-        $po = Carbon::parse($poDate);
-        $delivery = Carbon::parse($deliveryTarget);
+    //     $po = Carbon::parse($poDate);
+    //     $delivery = Carbon::parse($deliveryTarget);
 
-        // $daysRemaining = $delivery->diffInDays($po, false);
-        $daysRemaining = $po->diffInDays($delivery, false);
+    //     // $daysRemaining = $delivery->diffInDays($po, false);
+    //     $daysRemaining = $po->diffInDays($delivery, false);
 
 
-        $color = null;
+    //     $color = null;
 
-        // Prioritaskan tanggal_ta
-        if (!empty($this->event_readiness->tanggal_ta)) {
-            $taDate = Carbon::parse($this->event_readiness->tanggal_ta);
-            if ($po->gt($taDate)) {
-                $color = 'red';
-            }
-        }
+    //     // Prioritaskan tanggal_ta
+    //     if (!empty($this->event_readiness->tanggal_ta)) {
+    //         $taDate = Carbon::parse($this->event_readiness->tanggal_ta);
+    //         if ($po->gt($taDate)) {
+    //             $color = 'red';
+    //         }
+    //     }
 
-        if (!$color) {
-            if ($po->lt($delivery)) {
-                $color = 'green'; // lebih cepat dari target
-            } elseif ($po->eq($delivery)) {
-                $color = 'yellow'; // pas sama target
-            } else {
-                $color = 'yellow'; // lebih lambat dari target
-            }
-        }
+    //     if (!$color) {
+    //         if ($po->lt($delivery)) {
+    //             $color = 'green'; // lebih cepat dari target
+    //         } elseif ($po->eq($delivery)) {
+    //             $color = 'yellow'; // pas sama target
+    //         } else {
+    //             $color = 'yellow'; // lebih lambat dari target
+    //         }
+    //     }
 
-        return [
-            'days_remaining' => $daysRemaining,
-            'color' => $color,
-            'delivery_date' => $po->toDateString(),
-            'target_date' => $delivery->toDateString(),
-            'tanggal_ta' => $this->event_readiness->tanggal_ta,
-        ];
-    }
+    //     return [
+    //         'days_remaining' => $daysRemaining,
+    //         'color' => $color,
+    //         'delivery_date' => $po->toDateString(),
+    //         'target_date' => $delivery->toDateString(),
+    //         'tanggal_ta' => $this->event_readiness->tanggal_ta,
+    //     ];
+    // }
 
     public function getTotalProgressAttribute()
     {

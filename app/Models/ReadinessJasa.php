@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class ReadinessJasa extends Model
 {
     use HasFactory;
-    protected $fillable = ['event_readiness_id','jasa_name', 'status'];
+    protected $fillable = ['event_readiness_id','jasa_name', 'price_estimate', 'status', 'current_status'];
     protected $appends = [
         'ta_status',
         'last_number_status',
