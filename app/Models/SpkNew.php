@@ -25,7 +25,7 @@ class SpkNew extends Model
         'receipt_file',
     ];
 
-    protected $appends = ['total_weeks'];
+    protected $appends = ['total_weeks', 'penagihan_status'];
 
     public function contracttNew()
     {
@@ -54,5 +54,17 @@ class SpkNew extends Model
         }
 
         return $weekCount;
+    }
+
+    public function getPenagihanStatusAttribute()
+    {
+        $penagihan = 0;
+        if ($this->receipt_nominal && $this->receipt_file) {
+            $penagihan = 1;
+            return $penagihan;
+        } else {
+            $penagihan = 0;
+            return $penagihan;
+        }
     }
 }

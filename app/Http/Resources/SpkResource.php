@@ -27,6 +27,7 @@ class SpkResource extends JsonResource
             'receipt_nominal' => $this->receipt_nominal,
             'receipt_file' => $this->receipt_file,
             'total_weeks' => $this->total_weeks,
+            'penagihan_status' => $this->penagihan_status,
         ];
     }
 }

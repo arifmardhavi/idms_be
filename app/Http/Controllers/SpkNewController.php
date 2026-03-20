@@ -117,16 +117,16 @@ class SpkNewController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'contract_new_id' => 'required|exists:contract_news,id',
-            'no_spk' => 'required|string|max:100',
-            'spk_name' => 'required|string|max:200',
-            'spk_start_date' => 'required|date',
-            'spk_end_date' => 'required|date',
-            'spk_price' => 'required|integer',
-            'spk_file' => 'required|file|mimes:pdf|max:25600', // Maksimal 25MB
-            'spk_status' => 'required|in:0,1',
-            'receipt_nominal' => 'nullable|integer',
-            'receipt_file' => 'nullable|file|mimes:pdf|max:3072', // Maksimal 3MB
+            'contract_new_id' => 'sometimes|required|exists:contract_news,id',
+            'no_spk' => 'sometimes|required|string|max:100',
+            'spk_name' => 'sometimes|required|string|max:200',
+            'spk_start_date' => 'sometimes|required|date',
+            'spk_end_date' => 'sometimes|required|date',
+            'spk_price' => 'sometimes|required|integer',
+            'spk_file' => 'sometimes|file|mimes:pdf|max:25600', // Maksimal 25MB
+            'spk_status' => 'sometimes|required|in:0,1',
+            'receipt_nominal' => 'sometimes|nullable|integer',
+            'receipt_file' => 'sometimes|nullable|file|mimes:pdf|max:3072', // Maksimal 3MB
         ]);
 
         if ($validator->fails()) {
