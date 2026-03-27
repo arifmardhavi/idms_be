@@ -11,15 +11,15 @@ class AmandemenNew extends Model
 
     protected $fillable = [
         'contract_new_id',
-        'contract_price_before_amandemen', 
-        'ba_agreement_file', 
-        'result_amandemen_file', 
-        'principle_permit_file', 
-        'amandemen_price', 
-        'amandemen_end_date', 
-        'amandemen_penalty', 
-        'amandemen_termin',
         'contract_price_before_amandemen',
+        'contract_end_date_before_amandemen',
+        'ba_agreement_file',
+        'result_amandemen_file',
+        'principle_permit_file',
+        'amandemen_price',
+        'amandemen_end_date',
+        'amandemen_penalty',
+        'amandemen_termin',
     ];
 
     public function contractNew()
