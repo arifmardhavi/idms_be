@@ -24,8 +24,8 @@ class AmandemenResource extends JsonResource
             'amandemen_price' => $this->amandemen_price,
             'amandemen_end_date' => $this->amandemen_end_date,
             'amandemen_penalty' => $this->amandemen_penalty,
-            'amandemen_termin' => $this->amandemen_termin,
             'contract_price_before_amandemen' => $this->contract_price_before_amandemen,
+            'contract_end_date_before_amandemen' => $this->contract_end_date_before_amandemen,
         ];
     }
 }

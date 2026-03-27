@@ -30,6 +30,7 @@ class AmandemenNewController extends Controller
      */
     public function store(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
             'contract_new_id' => 'required|exists:contract_news,id',
             'ba_agreement_file' => 'nullable|file|mimes:pdf|max:5120',
@@ -38,19 +39,19 @@ class AmandemenNewController extends Controller
             'amandemen_price' => 'nullable|integer',
             'amandemen_end_date' => 'nullable|date',
             'amandemen_penalty' => 'nullable|integer',
-            'amandemen_termin' => 'nullable|string|max:255',
         ]);
 
-        $validator->after(function ($validator) use ($request) {
+        $contract = ContractNew::find($request->input('contract_new_id'));
+
+        $validator->after(function ($validator) use ($request, $contract) {
             $fields = [
                 $request->input('amandemen_price'),
                 $request->input('amandemen_end_date'),
                 $request->input('amandemen_penalty'),
-                $request->input('amandemen_termin'),
             ];
-        
+
             $filled = array_filter($fields, fn($value) => !is_null($value) && $value !== '');
-        
+
             if (count($filled) === 0) {
                 $validator->errors()->add(
                     'amandemen_group',
@@ -58,15 +59,14 @@ class AmandemenNewController extends Controller
                 );
             }
 
-            $contract = ContractNew::find($request->input('contract_new_id'));
             $amandemenPrice = $request->input('amandemen_price');
             $principlePermit = $request->file('principle_permit_file');
             if ($contract && $amandemenPrice) {
                 $contractPrice = $contract->contract_price;
-        
+
                 if ($contractPrice > 0) {
                     $increasePercentage = (($amandemenPrice - $contractPrice) / $contractPrice) * 100;
-        
+
                     if ($increasePercentage >= 10 && !$principlePermit) {
                         $validator->errors()->add(
                             'principle_permit_file',
@@ -77,14 +77,14 @@ class AmandemenNewController extends Controller
             }
             if ($contract) {
                 $amandemenEndDate = $request->input('amandemen_end_date');
-        
+
                 if (!is_null($amandemenPrice) && $amandemenPrice <= $contract->contract_price) {
                     $validator->errors()->add(
                         'amandemen_price',
                         'Perubahan Nilai Amandemen tidak boleh lebih kecil dari nilai kontrak yaitu ' . number_format($contract->contract_price, 0, ',', '.')
                     );
                 }
-        
+
                 if (!is_null($amandemenEndDate) && $amandemenEndDate <= $contract->contract_end_date) {
                     $formattedDate = Carbon::parse($contract->contract_end_date)->translatedFormat('d F Y'); // Contoh: 11 November 2026
                     $validator->errors()->add(
@@ -100,11 +100,11 @@ class AmandemenNewController extends Controller
                 'success' => false,
                 'message' => 'Validation Error.',
                 'errors' => $validator->errors(),
-            ], 422);   
+            ], 422);
         }
-        
+
         $validatedData = $validator->validated();
-        
+
         if ($request->hasFile('ba_agreement_file')) {
             $validatedData['ba_agreement_file'] = FileHelper::uploadWithVersion($request->file('ba_agreement_file'), 'contract_new/amandemen/ba_agreement');
         }
@@ -115,10 +115,22 @@ class AmandemenNewController extends Controller
             $validatedData['principle_permit_file'] = FileHelper::uploadWithVersion($request->file('principle_permit_file'), 'contract_new/amandemen/principle_permit');
         }
         // Ambil harga kontrak sebelum amandemen
-        if (ContractNew::find($validatedData['contract_new_id'])) {
-            $validatedData['contract_price_before_amandemen'] = ContractNew::find($validatedData['contract_new_id'])->contract_price;
+        if ($contract) {
+            $validatedData['contract_price_before_amandemen'] = $contract->contract_price;
+            $validatedData['contract_end_date_before_amandemen'] = $contract->contract_end_date;
         }
         $amandemenNew = AmandemenNew::create($validatedData);
+
+        if ($amandemenNew) {
+            // Update kontrak jika amandemen berhasil dibuat
+            if ($request->input('amandemen_price') && $request->input('amandemen_price') != null) {
+                $contract->contract_price = $request->input('amandemen_price');
+            }
+            if ($request->input('amandemen_end_date') && $request->input('amandemen_end_date') != null) {
+                $contract->contract_end_date = $request->input('amandemen_end_date');
+            }
+            $contract->save();
+        }
 
         return response()->json([
             'success' => true,
@@ -146,7 +158,7 @@ class AmandemenNewController extends Controller
             'data' => new AmandemenResource($amandemenNew),
         ]);
     }
-    
+
     /**
      * Display the specified resource.
      */
@@ -188,19 +200,17 @@ class AmandemenNewController extends Controller
             'amandemen_price' => 'sometimes|nullable|integer',
             'amandemen_end_date' => 'sometimes|nullable|date',
             'amandemen_penalty' => 'sometimes|nullable|integer',
-            'amandemen_termin' => 'sometimes|nullable|string|max:255',
         ]);
-
-        $validator->after(function ($validator) use ($request) {
+        $contract = ContractNew::find($request->input('contract_new_id'));
+        $validator->after(function ($validator) use ($request, $contract) {
             $fields = [
                 $request->input('amandemen_price'),
                 $request->input('amandemen_end_date'),
                 $request->input('amandemen_penalty'),
-                $request->input('amandemen_termin'),
             ];
-        
+
             $filled = array_filter($fields, fn($value) => !is_null($value) && $value !== '');
-        
+
             if (count($filled) === 0) {
                 $validator->errors()->add(
                     'amandemen_group',
@@ -208,38 +218,38 @@ class AmandemenNewController extends Controller
                 );
             }
 
-            $contract = ContractNew::find($request->input('contract_new_id'));
             $amandemenPrice = $request->input('amandemen_price');
             $principlePermit = $request->file('principle_permit_file');
+            $lastPriceAmandemen = $contract->lastPriceAmandemen;
+            $lastDateAmandemen = $contract->lastDateAmandemen;
             if ($contract && $amandemenPrice) {
-                $contractPrice = $contract->contract_price;
-        
-                if ($contractPrice > 0) {
-                    $increasePercentage = (($amandemenPrice - $contractPrice) / $contractPrice) * 100;
-        
+
+                if ($lastPriceAmandemen && $lastPriceAmandemen->contract_price_before_amandemen > 0) {
+                    $increasePercentage = (($amandemenPrice - $lastPriceAmandemen->contract_price_before_amandemen) / $lastPriceAmandemen->contract_price_before_amandemen) * 100;
+
                     if ($increasePercentage >= 10 && !$principlePermit) {
                         $validator->errors()->add(
                             'principle_permit_file',
-                            'File principle permit wajib diunggah karena perubahan nilai amandemen naik lebih dari 10% dari nilai kontrak awal.'
+                            'File principle permit wajib diunggah karena perubahan nilai amandemen naik lebih dari 10% dari nilai kontrak/amandemen sebelumnya.'
                         );
                     }
                 }
             }
             if ($contract) {
                 $amandemenEndDate = $request->input('amandemen_end_date');
-        
-                if (!is_null($amandemenPrice) && $amandemenPrice <= $contract->contract_price) {
+
+                if (!is_null($amandemenPrice) && $amandemenPrice <= $lastPriceAmandemen->contract_price_before_amandemen) {
                     $validator->errors()->add(
                         'amandemen_price',
-                        'Perubahan Nilai Amandemen tidak boleh lebih kecil dari nilai kontrak yaitu ' . number_format($contract->contract_price, 0, ',', '.')
+                        'Perubahan Nilai Amandemen tidak boleh lebih kecil dari nilai kontrak/amandemen sebelumnya yaitu ' . number_format($lastPriceAmandemen->contract_price_before_amandemen, 0, ',', '.')
                     );
                 }
-        
-                if (!is_null($amandemenEndDate) && $amandemenEndDate <= $contract->contract_end_date) {
-                    $formattedDate = Carbon::parse($contract->contract_end_date)->translatedFormat('d F Y'); // Contoh: 11 November 2026
+
+                if (!is_null($amandemenEndDate) && $amandemenEndDate <= $lastDateAmandemen->contract_end_date_before_amandemen) {
+                    $formattedDate = Carbon::parse($lastDateAmandemen->contract_end_date_before_amandemen)->translatedFormat('d F Y'); // Contoh: 11 November 2026
                     $validator->errors()->add(
                         'amandemen_end_date',
-                        'Perubahan waktu Amandemen tidak boleh lebih awal dari tanggal akhir kontrak yaitu ' . $formattedDate
+                        'Perubahan waktu Amandemen tidak boleh lebih awal dari tanggal akhir kontrak/amandemen sebelumnya yaitu ' . $formattedDate
                     );
                 }
             }
@@ -273,7 +283,18 @@ class AmandemenNewController extends Controller
             }
         }
 
-        $amandemenNew->update($validatedData);
+        $amandemenUpdated = $amandemenNew->update($validatedData);
+
+        if ($amandemenUpdated) {
+            // Update kontrak jika amandemen berhasil dibuat
+            if ($request->input('amandemen_price') && $request->input('amandemen_price') != null) {
+                $contract->contract_price = $request->input('amandemen_price');
+            }
+            if ($request->input('amandemen_end_date') && $request->input('amandemen_end_date') != null) {
+                $contract->contract_end_date = $request->input('amandemen_end_date');
+            }
+            $contract->save();
+        }
 
         return response()->json([
             'success' => true,
@@ -296,6 +317,10 @@ class AmandemenNewController extends Controller
             ], 404);
         }
 
+        $contract = ContractNew::find($amandemenNew->contract_new_id);
+        $lastPriceAmandemen = $contract->lastPriceAmandemen;
+        $lastDateAmandemen = $contract->lastDateAmandemen;
+
         // Hapus file terkait
         if ($amandemenNew->ba_agreement_file) {
             FileHelper::deleteFile($amandemenNew->ba_agreement_file, 'contract_new/amandemen/ba_agreement');
@@ -305,6 +330,17 @@ class AmandemenNewController extends Controller
         }
         if ($amandemenNew->principle_permit_file) {
             FileHelper::deleteFile($amandemenNew->principle_permit_file, 'contract_new/amandemen/principle_permit');
+        }
+
+        if ($amandemenNew) {
+            // Update kontrak jika amandemen berhasil dibuat
+            if ($lastPriceAmandemen->contract_price_before_amandemen && $lastPriceAmandemen->contract_price_before_amandemen != null) {
+                $contract->contract_price = $lastPriceAmandemen->contract_price_before_amandemen;
+            }
+            if ($lastDateAmandemen->contract_end_date_before_amandemen && $lastDateAmandemen->contract_end_date_before_amandemen != null) {
+                $contract->contract_end_date = $lastDateAmandemen->contract_end_date_before_amandemen;
+            }
+            $contract->save();
         }
 
         $amandemenNew->delete();
