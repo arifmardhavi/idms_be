@@ -98,6 +98,20 @@ class ContractNew extends Model
         );
     }
 
+    public function lastPriceAmandemen()
+    {
+        return $this->hasOne(AmandemenNew::class, 'contract_new_id')
+            ->where('contract_price_before_amandemen', '>', 0)
+            ->latest('id');
+    }
+
+    public function lastDateAmandemen()
+    {
+        return $this->hasOne(AmandemenNew::class, 'contract_new_id')
+            ->whereNotNull('contract_end_date_before_amandemen')
+            ->latest('id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | MODEL EVENT
