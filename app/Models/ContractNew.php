@@ -41,6 +41,8 @@ class ContractNew extends Model
         'plan_progress',
         'actual_progress',
         'deviation_progress',
+        'has_amandemen_price',
+        'has_amandemen_date',
     ];
 
     /*
@@ -318,5 +320,23 @@ class ContractNew extends Model
         return $this->lumpsum_progress()
             ->latest()
             ->value('plan') ?? 0;
+    }
+
+    public function getHasAmandemenPriceAttribute()
+    {
+        $exists = $this->relationLoaded('amandemen')
+            ? $this->amandemen->whereNotNull('amandemen_price')->isNotEmpty()
+            : $this->amandemen()->whereNotNull('amandemen_price')->exists();
+
+        return $exists ? 1 : 0;
+    }
+
+    public function getHasAmandemenDateAttribute()
+    {
+        $exists = $this->relationLoaded('amandemen')
+            ? $this->amandemen->whereNotNull('amandemen_end_date')->isNotEmpty()
+            : $this->amandemen()->whereNotNull('amandemen_end_date')->exists();
+
+        return $exists ? 1 : 0;
     }
 }

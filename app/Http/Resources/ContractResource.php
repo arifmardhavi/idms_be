@@ -36,6 +36,8 @@ class ContractResource extends JsonResource
             'plan_progress' => $this->plan_progress,
             'actual_progress' => $this->actual_progress,
             'deviation_progress' => $this->deviation_progress,
+            'has_amandemen_price' => $this->has_amandemen_price,
+            'has_amandemen_date' => $this->has_amandemen_date,
         ];
     }
 }
