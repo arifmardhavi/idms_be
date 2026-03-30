@@ -56,6 +56,12 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsToMany(Contract::class)->withTimestamps();
     }
 
+    public function contract_news()
+    {
+        return $this->belongsToMany(ContractNew::class)->withTimestamps();
+    }
+
+
     /** =====================
      * Relasi ke OpenFileActivity
      * ===================== */
@@ -82,7 +88,7 @@ class User extends Authenticatable implements JWTSubject
             ->groupBy('features')
             ->pluck('total', 'features');
     }
-    
+
 
     /** =====================
      * Relasi ke LogActivity
@@ -93,7 +99,7 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /** =====================
-     * Accessor: Total semua aktivitas 
+     * Accessor: Total semua aktivitas
      * ===================== */
     public function getTotalActivitiesAttribute()
     {

@@ -15,7 +15,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('contracts:id', 'openFileActivities')->orderBy('id', 'desc')->get();
+        $users = User::with('contract_news:id', 'openFileActivities')->orderBy('id', 'desc')->get();
         $data = $users->map(function ($user) {
             return [
                 'id' => $user->id,
@@ -26,7 +26,7 @@ class UserController extends Controller
                 'status' => $user->status,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
-                'contracts' => $user->contracts->pluck('id')->toArray(), // hanya ambil ID dari kontrak
+                'contract_news' => $user->contract_news->pluck('id')->toArray(), // hanya ambil ID dari kontrak
                 'total_file_open' => $user->total_file_open,
                 'file_open_per_feature' => $user->file_open_per_feature,
                 'total_activities' => $user->total_activities,
@@ -52,8 +52,8 @@ class UserController extends Controller
             'password' => 'required|string|min:6',
             'level_user' => 'required|numeric|in:1,2,3,4,5', // 1: Admin, 2: User, 3: Vendor, 4: viewer all, 5: viewer
             'status' => 'required|in:0,1', // 0: Nonaktif, 1: Aktif
-            'contract_id' => 'nullable|array|required_if:level_user,3', // support array
-            'contract_id.*' => 'exists:contracts,id', // validasi setiap ID kontrak
+            'contract_new_id' => 'nullable|array|required_if:level_user,3', // support array
+            'contract_new_id.*' => 'exists:contract_news,id', // validasi setiap ID kontrak
         ]);
 
         if ($validator->fails()) {
@@ -66,21 +66,21 @@ class UserController extends Controller
 
         $validatedData = $validator->validated();
          // Ambil contract_id dari request jika ada
-        $contractIds = $validatedData['contract_id'] ?? [];
+        $contractIds = $validatedData['contract_new_id'] ?? [];
 
         // Hapus contract_id dari array utama agar tidak dimasukkan ke kolom users
-        unset($validatedData['contract_id']);
+        unset($validatedData['contract_new_id']);
 
         $user = User::create($validatedData);
         // Hubungkan dengan kontrak (jika ada)
         if (!empty($contractIds)) {
-            $user->contracts()->attach($contractIds); // bisa juga pakai sync()
+            $user->contract_news()->attach($contractIds); // bisa juga pakai sync()
         }
 
         return response()->json([
             'success' => true,
             'message' => 'User created successfully.',
-            'data' => $user->load('contracts'),
+            'data' => $user->load('contract_news'),
         ], 201);
     }
 
@@ -126,7 +126,7 @@ class UserController extends Controller
             'password' => 'nullable|string|min:6',
             'level_user' => 'sometimes|in:1,2,3,4,5',
             'status' => 'sometimes|in:0,1',
-            'contract_id' => 'nullable|string|required_if:level_user,3',
+            'contract_new_id' => 'nullable|string|required_if:level_user,3',
         ]);
 
         if ($validator->fails()) {
@@ -140,9 +140,9 @@ class UserController extends Controller
         $validatedData = $validator->validated();
 
         // Ambil contract_id yang sudah divalidasi
-        $contractIds = explode(',', $validatedData['contract_id']) ?? [];
+        $contractIds = explode(',', $validatedData['contract_new_id']) ?? [];
 
-        unset($validatedData['contract_id']); // Hapus dari mass update
+        unset($validatedData['contract_new_id']); // Hapus dari mass update
 
         // Simpan level_user lama untuk membandingkan perubahan
         $oldLevelUser = $user->level_user;
@@ -160,17 +160,17 @@ class UserController extends Controller
         // Tangani kontrak berdasarkan perubahan level_user
         if ($newLevelUser == 3) {
             // Jika vendor, sinkronkan kontrak (boleh kosong)
-            $user->contracts()->sync($contractIds);
-        } elseif ($oldLevelUser == 3 && $newLevelUser != 3) {   
+            $user->contract_news()->sync($contractIds);
+        } elseif ($oldLevelUser == 3 && $newLevelUser != 3) {
             // Jika sebelumnya vendor, dan sekarang bukan vendor, hapus kontrak
-            $user->contracts()->sync([]);
+            $user->contract_news()->sync([]);
         }
         // Jika sebelumnya dan sekarang bukan vendor, tidak perlu apa-apa
 
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully.',
-            'data' => $user->load('contracts:id'),
+            'data' => $user->load('contract_news:id'),
         ], 200);
     }
 
