@@ -78,7 +78,7 @@ class ContractNewController extends Controller
         $validatedData['contract_name'] = strtoupper($request->contract_name);
 
         try {
-             
+
             $validatedData['contract_file'] = FileHelper::uploadWithVersion($request->file('contract_file'), 'contract_new');
 
             if($request->hasFile('meeting_notes')){
@@ -117,7 +117,7 @@ class ContractNewController extends Controller
             'success' => true,
             'message' => 'contract retrieved successfully.',
             'data' => new ContractResource($contract),
-        ], 200);    
+        ], 200);
     }
 
     /**
@@ -171,7 +171,7 @@ class ContractNewController extends Controller
             ], 404);
         }
 
-        if ($contract->contract_status == 3 || $contract->contract_status == 4){ 
+        if ($contract->contract_status == 3 || $contract->contract_status == 4){
             $validator = Validator::make($request->all(), [
                 'no_vendor' => 'sometimes|required|string',
                 'vendor_name' => 'sometimes|required|string',
@@ -201,7 +201,7 @@ class ContractNewController extends Controller
                 'contract_file' => 'nullable|file|mimes:pdf|max:30720', // Maksimal 30MB
                 'meeting_notes' => 'nullable|file|mimes:pdf|max:5120', // Maksimal 5MB
                 'contract_status' => 'sometimes|required|integer|in:0,1', // 0 = Aktif, 1 = Selesai
-    
+
             ]);
         }
 
@@ -216,9 +216,9 @@ class ContractNewController extends Controller
         $validatedData = $validator->validated();
 
         if ($request->contract_type == 3){
-            $validatedData['contract_date'] = null; 
+            $validatedData['contract_date'] = null;
         }
-        
+
         // uppercase fields
         $validatedData['vendor_name'] = strtoupper($request->vendor_name);
         $validatedData['contract_name'] = strtoupper($request->contract_name);
@@ -324,7 +324,7 @@ class ContractNewController extends Controller
     public function contractLumpsumProgress(string $id)
     {
         $contract = ContractNew::select('contract_start_date', 'contract_end_date')->find($id);
-        
+
         if (!$contract) {
             return response()->json([
                 'success' => false,
@@ -376,7 +376,16 @@ class ContractNewController extends Controller
                 ], 404);
             }
 
-            return response()->download($filePath);
+            $fileName = $contract->contract_file;
+
+            return response()->download(
+                $filePath,
+                $fileName,
+                [
+                    'Content-Type' => mime_content_type($filePath),
+                    'Content-Disposition' => "attachment; filename=\"{$fileName}\"; filename*=UTF-8''" . rawurlencode($fileName)
+                ]
+            );
 
         } catch (\Exception $e) {
             return response()->json([
