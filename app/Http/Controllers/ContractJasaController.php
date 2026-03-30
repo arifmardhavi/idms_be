@@ -28,7 +28,7 @@ class ContractJasaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'readiness_jasa_id' => 'required|exists:readiness_jasas,id',
-            'contract_id' => 'nullable|exists:contracts,id',
+            'contract_new_id' => 'nullable|exists:contract_news,id',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 
@@ -96,7 +96,7 @@ class ContractJasaController extends Controller
 
         $validator = Validator::make($request->all(), [
             'readiness_jasa_id' => 'sometimes|exists:readiness_jasas,id',
-            'contract_id' => 'sometimes|nullable|exists:contracts,id',
+            'contract_new_id' => 'sometimes|nullable|exists:contract_news,id',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
         ]);
 

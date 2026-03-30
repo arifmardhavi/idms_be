@@ -15,8 +15,8 @@ class ContractJasa extends BaseModel
         return $this->belongsTo(ReadinessJasa::class, 'readiness_jasa_id');
     }
 
-    public function contract()
+    public function contract_new()
     {
-        return $this->belongsTo(Contract::class, 'contract_id');
+        return $this->belongsTo(ContractNew::class, 'contract_new_id');
     }
 }
