@@ -101,7 +101,7 @@ class ReadinessMaterialController extends Controller
             'pr_material',
             'tender_material',
             'po_material',
-            'po_material.contract',
+            'po_material.contract_new',
             'fabrikasi_material',
             'delivery_material'
         )->orderBy('id', 'desc')->where('event_readiness_id', $id)->get();

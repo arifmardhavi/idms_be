@@ -98,7 +98,7 @@ class ReadinessJasaController extends Controller
             'pr_jasa',
             'tender_jasa',
             'contract_jasa',
-            'contract_jasa.contract',
+            'contract_jasa.contract_new',
         ])->where('event_readiness_id', $id)->get();
 
         if ($readiness_jasa->isEmpty()) {
