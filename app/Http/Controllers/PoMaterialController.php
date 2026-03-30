@@ -28,7 +28,7 @@ class PoMaterialController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'readiness_material_id' => 'required|exists:readiness_materials,id',
-            'contract_id' => 'nullable|exists:contracts,id',
+            'contract_new_id' => 'nullable|exists:contract_news,id',
             'no_po' => 'nullable|integer',
             'delivery_date' => 'nullable|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
@@ -111,7 +111,7 @@ class PoMaterialController extends Controller
         }
         $validator = Validator::make($request->all(), [
             'readiness_material_id' => 'sometimes|exists:readiness_materials,id',
-            'contract_id' => 'sometimes|nullable|exists:contracts,id',
+            'contract_new_id' => 'sometimes|nullable|exists:contract_news,id',
             'no_po' => 'sometimes|integer',
             'delivery_date' => 'sometimes|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
