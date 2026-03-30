@@ -213,7 +213,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('spk_progress_new', SpkProgressNewController::class);
     Route::apiResource('amandemen_new', AmandemenNewController::class);
     Route::apiResource('nib', NibController::class);
-    
+
     /*
     |--------------------------------------------------------------------------
     | Custom Feature Routes
@@ -246,26 +246,26 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/skhp/download', [SkhpController::class, 'downloadskhpCertificates']);
     Route::put('/skhp/deletefile/{id}', [SkhpController::class, 'deleteFileskhp']);
     Route::get('/skhp_countduedays', [SkhpController::class, 'countskhpDueDays']);
-    
+
     // SERTIFIKAT KALIBRASI
     Route::post('/sertifikat_kalibrasi/download', [SertifikatKalibrasiController::class, 'downloadSertifikatKalibrasiCertificates']);
     Route::put('/sertifikat_kalibrasi/deletefile/{id}', [SertifikatKalibrasiController::class, 'deleteFileSertifikatKalibrasi']);
     Route::get('/sertifikat_kalibrasi_countduedays', [SertifikatKalibrasiController::class, 'countSertifikatKalibrasiDueDays']);
 
-    // REPORT PLO 
+    // REPORT PLO
     Route::get('/report_plos/{id}', [ReportPloController::class, 'showWithPloId']);
-    // REPORT IZIN DISNAKER 
+    // REPORT IZIN DISNAKER
     Route::get('/report_izin_disnakers/{id}', [ReportIzinDisnakerController::class, 'showWithIzinDisnakerId']);
-    // REPORT COI 
+    // REPORT COI
     Route::get('/report_cois/{id}', [ReportCoiController::class, 'showWithCoiId']);
-    // REPORT IZIN OPERASI 
+    // REPORT IZIN OPERASI
     Route::get('/report_izin_operasis/{id}', [ReportIzinOperasiController::class, 'showWithIzinOperasiId']);
 
     // TERMIN
     Route::get('/termin/contract/{id}', [TerminController::class, 'showByContract']);
     // TERMIN NEW
     Route::get('/termin_new/contract/{id}', [TerminNewController::class, 'showByContract']);
-    
+
     // TERM BILLING
     Route::get('/termbilling/contract/{id}', [TermBillingController::class, 'showByContract']);
     // TERMIN RECEIPT
@@ -287,26 +287,26 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/lumpsum_progress/contract/{id}', [Lumpsum_progressController::class, 'showByContract']);
     // PROGRESS LUMPSUM NEW
     Route::get('/lumpsum_progress_new/contract/{id}', [LumpsumProgressNewController::class, 'showByContract']);
-    
+
     // AMANDEMEN
     Route::get('/amandemen/contract/{id}', [AmandemenController::class, 'showByContract']);
     // AMANDEMEN NEW
     Route::get('/amandemen_new/contract/{id}', [AmandemenNewController::class, 'showByContract']);
-    
+
     // CONTRACT
     Route::get('/monitoring_contract', [ContractController::class, 'monitoring']);
     Route::put('contract/current_status/{id}', [ContractController::class, 'updateCurrentStatus']);
     Route::get('contracts/po_material_type', [ContractController::class, 'showByPoMaterialType']);
     Route::get('contracts/un_po_material_type', [ContractController::class, 'showByUnPoMaterialType']);
-    
+
     // CONTRACT NEW
     Route::get('monitoring_contract_new', [ContractNewController::class, 'monitoringContract']);
     Route::put('contract_new/current_status/{id}', [ContractNewController::class, 'updateCurrentStatus']);
     Route::get('contract_new/lumpsum_progress/{id}', [ContractNewController::class, 'contractLumpsumProgress']);
-    Route::get('contract_new/po_material_type', [ContractNewController::class, 'showByPoMaterialType']);
-    Route::get('contract_new/un_po_material_type', [ContractNewController::class, 'showByUnPoMaterialType']);
+    Route::get('contract_new_po_material_type', [ContractNewController::class, 'showByPoMaterialType']);
+    Route::get('contract_new_un_po_material_type', [ContractNewController::class, 'showByUnPoMaterialType']);
     Route::get('contract_new/download/{id}', [ContractNewController::class, 'downloadContractFile']);
-    
+
     // HISTORICAL MEMORANDUM & LAMPIRAN
     Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId']);
     Route::post('/lampiran_memo/download', [LampiranMemoController::class, 'downloadLampiranMemoFiles']);
@@ -317,7 +317,7 @@ Route::middleware(['auth:api'])->group(function () {
 
     // DATASHEET
     Route::get('/datasheet/engineering/{id}', [DatasheetController::class, 'showWithEngineeringDataId']);
-    
+
     // MDR
     Route::get('/mdr_folder/engineering/{id}', [MdrFolderController::class, 'showByEngineering']);
     Route::get('/mdr_item/folder/{id}', [MdrItemController::class, 'showByFolder']);
@@ -365,6 +365,6 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/readiness_jasa/event/{id}', [ReadinessJasaController::class, 'showByEvent']);
     // OPEN FILE ACTIVITY
     Route::get('/open_file_activity/user/{id}', [OpenFileActivityController::class, 'showByUserId']);
-   
+
 
 });
