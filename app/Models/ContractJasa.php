@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ContractJasa extends BaseModel
 {
     use HasFactory;
-    protected $fillable = ['readiness_jasa_id', 'contract_id', 'status'];
+    protected $fillable = ['readiness_jasa_id', 'contract_new_id', 'status'];
 
     public function readiness_jasa()
     {
