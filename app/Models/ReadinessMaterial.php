@@ -166,7 +166,7 @@ class ReadinessMaterial extends BaseModel
         foreach ($steps as $relation => $field) {
             if ($this->$relation && !empty($this->$relation->$field)) {
                 // contoh output: "PO (12345)"
-                $stepName = strtoupper(str_replace('_material', '', $relation)); 
+                $stepName = strtoupper(str_replace('_material', '', $relation));
                 return $stepName . " " . $this->$relation->$field;
             }
         }
@@ -216,51 +216,6 @@ class ReadinessMaterial extends BaseModel
             }
         });
     }
-
-    // public function getPrognosaAttribute()
-    // {
-    //     $poDate = $this->po_material?->delivery_date; // step 6
-    //     $deliveryTarget = $this->delivery_material?->target_date; // step 8
-
-    //     if (empty($poDate) || empty($deliveryTarget)) {
-    //         return null; // belum bisa dihitung
-    //     }
-
-    //     $po = Carbon::parse($poDate);
-    //     $delivery = Carbon::parse($deliveryTarget);
-
-    //     // $daysRemaining = $delivery->diffInDays($po, false);
-    //     $daysRemaining = $po->diffInDays($delivery, false);
-
-
-    //     $color = null;
-
-    //     // Prioritaskan tanggal_ta
-    //     if (!empty($this->event_readiness->tanggal_ta)) {
-    //         $taDate = Carbon::parse($this->event_readiness->tanggal_ta);
-    //         if ($po->gt($taDate)) {
-    //             $color = 'red';
-    //         }
-    //     }
-
-    //     if (!$color) {
-    //         if ($po->lt($delivery)) {
-    //             $color = 'green'; // lebih cepat dari target
-    //         } elseif ($po->eq($delivery)) {
-    //             $color = 'yellow'; // pas sama target
-    //         } else {
-    //             $color = 'yellow'; // lebih lambat dari target
-    //         }
-    //     }
-
-    //     return [
-    //         'days_remaining' => $daysRemaining,
-    //         'color' => $color,
-    //         'delivery_date' => $po->toDateString(),
-    //         'target_date' => $delivery->toDateString(),
-    //         'tanggal_ta' => $this->event_readiness->tanggal_ta,
-    //     ];
-    // }
 
     public function getTotalProgressAttribute()
     {
@@ -320,10 +275,6 @@ class ReadinessMaterial extends BaseModel
         // format dengan 2 angka di belakang koma
         return number_format($progress, 2) . '%';
     }
-
-
-
-
 
 
 }
