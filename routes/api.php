@@ -327,6 +327,7 @@ Route::middleware(['auth:api'])->group(function () {
 
     // DASHBOARD READINESS MATERIAL
     Route::get('/readiness_material/dashboard/{id}', [ReadinessMaterialController::class, 'dashboard']);
+    Route::put('readiness_material/current_status/{id}', [ReadinessMaterialController::class, 'updateCurrentStatus']);
     // DASHBOARD READINESS JASA
     Route::get('/readiness_jasa/dashboard/{id}', [ReadinessJasaController::class, 'dashboard']);
     //INTERNAL INSPECTION
