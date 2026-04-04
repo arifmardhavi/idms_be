@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -36,7 +37,7 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Users retrieved successfully.',
-            'data' => $data,
+            'data' => UserResource::collection($users),
         ], 200);
     }
 
@@ -89,7 +90,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::find($id);
+        $user = User::with('contract_news:id')->find($id);
 
         if (!$user) {
             return response()->json([
@@ -101,7 +102,8 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'User retrieved successfully.',
-            'data' => $user,
+            'data' => new UserResource($user),
+            
         ], 200);
     }
 

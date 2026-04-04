@@ -306,6 +306,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('contract_new_po_material_type', [ContractNewController::class, 'showByPoMaterialType']);
     Route::get('contract_new_un_po_material_type', [ContractNewController::class, 'showByUnPoMaterialType']);
     Route::get('contract_new/download/{id}', [ContractNewController::class, 'downloadContractFile']);
+    Route::get('/contract_new_user', [ContractNewController::class, 'contractsByUser']);
 
     // HISTORICAL MEMORANDUM & LAMPIRAN
     Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId']);
