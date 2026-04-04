@@ -27,6 +27,29 @@ class ContractNewController extends Controller
     }
 
     /**
+     * Display contracts related to the logged-in vendor user.
+     */
+    public function contractsByUser()
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not authenticated.',
+            ], 401);
+        }
+
+        // Ambil contract yang terkait dengan user vendor
+        $contracts = $user->contract_news()->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Contracts retrieved successfully for user.',
+            'data' => $contracts,
+        ], 200);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
