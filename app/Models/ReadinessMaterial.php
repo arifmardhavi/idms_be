@@ -176,11 +176,11 @@ class ReadinessMaterial extends BaseModel
 
     public function getNilaiPoAttribute()
     {
-        if (empty($this->po_material?->contract_id) || $this->po_material?->contract_id === null) {
+        if (empty($this->po_material?->contract_new_id) || $this->po_material?->contract_new_id === null) {
             return $this->price_estimate;
         }
 
-        return $this->po_material?->contract?->contract_price ?? $this->price_estimate;
+        return $this->po_material?->contract_new?->contract_price ?? $this->price_estimate;
     }
 
     protected static function boot()
