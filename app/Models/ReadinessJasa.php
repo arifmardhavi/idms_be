@@ -221,24 +221,35 @@ class ReadinessJasa extends Model
         $taDate = Carbon::parse($this->event_readiness->tanggal_ta);
         $today = Carbon::now();
 
-        // selisih langsung ke TA
-        $diffTa = $today->diffInDays($taDate, false);
-
-        // days_remaining = sisa hari - durasi preparation
         $prepDays = (int) $this->job_plan_jasa->durasi_preparation;
-        $daysRemaining = $diffTa - $prepDays;
 
-        // tentukan warna
+        // tanggal mulai preparation (prognosa)
+        $prognosaDate = $taDate->copy()->subDays($prepDays);
+
+        // selisih hari dari hari ini ke prognosa
+        $daysRemaining = $today->diffInDays($prognosaDate, false);
+
+        if ($this->status == 0) {
+            return [
+                'days_remaining' => null,
+                'durasi_preparation' => $prepDays,
+                'tanggal_ta' => $this->event_readiness->tanggal_ta,
+                'color' => 'blue',
+            ];
+        }
+
+        // tentukan warna berdasarkan sisa hari ke prognosa
         if ($daysRemaining > 60) {
-            $color = 'green'; 
+            $color = 'green';
         } elseif ($daysRemaining >= 30 && $daysRemaining <= 60) {
             $color = 'yellow';
         } else {
-            $color = 'red'; // 0 - 29 hari atau sudah lewat
+            $color = 'red';
         }
 
         return [
-            'days_remaining' => $daysRemaining,
+            'days_remaining' => $prognosaDate->toDateString(),
+            // 'prognosa_date' => $prognosaDate->toDateString(),
             'durasi_preparation' => $prepDays,
             'tanggal_ta' => $this->event_readiness->tanggal_ta,
             'color' => $color,
