@@ -133,6 +133,14 @@ class ReadinessMaterial extends BaseModel
 
                 $taDate = Carbon::parse($this->event_readiness->tanggal_ta);
 
+                if ($this->status == 0) {
+                    return [
+                        'date' => null,
+                        'color' => 'blue',
+                        'tanggal_ta' => $taDate->toDateString(),
+                    ];
+                }
+
                 if ($date->gt($taDate)) {
                     $color = 'red';
                 } elseif ($date->eq($taDate)) {

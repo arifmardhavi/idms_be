@@ -231,7 +231,7 @@ class ReadinessJasa extends Model
 
         if ($this->status == 0) {
             return [
-                'days_remaining' => null,
+                'date' => null,
                 'durasi_preparation' => $prepDays,
                 'tanggal_ta' => $this->event_readiness->tanggal_ta,
                 'color' => 'blue',
@@ -248,7 +248,7 @@ class ReadinessJasa extends Model
         }
 
         return [
-            'days_remaining' => $prognosaDate->toDateString(),
+            'date' => $prognosaDate->toDateString(),
             // 'prognosa_date' => $prognosaDate->toDateString(),
             'durasi_preparation' => $prepDays,
             'tanggal_ta' => $this->event_readiness->tanggal_ta,
