@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\DateHelper;
 use App\Models\HistoricalMemorandum;
 use App\Models\LaporanInspection;
+use App\Models\Tag_number;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -17,7 +19,41 @@ class HistoricalEquipmentController extends Controller
     {
         $result = [];
 
-        //    memo
+        /*
+        |--------------------------------------------------------------------------
+        | QUERY PARAMS
+        |--------------------------------------------------------------------------
+        */
+        $range = request()->get('range'); // 2025-2026
+        $sort = request()->get('sort', 'desc');
+        $search = request()->get('search');
+
+        $startYear = null;
+        $endYear = null;
+
+        if ($range) {
+            if (strpos($range, '-') === false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Format range harus: YYYY-YYYY'
+                ], 400);
+            }
+
+            [$startYear, $endYear] = explode('-', $range);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PRELOAD TAG (ANTI N+1)
+        |--------------------------------------------------------------------------
+        */
+        $tagNumbers = Tag_number::pluck('tag_number', 'id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | MEMO
+        |--------------------------------------------------------------------------
+        */
         $memos = HistoricalMemorandum::select(
                 'id',
                 'tag_number_id',
@@ -30,27 +66,73 @@ class HistoricalEquipmentController extends Controller
             ->get();
 
         foreach ($memos as $memo) {
-            $tahun = Carbon::parse($memo->tanggal_terbit)->year;
 
-            if (!isset($result[$tahun])) {
-                $result[$tahun] = [
-                    'tahun' => $tahun,
-                    'memo' => [],
-                    'laporan' => []
+            if (!$memo->tag_number_id) continue;
+
+            $tagIds = explode(',', $memo->tag_number_id);
+
+            foreach ($tagIds as $tagId) {
+
+                $tag = $tagNumbers[trim($tagId)] ?? null;
+                if (!$tag) continue;
+
+                $tahun = Carbon::parse($memo->tanggal_terbit)->year;
+
+                // RANGE FILTER
+                if ($startYear && $endYear) {
+                    if ($tahun < $startYear || $tahun > $endYear) continue;
+                }
+
+                // SEARCH FILTER
+                if ($search) {
+                    $keyword = strtolower($search);
+                    $normalizedItemDate = DateHelper::normalize($memo->tanggal_terbit);
+                    $normalizedKeywordDate = DateHelper::normalize($search);
+
+                    if (
+                        !str_contains(strtolower($tag), $keyword) && 
+                        !str_contains(strtolower($memo->no_dokumen ?? ''), $keyword) &&
+                        !str_contains(strtolower($memo->tanggal_terbit ?? ''), $keyword) &&
+                        !(
+                            $normalizedItemDate &&
+                            $normalizedKeywordDate &&
+                            str_contains($normalizedItemDate, $normalizedKeywordDate)
+                        ) &&
+                        !str_contains(strtolower($memo->perihal ?? ''), $keyword)
+                    ) {
+                        continue;
+                    }
+                }
+
+                if (!isset($result[$tag])) {
+                    $result[$tag] = [
+                        'tag_number' => $tag,
+                        'tahun' => []
+                    ];
+                }
+
+                if (!isset($result[$tag]['tahun'][$tahun])) {
+                    $result[$tag]['tahun'][$tahun] = [
+                        'memo' => [],
+                        'laporan' => []
+                    ];
+                }
+
+                $result[$tag]['tahun'][$tahun]['memo'][] = [
+                    'id' => $memo->id,
+                    'no_dokumen' => $memo->no_dokumen,
+                    'perihal' => $memo->perihal,
+                    'memo_file' => $memo->memorandum_file,
+                    'tanggal_terbit' => $memo->tanggal_terbit,
                 ];
             }
-
-            $result[$tahun]['memo'][] = [
-                'id' => $memo->id,
-                'tag_number_id' => $memo->tag_number_id,
-                'no_dokumen' => $memo->no_dokumen,
-                'perihal' => $memo->perihal,
-                'memo_file' => $memo->memorandum_file,
-                'tanggal_terbit' => $memo->tanggal_terbit,
-            ];
         }
 
-        // laporan inspection
+        /*
+        |--------------------------------------------------------------------------
+        | LAPORAN
+        |--------------------------------------------------------------------------
+        */
         $laporans = LaporanInspection::with([
             'tagNumber:id,tag_number',
             'internalInspection',
@@ -64,6 +146,10 @@ class HistoricalEquipmentController extends Controller
 
         foreach ($laporans as $laporan) {
 
+            if (!$laporan->tagNumber) continue;
+
+            $tag = $laporan->tagNumber->tag_number;
+
             $menus = [
                 'Internal Inspection' => ['data' => $laporan->internalInspection, 'date' => 'inspection_date'],
                 'External Inspection' => ['data' => $laporan->externalInspection, 'date' => 'inspection_date'],
@@ -76,29 +162,56 @@ class HistoricalEquipmentController extends Controller
 
             foreach ($menus as $menuName => $config) {
 
-                if ($config['data']->isEmpty()) {
-                    continue;
-                }
+                if ($config['data']->isEmpty()) continue;
 
                 foreach ($config['data'] as $item) {
 
-                    if (!$item->{$config['date']}) {
-                        continue;
-                    }
+                    if (!$item->{$config['date']}) continue;
 
                     $tahun = Carbon::parse($item->{$config['date']})->year;
 
-                    if (!isset($result[$tahun])) {
-                        $result[$tahun] = [
-                            'tahun' => $tahun,
+                    // RANGE FILTER
+                    if ($startYear && $endYear) {
+                        if ($tahun < $startYear || $tahun > $endYear) continue;
+                    }
+
+                    // SEARCH FILTER
+                    if ($search) {
+                        $keyword = strtolower($search);
+                        $normalizedItemDate = DateHelper::normalize($item->tanggal_report);
+                        $normalizedKeywordDate = DateHelper::normalize($search);
+
+                        if (
+                            !str_contains(strtolower($tag), $keyword) &&
+                            !str_contains(strtolower($item->judul ?? ''), $keyword) &&
+                            !str_contains(strtolower($item->tanggal_report ?? ''), $keyword) &&
+                            !(
+                                $normalizedItemDate &&
+                                $normalizedKeywordDate &&
+                                str_contains($normalizedItemDate, $normalizedKeywordDate)
+                            ) &&
+                            !str_contains(strtolower($menuName), $keyword)
+                        ) {
+                            continue;
+                        }
+                    }
+
+                    if (!isset($result[$tag])) {
+                        $result[$tag] = [
+                            'tag_number' => $tag,
+                            'tahun' => []
+                        ];
+                    }
+
+                    if (!isset($result[$tag]['tahun'][$tahun])) {
+                        $result[$tag]['tahun'][$tahun] = [
                             'memo' => [],
                             'laporan' => []
                         ];
                     }
 
-                    $result[$tahun]['laporan'][] = [
+                    $result[$tag]['tahun'][$tahun]['laporan'][] = [
                         'id' => $item->laporan_inspection_id,
-                        'tag_number' => $laporan->tag_number_id,
                         'menu' => $menuName,
                         'judul' => $item->judul,
                         'tanggal_report' => $item->{$config['date']},
@@ -109,40 +222,37 @@ class HistoricalEquipmentController extends Controller
             }
         }
 
-        // generate full year
-        if (!empty($result))
-        {
+        /*
+        |--------------------------------------------------------------------------
+        | SORTING
+        |--------------------------------------------------------------------------
+        */
+        foreach ($result as &$tagData) {
 
-            $years = array_keys($result);
+            if ($sort === 'asc') {
+                ksort($tagData['tahun']);
+            } else {
+                krsort($tagData['tahun']);
+            }
 
-            $minYear = min($years);
-            $currentYear = Carbon::now()->year;
+            foreach ($tagData['tahun'] as &$tahunData) {
 
-            for ($year = $minYear; $year <= $currentYear; $year++) {
-
-                if (!isset($result[$year])) {
-                    $result[$year] = [
-                        'tahun' => $year,
-                        'memo' => [],
-                        'laporan' => []
-                    ];
+                if (!empty($tahunData['laporan'])) {
+                    usort($tahunData['laporan'], function ($a, $b) use ($sort) {
+                        if ($sort === 'asc') {
+                            return strtotime($a['tanggal_report']) <=> strtotime($b['tanggal_report']);
+                        }
+                        return strtotime($b['tanggal_report']) <=> strtotime($a['tanggal_report']);
+                    });
                 }
             }
         }
 
-        // sort laporan per tahun
-        foreach ($result as $tahun => $data) {
-            if (!empty($data['laporan'])) {
-                usort($result[$tahun]['laporan'], function ($a, $b) {
-                    return strtotime($b['tanggal_report']) <=> strtotime($a['tanggal_report']);
-                });
-            }
-        }
-
-        // sort tahun terbaru terlebih dahulu
-        krsort($result);
-
-        // PAGINATION
+        /*
+        |--------------------------------------------------------------------------
+        | PAGINATION
+        |--------------------------------------------------------------------------
+        */
         $page = request()->get('page', 1);
         $perPage = request()->get('per_page', 3);
 
@@ -161,7 +271,11 @@ class HistoricalEquipmentController extends Controller
             ]
         );
 
-        // RESPONSE AKHIR
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSE
+        |--------------------------------------------------------------------------
+        */
         return response()->json([
             'success' => true,
             'message' => 'Historical Equipment retrieved successfully.',
