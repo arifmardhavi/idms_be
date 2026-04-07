@@ -156,9 +156,11 @@ class ReadinessJasa extends Model
 
     public function getLastNumberStatusAttribute()
     {
+        if ($this->contract_jasa) {
+            return "PO " . $this->contract_jasa->contract_new->no_contract;
+        }
         // urutan prioritas dari belakang ke depan
         $steps = [
-            'po_jasa'      => 'no_po',
             'pr_jasa'      => 'no_pr',
             'job_plan_jasa'=> 'no_wo',
             'notif_jasa'   => 'no_notif',
