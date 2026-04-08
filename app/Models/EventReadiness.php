@@ -37,7 +37,7 @@ class EventReadiness extends BaseModel
             return null;
         }
 
-        if ($this->status === 0) { // sudah selesai
+        if ($this->status == 0) { // sudah selesai
             return [
                 'days_remaining' => 0,
                 'color' => 'blue',

@@ -120,6 +120,13 @@ class ReadinessJasa extends Model
             return null;
         }
 
+        if($this->status === 0) { // sudah selesai
+            return [
+                'days_remaining' => 0,
+                'color' => 'blue',
+            ];
+        }
+
         $taDate = Carbon::parse($this->event_readiness->tanggal_ta);
         $diff = Carbon::now()->diffInDays($taDate, false);
 
