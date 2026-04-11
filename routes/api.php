@@ -21,6 +21,8 @@ use App\Http\Controllers\{
     LampiranMemoController,
     AmandemenController,
     AmandemenNewController,
+    BapkCoiController,
+    BapkPloController,
     BreakdownReportController,
     ContractJasaController,
     ContractNewController,
@@ -213,6 +215,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('spk_progress_new', SpkProgressNewController::class);
     Route::apiResource('amandemen_new', AmandemenNewController::class);
     Route::apiResource('nib', NibController::class);
+    Route::apiResource('bapk_coi', BapkCoiController::class);
+    Route::apiResource('bapk_plo', BapkPloController::class);
 
     /*
     |--------------------------------------------------------------------------
