@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ReadinessJasa extends Model
+class ReadinessJasa extends BaseModel
 {
     use HasFactory;
     protected $fillable = ['event_readiness_id','jasa_name', 'price_estimate', 'status', 'current_status'];

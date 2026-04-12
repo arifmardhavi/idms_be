@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Spk_progress extends Model
+class Spk_progress extends BaseModel
 {
     use HasFactory;
 

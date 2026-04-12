@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MdrFolder extends Model
+class MdrFolder extends BaseModel
 {
     use HasFactory;
     protected $fillable = [

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TerminNew extends Model
+class TerminNew extends BaseModel
 {
     use HasFactory;
     protected $fillable = [

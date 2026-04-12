@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class LumpsumProgressNew extends Model
+class LumpsumProgressNew extends BaseModel
 {
     use HasFactory;
 
