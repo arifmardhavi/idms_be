@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class EventReadiness extends BaseModel
 {
     use HasFactory;
-    protected $fillable = ['event_name', 'tanggal_ta'];
+    protected $fillable = ['event_name', 'tanggal_ta', 'status'];
     protected $appends = [
         'ta_status',
     ];
@@ -18,12 +18,20 @@ class EventReadiness extends BaseModel
     {
         return $this->hasMany(ReadinessMaterial::class);
     }
+    public function readiness_jasa()
+    {
+        return $this->hasMany(ReadinessJasa::class);
+    }
 
     protected static function boot()
     {
         parent::boot();
 
         static::deleting(function ($event) {
+            foreach ($event->readiness as $readiness) {
+                $readiness->delete();
+                // ini akan otomatis trigger boot()->deleting() di ReadinessMaterial
+            }
             foreach ($event->readiness as $readiness) {
                 $readiness->delete();
                 // ini akan otomatis trigger boot()->deleting() di ReadinessMaterial
