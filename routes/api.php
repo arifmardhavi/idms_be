@@ -34,6 +34,8 @@ use App\Http\Controllers\{
     EventReadinessController,
     ExternalInspectionController,
     FabrikasiMaterialController,
+    FeatureController,
+    HakAksesController,
     HistoricalEquipmentController,
     InternalInspectionController,
     IzinDisnakerController,
@@ -75,7 +77,8 @@ use App\Http\Controllers\{
     TenderJasaController,
     TenderMaterialController,
     TerminNewController,
-    TerminReceiptController
+    TerminReceiptController,
+    UserHakAksesController
 };
 
 /*
@@ -217,6 +220,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('nib', NibController::class);
     Route::apiResource('bapk_coi', BapkCoiController::class);
     Route::apiResource('bapk_plo', BapkPloController::class);
+    Route::apiResource('features', FeatureController::class);
+    Route::apiResource('hak_akses', HakAksesController::class);
+    Route::apiResource('user_hak_akses', UserHakAksesController::class);
 
     /*
     |--------------------------------------------------------------------------
@@ -226,6 +232,8 @@ Route::middleware(['auth:api'])->group(function () {
 
     // User
     Route::put('/users/nonactive/{id}', [UserController::class, 'nonactive']);
+    // Feature
+    Route::get('/feature/group', [FeatureController::class, 'showByGroup']);
 
     // COI
     Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']);

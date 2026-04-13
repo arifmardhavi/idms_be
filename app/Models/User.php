@@ -26,6 +26,7 @@ class User extends Authenticatable implements JWTSubject
 
     protected $hidden = [
         'password',
+        'hak_akses'
     ];
 
     // tambahin biar field baru ikut ke JSON
@@ -48,7 +49,15 @@ class User extends Authenticatable implements JWTSubject
 
     public function getJWTCustomClaims()
     {
-        return $this->toArray();
+        return [
+            'id' => $this->id,
+            'fullname' => $this->fullname,
+            'email' => $this->email,
+            'username' => $this->username,
+            'level_user' => $this->level_user,
+            'status' => $this->status,
+            'hak_akses_list' => $this->hak_akses_list ?? [],
+        ];
     }
 
     public function contracts()
@@ -59,6 +68,11 @@ class User extends Authenticatable implements JWTSubject
     public function contract_news()
     {
         return $this->belongsToMany(ContractNew::class)->withTimestamps();
+    }
+
+    public function hak_akses()
+    {
+        return $this->hasMany(UserHakAkses::class);
     }
 
 
@@ -87,6 +101,19 @@ class User extends Authenticatable implements JWTSubject
             ->select('features', DB::raw('COUNT(*) as total'))
             ->groupBy('features')
             ->pluck('total', 'features');
+    }
+
+    /** =====================
+    * Accessor: List hak akses
+    * ===================== */
+
+    public function getHakAksesListAttribute()
+    {
+        return $this->hak_akses
+            ->pluck('hak_akses.hak_akses')
+            ->filter()
+            ->values()
+            ->toArray();
     }
 
 

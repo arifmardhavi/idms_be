@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserLoginResource;
 use App\Models\User;
+use App\Models\UserHakAkses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -76,6 +78,18 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // add hak akses to user
+        $data = UserHakAkses::with('hak_akses')
+            ->where('user_id', $user->id)
+            ->get();
+
+        $user->hak_akses_list = $data
+            ->pluck('hak_akses.hak_akses')
+            ->filter()
+            ->values()
+            ->toArray();
+
+
         // Buat token
         $token = JWTAuth::fromUser($user);
 
@@ -84,7 +98,7 @@ class AuthController extends Controller
             'message' => 'Login berhasil.',
             'data' => [
                 'token' => $token,
-                'user' => $user
+                'user' => new UserLoginResource($user),
             ],
         ]);
     }
