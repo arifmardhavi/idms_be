@@ -240,6 +240,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('/coi/deletefile/{id}', [CoiController::class, 'deleteFileCoi']);
     Route::get('/coi_countduedays', [CoiController::class, 'countCoiDueDays']);
     Route::get('/coi/tag_number/{id}', [CoiController::class, 'showByTagNumber']);
+    Route::get('/bapk_cois/{id}', [BapkCoiController::class, 'showByCoi']);
     // IZIN DISNAKER
     Route::post('/izin_disnaker/download', [IzinDisnakerController::class, 'downloadIzinDisnakerCertificates']);
     Route::put('/izin_disnaker/deletefile/{id}', [IzinDisnakerController::class, 'deleteFileIzinDisnaker']);
@@ -249,6 +250,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('/plo/deletefile/{id}', [PloController::class, 'deleteFilePlo']);
     Route::post('/plo/download', [PloController::class, 'downloadPloCertificates']);
     Route::get('/plo_countduedays', [PloController::class, 'countPloDueDays']);
+    Route::get('/bapk_plos/{id}', [BapkPloController::class, 'showByPlo']);
     // IZIN OPERASI
     Route::put('/izin_operasi/deletefile/{id}', [IzinOperasiController::class, 'deleteFileIzinOperasi']);
     Route::post('/izin_operasi/download', [IzinOperasiController::class, 'downloadIzinOperasiCertificates']);

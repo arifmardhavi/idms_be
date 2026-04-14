@@ -90,6 +90,27 @@ class BapkCoiController extends Controller
     }
 
     /**
+     * Display the specified resource by coi.
+     */
+    public function showByCoi(string $id)
+    {
+        $bapkCoi = BapkCoi::with('coi')->where('coi_id', $id)->get();
+
+        if (!$bapkCoi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'BAPK COI not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'BAPK COI retrieved successfully.',
+            'data' => $bapkCoi,
+        ], 200);
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)

@@ -90,6 +90,27 @@ class BapkPloController extends Controller
     }
 
     /**
+     * Display the specified resource by plo.
+     */
+    public function showByPlo(string $id)
+    {
+        $bapkPlo = BapkPlo::with('plo')->where('plo_id', $id)->get();
+
+        if (!$bapkPlo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'BAPK PLO not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'BAPK PLO retrieved successfully.',
+            'data' => $bapkPlo,
+        ], 200);
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
