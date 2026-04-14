@@ -339,10 +339,13 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/contracts/user', [ContractController::class, 'contractsByUser']);
 
     // DASHBOARD READINESS MATERIAL
+    Route::put('event_readiness/status/{id}', [EventReadinessController::class, 'updateStatus']);
     Route::get('/readiness_material/dashboard/{id}', [ReadinessMaterialController::class, 'dashboard']);
     Route::put('readiness_material/current_status/{id}', [ReadinessMaterialController::class, 'updateCurrentStatus']);
+    Route::put('readiness_material/status/{id}', [ReadinessMaterialController::class, 'updateStatus']);
     // DASHBOARD READINESS JASA
     Route::get('/readiness_jasa/dashboard/{id}', [ReadinessJasaController::class, 'dashboard']);
+    Route::put('readiness_jasa/status/{id}', [ReadinessJasaController::class, 'updateStatus']);
     //INTERNAL INSPECTION
     Route::get('/internal_inspection/laporan_inspection/{id}', [InternalInspectionController::class, 'showByLaporanInspection']);
     //EXTERNAL INSPECTION

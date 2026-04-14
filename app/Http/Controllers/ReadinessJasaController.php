@@ -225,6 +225,39 @@ class ReadinessJasaController extends Controller
             'data' => $readiness_jasa,
         ], 200);
     }
+    /**
+     * additional function to update status of readiness jasa
+     */
+    public function updateStatus(Request $request, string $id )
+    {
+        $readiness_jasa = ReadinessJasa::find($id);
+        if (!$readiness_jasa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Readiness TA Jasa not found.',
+            ], 404);
+        }
+        $validator = Validator::make($request->all(), [
+            'status' => 'sometimes|integer|in:0,1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed for current status',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validatedData = $validator->validated();
+        $readiness_jasa->update($validatedData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status updated successfully.',
+            'data' => $readiness_jasa,
+        ], 200);
+    }
 
     public function dashboard(string $id)
     {

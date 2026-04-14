@@ -232,6 +232,40 @@ class ReadinessMaterialController extends Controller
     }
 
     /**
+     * additional function to update status of readiness material
+     */
+    public function updateStatus(Request $request, string $id )
+    {
+        $readiness_material = ReadinessMaterial::find($id);
+        if (!$readiness_material) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Readiness TA Material not found.',
+            ], 404);
+        }
+        $validator = Validator::make($request->all(), [
+            'status' => 'sometimes|integer|in:0,1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed for current status',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validatedData = $validator->validated();
+        $readiness_material->update($validatedData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status updated successfully.',
+            'data' => $readiness_material,
+        ], 200);
+    }
+
+    /**
      * Display dashboard summary for the specified event readiness.
      */
 

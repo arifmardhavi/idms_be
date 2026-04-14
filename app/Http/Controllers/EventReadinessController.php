@@ -153,4 +153,47 @@ class EventReadinessController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * additional function to update status
+     */
+    public function updateStatus(Request $request, string $id)
+    {
+        $event_readiness = EventReadiness::find($id);
+        if (!$event_readiness) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Event Readiness not found.',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'status' => 'sometimes|integer|in:0,1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validatedData = $validator->validated();
+
+        try {
+            $event_readiness->update($validatedData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status Event Readiness updated successfully.',
+                'data' => $event_readiness,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Status Event Readiness update failed.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
