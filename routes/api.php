@@ -234,6 +234,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('/users/nonactive/{id}', [UserController::class, 'nonactive']);
     // Feature
     Route::get('/feature/group', [FeatureController::class, 'showByGroup']);
+    Route::get('/user_hak_akses/user/{id}', [UserHakAksesController::class, 'showByUser']);
 
     // COI
     Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']);
