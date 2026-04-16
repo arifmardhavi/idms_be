@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\P_id;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -222,5 +223,27 @@ class P_IdController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+
+    public function downloadPIdFile(string $id)
+    {
+        $p_id = P_id::find($id);
+
+        if (!$p_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'P & ID not found.',
+            ], 404);
+        }
+
+        if (!$p_id->p_id_file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'P & ID file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('p_id', $p_id->p_id_file);
     }
 }
