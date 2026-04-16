@@ -45,4 +45,23 @@ class FileHelper
         }
         return $size;
     }
+    
+    public static function downloadFile(string $destinationFolder, string $fileName)
+    {
+        $filePath = public_path($destinationFolder . '/' . $fileName);
+        if (!file_exists($filePath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File does not exist in storage.',
+            ], 404);
+        }
+        return response()->download(
+            $filePath,
+            $fileName,
+            [
+                'Content-Type' => mime_content_type($filePath),
+                'Content-Disposition' => "attachment; filename=\"{$fileName}\"; filename*=UTF-8''" . rawurlencode($fileName)
+            ]
+        );
+    }
 }
