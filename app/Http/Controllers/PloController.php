@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\Plo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -507,6 +508,60 @@ class PloController extends Controller
             ],
         ], 200);
 
+    }
+
+    public function downloadPloFile(string $id)
+    {
+        $typeFile = request()->get('file', 'plo_certificate');
+
+        $plo = Plo::find($id);
+
+        if (!$plo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PLO not found.',
+            ], 404);
+        }
+
+        // mapping file field + folder
+        $fileMap = [
+            'plo_certificate' => [
+                'field' => 'plo_certificate',
+                'path' => 'plo/certificates'
+            ],
+            'plo_old_certificate' => [
+                'field' => 'plo_old_certificate',
+                'path' => 'plo/certificates'
+            ],
+            'rla_certificate' => [
+                'field' => 'rla_certificate',
+                'path' => 'plo/rla'
+            ],
+            'rla_old_certificate' => [
+                'field' => 'rla_old_certificate',
+                'path' => 'plo/rla'
+            ],
+        ];
+
+        // validasi type
+        if (!isset($fileMap[$typeFile])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file type.',
+            ], 400);
+        }
+
+        $file = $plo->{$fileMap[$typeFile]['field']};
+        $destinationPath = $fileMap[$typeFile]['path'];
+
+        if (!$file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile($destinationPath, $file);
     }
 
     

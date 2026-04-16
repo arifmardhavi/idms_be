@@ -193,4 +193,25 @@ class BapkPloController extends Controller
             ], 500);
         }
     }
+
+    public function downloadBapkPloFile(string $id)
+    {
+        $bapkPlo = BapkPlo::find($id);
+
+        if (!$bapkPlo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'BAPK PLO not found.',
+            ], 404);
+        }
+
+        if (!$bapkPlo->bapk_plo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'BAPK PLO file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('plo/bapk', $bapkPlo->bapk_plo);
+    }
 }

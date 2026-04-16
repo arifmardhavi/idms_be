@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\ReportPlo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -241,5 +242,26 @@ class ReportPloController extends Controller
                 'errors' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function downloadReportPloFile(string $id)
+    {
+        $report = ReportPlo::find($id);
+
+        if (!$report) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Report PLO not found.',
+            ], 404);
+        }
+
+        if (!$report->report_plo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Report PLO file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('plo/reports', $report->report_plo);
     }
 }
