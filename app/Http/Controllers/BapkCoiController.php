@@ -192,5 +192,24 @@ class BapkCoiController extends Controller
                 'errors' => $e->getMessage(),
             ], 500);
         }
+    }public function downloadBapkCoiFile(string $id)
+    {
+        $bapkCoi = BapkCoi::find($id);
+
+        if (!$bapkCoi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'BAPK COI not found.',
+            ], 404);
+        }
+
+        if (!$bapkCoi->bapk_coi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'BAPK COI file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('coi/bapk', $bapkCoi->bapk_coi);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\Coi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -599,6 +600,65 @@ class CoiController extends Controller
             ],
         ], 200);
 
+    }
+
+
+    public function downloadCoiFile(string $id)
+    {
+        $typeFile = request()->get('file', 'coi_certificate');
+
+        $coi = Coi::find($id);
+
+        if (!$coi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'COI not found.',
+            ], 404);
+        }
+
+        // mapping file field + folder
+        $fileMap = [
+            'coi_certificate' => [
+                'field' => 'coi_certificate',
+                'path' => 'coi/certificates'
+            ],
+            'coi_old_certificate' => [
+                'field' => 'coi_old_certificate',
+                'path' => 'coi/certificates'
+            ],
+            'rla_certificate' => [
+                'field' => 'rla_certificate',
+                'path' => 'coi/rla'
+            ],
+            'rla_old_certificate' => [
+                'field' => 'rla_old_certificate',
+                'path' => 'coi/rla'
+            ],
+            're_engineer_certificate' => [
+                'field' => 're_engineer_certificate',
+                'path' => 'coi/re_engineer'
+            ],
+        ];
+
+        // validasi type
+        if (!isset($fileMap[$typeFile])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file type.',
+            ], 400);
+        }
+
+        $file = $coi->{$fileMap[$typeFile]['field']};
+        $destinationPath = $fileMap[$typeFile]['path'];
+
+        if (!$file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile($destinationPath, $file);
     }
     
 

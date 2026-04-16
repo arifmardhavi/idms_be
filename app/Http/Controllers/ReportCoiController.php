@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\ReportCoi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -240,5 +241,26 @@ class ReportCoiController extends Controller
                 'errors' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function downloadReportCoiFile(string $id)
+    {
+        $report = ReportCoi::find($id);
+
+        if (!$report) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Report COI not found.',
+            ], 404);
+        }
+
+        if (!$report->report_coi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Report COI file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('coi/reports', $report->report_coi);
     }
 }

@@ -230,6 +230,16 @@ Route::middleware(['auth:api'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
+    // download file
+    Route::get('contract_new/download/{id}', [ContractNewController::class, 'downloadContractFile']); // Download Contract New File
+    Route::get('/p_id/download_file/{id}', [P_IdController::class, 'downloadPIdFile']); // Download P_Id File
+    Route::get('/plo/download_file/{id}', [PloController::class, 'downloadPloFile']); // Download PLO File
+    Route::get('/report_plo/download_file/{id}', [ReportPloController::class, 'downloadReportPloFile']); // Download Report PLO File
+    Route::get('/bapk_plo/download_file/{id}', [BapkPloController::class, 'downloadBapkPloFile']); // Download BAPK PLO File
+    Route::get('/coi/download_file/{id}', [CoiController::class, 'downloadCoiFile']); // Download COI File
+    Route::get('/report_coi/download_file/{id}', [ReportCoiController::class, 'downloadReportCoiFile']); // Download Report COI File
+    Route::get('/bapk_coi/download_file/{id}', [BapkCoiController::class, 'downloadBapkCoiFile']); // Download BAPK COI File
+
     // User
     Route::put('/users/nonactive/{id}', [UserController::class, 'nonactive']);
     // Feature
@@ -320,7 +330,6 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('contract_new/lumpsum_progress/{id}', [ContractNewController::class, 'contractLumpsumProgress']);
     Route::get('contract_new_po_material_type', [ContractNewController::class, 'showByPoMaterialType']);
     Route::get('contract_new_un_po_material_type', [ContractNewController::class, 'showByUnPoMaterialType']);
-    Route::get('contract_new/download/{id}', [ContractNewController::class, 'downloadContractFile']);
     Route::get('/contract_new_user', [ContractNewController::class, 'contractsByUser']);
 
     // HISTORICAL MEMORANDUM & LAMPIRAN
