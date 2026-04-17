@@ -239,6 +239,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/coi/download_file/{id}', [CoiController::class, 'downloadCoiFile']); // Download COI File
     Route::get('/report_coi/download_file/{id}', [ReportCoiController::class, 'downloadReportCoiFile']); // Download Report COI File
     Route::get('/bapk_coi/download_file/{id}', [BapkCoiController::class, 'downloadBapkCoiFile']); // Download BAPK COI File
+    Route::get('/skhp/download_file/{id}', [SkhpController::class, 'downloadSkhpFile']); // Download SKHP File
 
     // User
     Route::put('/users/nonactive/{id}', [UserController::class, 'nonactive']);
@@ -327,6 +328,7 @@ Route::middleware(['auth:api'])->group(function () {
     // CONTRACT NEW
     Route::get('monitoring_contract_new', [ContractNewController::class, 'monitoringContract']);
     Route::put('contract_new/current_status/{id}', [ContractNewController::class, 'updateCurrentStatus']);
+    Route::put('contract_new/tkdn/{id}', [ContractNewController::class, 'updateTkdn']);
     Route::get('contract_new/lumpsum_progress/{id}', [ContractNewController::class, 'contractLumpsumProgress']);
     Route::get('contract_new_po_material_type', [ContractNewController::class, 'showByPoMaterialType']);
     Route::get('contract_new_un_po_material_type', [ContractNewController::class, 'showByUnPoMaterialType']);

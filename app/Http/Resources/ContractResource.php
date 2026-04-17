@@ -31,6 +31,7 @@ class ContractResource extends JsonResource
             'contract_status' => $this->contract_status,
             'pengawas' => $this->pengawas,
             'current_status' => $this->current_status,
+            'tkdn' => $this->tkdn,
             'durasi_mpp' => $this->durasi_mpp,
             'sisa_nilai' => $this->sisa_nilai,
             'plan_progress' => $this->plan_progress,

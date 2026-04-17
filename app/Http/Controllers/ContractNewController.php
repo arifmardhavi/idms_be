@@ -67,6 +67,7 @@ class ContractNewController extends Controller
                 'contract_end_date' => 'required|date|after_or_equal:contract_start_date',
                 'contract_file' => 'required|file|mimes:pdf|max:51200', // Maksimal 50MB
                 'contract_status' => 'nullable|integer|in:0,1', // 0 = Aktif, 1 = Selesai
+                'tkdn' => 'nullable|integer', 
 
             ]);
         }else{
@@ -83,6 +84,7 @@ class ContractNewController extends Controller
                 'meeting_notes' => 'nullable|file|mimes:pdf|max:5120', // Maksimal 5MB
                 'pengawas' => 'required|integer',
                 'contract_status' => 'required|integer|in:0,1', // 0 = Aktif, 1 = Selesai
+                'tkdn' => 'nullable|integer',
                 'contract_file' => 'required|file|mimes:pdf|max:30720', // Maksimal 30MB
 
             ]);
@@ -207,6 +209,7 @@ class ContractNewController extends Controller
                 'contract_end_date' => 'nullable|date',
                 'contract_file' => 'nullable|file|mimes:pdf|max:30720', // Maksimal 30MB
                 'contract_status' => 'sometimes|required|integer|in:0,1', // 0 = Aktif, 1 = Selesai
+                'tkdn' => 'nullable|integer',
 
             ]);
         }else{
@@ -224,6 +227,7 @@ class ContractNewController extends Controller
                 'contract_file' => 'nullable|file|mimes:pdf|max:30720', // Maksimal 30MB
                 'meeting_notes' => 'nullable|file|mimes:pdf|max:5120', // Maksimal 5MB
                 'contract_status' => 'sometimes|required|integer|in:0,1', // 0 = Aktif, 1 = Selesai
+                'tkdn' => 'nullable|integer',
 
             ]);
         }
@@ -340,6 +344,37 @@ class ContractNewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Current status updated successfully.',
+            'data' => new ContractResource($contract->fresh()),
+        ], 200);
+    }
+
+    public function updateTkdn(Request $request, string $id )
+    {
+        $contract = ContractNew::find($id);
+        if (!$contract) {
+            return response()->json([
+                'success' => false,
+                'message' => 'contract not found.',
+            ], 404);
+        }
+        $validator = Validator::make($request->all(), [
+            'tkdn' => 'sometimes|nullable|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed for tkdn',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validatedData = $validator->validated();
+        $contract->update($validatedData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'TKDN updated successfully.',
             'data' => new ContractResource($contract->fresh()),
         ], 200);
     }

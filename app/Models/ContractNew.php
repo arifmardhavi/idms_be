@@ -20,6 +20,7 @@ class ContractNew extends BaseModel
         'contract_price',
         'contract_file',
         'current_status',
+        'tkdn',
         'contract_start_date',
         'contract_end_date',
         'meeting_notes',
