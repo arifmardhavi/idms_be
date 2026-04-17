@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Http\Resources\SkhpResource;
 use App\Models\Skhp;
 use Illuminate\Http\Request;
@@ -353,5 +354,51 @@ class SkhpController extends Controller
             ],
         ], 200);
 
+    }
+
+    public function downloadSkhpFile(string $id)
+    {
+        $typeFile = request()->get('file', 'file_skhp'); // Default ke 'file_skhp' jika parameter tidak diberikan
+
+        $skhp = Skhp::find($id);
+
+        if (!$skhp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SKHP not found.',
+            ], 404);
+        }
+
+        // mapping file field + folder
+        $fileMap = [
+            'file_skhp' => [
+                'field' => 'file_skhp',
+                'path' => 'skhp'
+            ],
+            'file_old_skhp' => [
+                'field' => 'file_old_skhp',
+                'path' => 'skhp'
+            ],
+        ];
+
+        // validasi type
+        if (!isset($fileMap[$typeFile])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file type.',
+            ], 400);
+        }
+
+        $file = $skhp->{$fileMap[$typeFile]['field']};
+        $destinationPath = $fileMap[$typeFile]['path'];
+
+        if (!$file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile($destinationPath, $file);
     }
 }
