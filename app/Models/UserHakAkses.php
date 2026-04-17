@@ -14,6 +14,12 @@ class UserHakAkses extends Model
         'hak_akses_id',
     ];
 
+    protected $appends = [
+        'hak_akses_name',
+        'feature_name',
+        'group_name',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -22,5 +28,20 @@ class UserHakAkses extends Model
     public function hak_akses()
     {
         return $this->belongsTo(HakAkses::class);
+    }
+
+    public function getHakAksesNameAttribute()
+    {
+        return $this->hak_akses ? $this->hak_akses?->hak_akses : null;
+    }
+
+    public function getFeatureNameAttribute()
+    {
+        return $this->hak_akses ? $this->hak_akses?->feature?->feature : null;
+    }
+
+    public function getGroupNameAttribute()
+    {
+        return $this->hak_akses ? $this->hak_akses?->feature?->group : null;
     }
 }
