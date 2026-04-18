@@ -192,7 +192,9 @@ class BapkCoiController extends Controller
                 'errors' => $e->getMessage(),
             ], 500);
         }
-    }public function downloadBapkCoiFile(string $id)
+    }
+    
+    public function downloadBapkCoiFile(string $id)
     {
         $bapkCoi = BapkCoi::find($id);
 
