@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Http\Resources\SertifikatKalibrasiResource;
 use App\Models\SertifikatKalibrasi;
 use Illuminate\Http\Request;
@@ -352,5 +353,51 @@ class SertifikatKalibrasiController extends Controller
             ],
         ], 200);
 
+    }
+
+    public function downloadSertifikatKalibrasiFile(string $id)
+    {
+        $typeFile = request()->get('file', 'file_skhp'); // Default ke 'file_skhp' jika parameter tidak diberikan
+
+        $sertifikat_kalibrasi = SertifikatKalibrasi::find($id);
+
+        if (!$sertifikat_kalibrasi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sertifikat Kalibrasi not found.',
+            ], 404);
+        }
+
+        // mapping file field + folder
+        $fileMap = [
+            'file_sertifikat_kalibrasi' => [
+                'field' => 'file_sertifikat_kalibrasi',
+                'path' => 'sertifikat_kalibrasi'
+            ],
+            'file_old_sertifikat_kalibrasi' => [
+                'field' => 'file_old_sertifikat_kalibrasi',
+                'path' => 'sertifikat_kalibrasi'
+            ],
+        ];
+
+        // validasi type
+        if (!isset($fileMap[$typeFile])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file type.',
+            ], 400);
+        }
+
+        $file = $sertifikat_kalibrasi->{$fileMap[$typeFile]['field']};
+        $destinationPath = $fileMap[$typeFile]['path'];
+
+        if (!$file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile($destinationPath, $file);
     }
 }
