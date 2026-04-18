@@ -28,7 +28,8 @@ class UserHakAksesController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
-            'hak_akses_id' => 'required|exists:hak_akses,id',
+            'hak_akses' => 'required|array',
+            'hak_akses.*' => 'required|exists:hak_akses,id',
         ]);
 
         if ($validator->fails()) {
@@ -38,12 +39,22 @@ class UserHakAksesController extends Controller
                 'errors' => $validator->errors(),
             ], 422);
         }
+
         $validatedData = $validator->validated();
-        $userHakAkses = UserHakAkses::create($validatedData);
+
+        UserHakAkses::where('user_id', $validatedData['user_id'])->delete();
+
+        foreach ($validatedData['hak_akses'] as $hakAksesId) {
+            UserHakAkses::create([
+                'user_id' => $validatedData['user_id'],
+                'hak_akses_id' => $hakAksesId,
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'User hak akses created successfully.',
-            'data' => $userHakAkses,
+            'data' => $validatedData,
         ], 201);
     }
 

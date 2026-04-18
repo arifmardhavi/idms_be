@@ -30,7 +30,13 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     // tambahin biar field baru ikut ke JSON
-    protected $appends = ['total_file_open', 'file_open_per_feature', 'total_activities', 'activities_per_feature'];
+    protected $appends = [
+        'total_file_open', 
+        'file_open_per_feature', 
+        'total_activities', 
+        'activities_per_feature',
+        'akses_list',
+    ];
 
     public function setPasswordAttribute($value)
     {
@@ -111,6 +117,15 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hak_akses
             ->pluck('hak_akses.hak_akses')
+            ->filter()
+            ->values()
+            ->toArray();
+    }
+
+    public function getAksesListAttribute()
+    {
+        return $this->hak_akses
+            ->pluck('hak_akses.id')
             ->filter()
             ->values()
             ->toArray();

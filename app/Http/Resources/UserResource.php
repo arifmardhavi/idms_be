@@ -26,6 +26,7 @@ class UserResource extends JsonResource
             'file_open_per_feature' => $this->file_open_per_feature,
             'total_activities' => $this->total_activities,
             'activities_per_feature' => $this->activities_per_feature,
+            'akses_list' => $this->akses_list, // tambahkan akses_list ke response
         ];  
     }
 }
