@@ -147,4 +147,25 @@ class NibController extends Controller
             'message' => 'NIB deleted successfully.',
         ], 200);
     }
+
+    public function downloadNibFile(string $id)
+    {
+        $nib = Nib::find($id);
+
+        if (!$nib) {
+            return response()->json([
+                'success' => false,
+                'message' => 'NIB not found.',
+            ], 404);
+        }
+
+        if (!$nib->nib_file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'NIB file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('nib', $nib->nib_file);
+    }
 }
