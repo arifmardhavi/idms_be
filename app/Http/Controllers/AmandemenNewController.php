@@ -350,4 +350,54 @@ class AmandemenNewController extends Controller
             'message' => 'Amandemen New deleted successfully.',
         ]);
     }
+
+    public function downloadAmandemenFile(string $id)
+    {
+        $typeFile = request()->get('file', 'ba_agreement_file'); // Default ke 'amandemen_file' jika tidak ada parameter 'file'
+
+        $amandemenNew = AmandemenNew::find($id);
+
+        if (!$amandemenNew) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Amandemen New not found.',
+            ], 404);
+        }
+
+        // mapping file field + folder
+        $fileMap = [
+            'ba_agreement_file' => [
+                'field' => 'ba_agreement_file',
+                'path' => 'contract_new/amandemen/ba_agreement'
+            ],
+            'result_amandemen_file' => [
+                'field' => 'result_amandemen_file',
+                'path' => 'contract_new/amandemen/result_amandemen'
+            ],
+            'principle_permit_file' => [
+                'field' => 'principle_permit_file',
+                'path' => 'contract_new/amandemen/principle_permit'
+            ],
+        ];
+
+        // validasi type
+        if (!isset($fileMap[$typeFile])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file type.',
+            ], 400);
+        }
+
+        $file = $amandemenNew->{$fileMap[$typeFile]['field']};
+        $destinationPath = $fileMap[$typeFile]['path'];
+
+        if (!$file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile($destinationPath, $file);
+    }
 }

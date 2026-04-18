@@ -184,4 +184,25 @@ class SpkProgressNewController extends Controller
             'message' => 'spk Progress deleted successfully.',
         ]);
     }
+
+    public function downloadSpkProgressFile(string $id)
+    {
+        $spkProgressNew = SpkProgressNew::find($id);
+
+        if (!$spkProgressNew) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SPK Progress not found.',
+            ], 404);
+        }
+
+        if (!$spkProgressNew->progress_file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SPK Progress file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('contract_new/spk/progress', $spkProgressNew->progress_file);
+    }
 }

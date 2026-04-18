@@ -165,4 +165,25 @@ class LumpsumProgressNewController extends Controller
             'message' => 'Lumpsum Progress deleted successfully.',
         ], 200);
     }
+
+    public function downloadLumpsumProgressFile(string $id)
+    {
+        $lumpsum_progress = LumpsumProgressNew::find($id);
+
+        if (!$lumpsum_progress) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lumpsum Progress not found.',
+            ], 404);
+        }
+
+        if (!$lumpsum_progress->progress_file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lumpsum Progress file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('contract_new/lumpsum/progress', $lumpsum_progress->progress_file);
+    }
 }

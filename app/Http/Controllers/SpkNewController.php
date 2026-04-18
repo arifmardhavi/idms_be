@@ -194,4 +194,50 @@ class SpkNewController extends Controller
             ], 500);
         }
     }
+
+    public function downloadSpkFile(string $id)
+    {
+        $typeFile = request()->get('file', 'spk_file'); // Default ke 'spk_file' jika tidak ada parameter 'file'
+
+        $spk = SpkNew::find($id);
+
+        if (!$spk) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SPK not found.',
+            ], 404);
+        }
+
+        // mapping file field + folder
+        $fileMap = [
+            'spk_file' => [
+                'field' => 'spk_file',
+                'path' => 'contract_new/spk'
+            ],
+            'receipt_file' => [
+                'field' => 'receipt_file',
+                'path' => 'contract_new/spk/receipt'
+            ],
+        ];
+
+        // validasi type
+        if (!isset($fileMap[$typeFile])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file type.',
+            ], 400);
+        }
+
+        $file = $spk->{$fileMap[$typeFile]['field']};
+        $destinationPath = $fileMap[$typeFile]['path'];
+
+        if (!$file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile($destinationPath, $file);
+    }
 }

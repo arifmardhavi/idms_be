@@ -167,4 +167,25 @@ class TerminReceiptController extends Controller
             ], 500);
         }
     }
+
+    public function downloadTerminReceiptFile(string $id)
+    {
+        $termin_receipt = TerminReceiptNew::find($id);
+
+        if (!$termin_receipt) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Termin Receipt not found.',
+            ], 404);
+        }
+
+        if (!$termin_receipt->receipt_file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Termin Receipt file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('contract_new/termin_receipt', $termin_receipt->receipt_file);
+    }
 }
