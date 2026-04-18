@@ -32,6 +32,7 @@ use App\Http\Controllers\{
     GaDrawingController,
     EngineeringDataController,
     EventReadinessController,
+    EventReadinessOhController,
     ExternalInspectionController,
     FabrikasiMaterialController,
     FeatureController,
@@ -65,6 +66,7 @@ use App\Http\Controllers\{
     ProjectController,
     ReadinessJasaController,
     ReadinessMaterialController,
+    ReadinessMaterialOhController,
     RekomendasiJasaController,
     RekomendasiMaterialController,
     ReportCoiController,
@@ -183,7 +185,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('surveillance', SurveillanceController::class);
     Route::apiResource('breakdown_report', BreakdownReportController::class);
     Route::apiResource('event_readiness', EventReadinessController::class);
+    Route::apiResource('event_readiness_oh', EventReadinessOhController::class);
     Route::apiResource('readiness_material', ReadinessMaterialController::class);
+    Route::apiResource('readiness_material_oh', ReadinessMaterialOhController::class);
     Route::apiResource('rekomendasi_material', RekomendasiMaterialController::class);
     Route::apiResource('notif_material', NotifMaterialController::class);
     Route::apiResource('job_plan_material', JobPlanMaterialController::class);
@@ -372,6 +376,11 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/readiness_material/dashboard/{id}', [ReadinessMaterialController::class, 'dashboard']);
     Route::put('readiness_material/current_status/{id}', [ReadinessMaterialController::class, 'updateCurrentStatus']);
     Route::put('readiness_material/status/{id}', [ReadinessMaterialController::class, 'updateStatus']);
+    // DASHBOARD READINESS MATERIAL OH
+    Route::put('event_readiness_oh/status/{id}', [EventReadinessOhController::class, 'updateStatus']);
+    // Route::get('/readiness_material_oh/dashboard/{id}', [ReadinessMaterialOhController::class, 'dashboard']);
+    Route::put('readiness_material_oh/current_status/{id}', [ReadinessMaterialOhController::class, 'updateCurrentStatus']);
+    Route::put('readiness_material_oh/status/{id}', [ReadinessMaterialOhController::class, 'updateStatus']);
     // DASHBOARD READINESS JASA
     Route::get('/readiness_jasa/dashboard/{id}', [ReadinessJasaController::class, 'dashboard']);
     Route::put('readiness_jasa/status/{id}', [ReadinessJasaController::class, 'updateStatus']);
@@ -391,6 +400,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/overhaul/laporan_inspection/{id}', [OverhaulController::class, 'showByLaporanInspection']);
     //READINESS MATERIAL
     Route::get('/readiness_material/event/{id}', [ReadinessMaterialController::class, 'showByEvent']);
+    //READINESS MATERIAL OH
+    Route::get('/readiness_material_oh/event/{id}', [ReadinessMaterialOhController::class, 'showByEvent']);
     //REKOMENDASI MATERIAL
     Route::get('/rekomendasi_material/readiness/{id}', [RekomendasiMaterialController::class, 'showByReadiness']);
     //NOTIF MATERIAL
