@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\IzinOperasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -505,5 +506,59 @@ class IzinOperasiController extends Controller
             ],
         ], 200);
 
+    }
+
+    public function downloadIzinOperasiFile(string $id)
+    {
+        $typeFile = request()->get('file', 'izin_operasi_certificate'); // default file yang akan didownload adalah izin_operasi_certificate
+
+        $izinOperasi = IzinOperasi::find($id);
+
+        if (!$izinOperasi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Izin Operasi not found.',
+            ], 404);
+        }
+
+        // mapping file field + folder
+        $fileMap = [
+            'izin_operasi_certificate' => [
+                'field' => 'izin_operasi_certificate',
+                'path' => 'izin_operasi/certificates'
+            ],
+            'izin_operasi_old_certificate' => [
+                'field' => 'izin_operasi_old_certificate',
+                'path' => 'izin_operasi/certificates'
+            ],
+            'rla_certificate' => [
+                'field' => 'rla_certificate',
+                'path' => 'izin_operasi/rla'
+            ],
+            'rla_old_certificate' => [
+                'field' => 'rla_old_certificate',
+                'path' => 'izin_operasi/rla'
+            ],
+        ];
+
+        // validasi type
+        if (!isset($fileMap[$typeFile])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file type.',
+            ], 400);
+        }
+
+        $file = $izinOperasi->{$fileMap[$typeFile]['field']};
+        $destinationPath = $fileMap[$typeFile]['path'];
+
+        if (!$file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile($destinationPath, $file);
     }
 }
