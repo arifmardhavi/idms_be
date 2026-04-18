@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\LampiranMemo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -224,5 +225,26 @@ class LampiranMemoController extends Controller
     
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
         return response()->json(['success' => true, 'url' => url('file_lampiran_memo.zip')]);
+    }
+
+    public function downloadLampiranMemoFile(string $id)
+    {
+        $lampiranMemo = LampiranMemo::find($id);
+
+        if (!$lampiranMemo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lampiran Memorandum not found.',
+            ], 404);
+        }
+
+        if (!$lampiranMemo->lampiran_memo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lampiran Memorandum file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('historical_memorandum/lampiran', $lampiranMemo->lampiran_memo);
     }
 }

@@ -231,7 +231,6 @@ Route::middleware(['auth:api'])->group(function () {
     */
 
     // download file
-    Route::get('contract_new/download/{id}', [ContractNewController::class, 'downloadContractFile']); // Download Contract New File
     Route::get('/p_id/download_file/{id}', [P_IdController::class, 'downloadPIdFile']); // Download P_Id File
     Route::get('/plo/download_file/{id}', [PloController::class, 'downloadPloFile']); // Download PLO File
     Route::get('/report_plo/download_file/{id}', [ReportPloController::class, 'downloadReportPloFile']); // Download Report PLO File
@@ -240,6 +239,22 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/report_coi/download_file/{id}', [ReportCoiController::class, 'downloadReportCoiFile']); // Download Report COI File
     Route::get('/bapk_coi/download_file/{id}', [BapkCoiController::class, 'downloadBapkCoiFile']); // Download BAPK COI File
     Route::get('/skhp/download_file/{id}', [SkhpController::class, 'downloadSkhpFile']); // Download SKHP File
+    Route::get('/sertifikat_kalibrasi/download_file/{id}', [SertifikatKalibrasiController::class, 'downloadSertifikatKalibrasiFile']); // Download Sertifikat Kalibrasi File
+    Route::get('/izin_usaha/download_file/{id}', [IzinUsahaController::class, 'downloadIzinUsahaFile']); // Download Izin Usaha File
+    Route::get('/nib/download_file/{id}', [NibController::class, 'downloadNibFile']); // Download NIB File
+    Route::get('/izin_operasi/download_file/{id}', [IzinOperasiController::class, 'downloadIzinOperasiFile']); // Download Izin Operasi File
+    Route::get('/report_izin_operasi/download_file/{id}', [ReportIzinOperasiController::class, 'downloadReportIzinOperasiFile']); // Download Report Izin Operasi File
+    Route::get('/izin_disnaker/download_file/{id}', [IzinDisnakerController::class, 'downloadIzinDisnakerFile']); // Download Izin Disnaker File
+    Route::get('/report_izin_disnaker/download_file/{id}', [ReportIzinDisnakerController::class, 'downloadReportIzinDisnakerFile']); // Download Report Izin Disnaker File
+    Route::get('contract_new/download/{id}', [ContractNewController::class, 'downloadContractFile']); // Download Contract New File
+    Route::get('/spk/download_file/{id}', [SpkNewController::class, 'downloadSpkFile']); // Download SPK File
+    Route::get('/spk_progress/download_file/{id}', [SpkProgressNewController::class, 'downloadSpkProgressFile']); // Download SPK Progress File
+    Route::get('/termin_receipt/download_file/{id}', [TerminReceiptController::class, 'downloadTerminReceiptFile']); // Download Termin Receipt File
+    Route::get('/lumpsum_progress_new/download_file/{id}', [LumpsumProgressNewController::class, 'downloadLumpsumProgressFile']); // Download Lumpsum Progress File
+    Route::get('/amandemen_new/download_file/{id}', [AmandemenNewController::class, 'downloadAmandemenFile']); // Download Amandemen File
+    Route::get('/historical_memorandum/download_file/{id}', [HistoricalMemorandumController::class, 'downloadHistoricalMemorandumFile']); // Download Historical Memorandum File
+    Route::get('/lampiran_memo/download_file/{id}', [LampiranMemoController::class, 'downloadLampiranMemoFile']); // Download Lampiran Memo File
+
 
     // User
     Route::put('/users/nonactive/{id}', [UserController::class, 'nonactive']);

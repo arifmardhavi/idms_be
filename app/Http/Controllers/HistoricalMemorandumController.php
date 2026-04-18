@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\HistoricalMemorandum;
 use App\Models\Tag_number;
 use Illuminate\Http\Request;
@@ -273,5 +274,26 @@ class HistoricalMemorandumController extends Controller
     
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
         return response()->json(['success' => true, 'url' => url('file_historical_memorandum.zip')]);
+    }
+
+    public function downloadHistoricalMemorandumFile(string $id)
+    {
+        $historicalMemorandum = HistoricalMemorandum::find($id);
+
+        if (!$historicalMemorandum) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Historical Memorandum not found.',
+            ], 404);
+        }
+
+        if (!$historicalMemorandum->memorandum_file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Historical Memorandum file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('historical_memorandum', $historicalMemorandum->memorandum_file);
     }
 }
