@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\IzinDisnaker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -596,5 +597,63 @@ class IzinDisnakerController extends Controller
             ],
         ], 200);
 
+    }
+
+    public function downloadIzinDisnakerFile(string $id)
+    {
+        $typeFile = request()->get('file', 'izin_disnaker_certificate');
+
+        $izinDisnaker = IzinDisnaker::find($id);
+
+        if (!$izinDisnaker) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Izin Disnaker not found.',
+            ], 404);
+        }
+
+        // mapping file field + folder
+        $fileMap = [
+            'izin_disnaker_certificate' => [
+                'field' => 'izin_disnaker_certificate',
+                'path' => 'izin_disnaker/certificates'
+            ],
+            'izin_disnaker_old_certificate' => [
+                'field' => 'izin_disnaker_old_certificate',
+                'path' => 'izin_disnaker/certificates'
+            ],
+            'rla_certificate' => [
+                'field' => 'rla_certificate',
+                'path' => 'izin_disnaker/rla'
+            ],
+            'rla_old_certificate' => [
+                'field' => 'rla_old_certificate',
+                'path' => 'izin_disnaker/rla'
+            ],
+            're_engineer_certificate' => [
+                'field' => 're_engineer_certificate',
+                'path' => 'izin_disnaker/re_engineer'
+            ],
+        ];
+
+        // validasi type
+        if (!isset($fileMap[$typeFile])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file type.',
+            ], 400);
+        }
+
+        $file = $izinDisnaker->{$fileMap[$typeFile]['field']};
+        $destinationPath = $fileMap[$typeFile]['path'];
+
+        if (!$file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile($destinationPath, $file);
     }
 }
