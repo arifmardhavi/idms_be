@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\IzinUsaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -220,5 +221,26 @@ class IzinUsahaController extends Controller
                 'errors' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function downloadIzinUsahaFile(string $id)
+    {
+        $izin_usaha = IzinUsaha::find($id);
+
+        if (!$izin_usaha) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Izin Usaha not found.',
+            ], 404);
+        }
+
+        if (!$izin_usaha->izin_usaha_file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Izin Usaha file not found.',
+            ], 404);
+        }
+
+        return FileHelper::downloadFile('izin_usaha', $izin_usaha->izin_usaha_file);
     }
 }
