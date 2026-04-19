@@ -89,6 +89,15 @@ class AuthController extends Controller
             ->values()
             ->toArray();
 
+        // Username yang dapat akses semua
+        $superUsers = ['admin', 'superadmin', 'faza.ahmad'];
+
+        if (in_array($user->username, $superUsers)) {
+            $hakAksesList[] = '*';
+        }
+
+        $user->hak_akses_list = $hakAksesList;
+
 
         // Buat token
         $token = JWTAuth::fromUser($user);

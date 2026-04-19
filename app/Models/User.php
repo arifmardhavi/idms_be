@@ -113,14 +113,14 @@ class User extends Authenticatable implements JWTSubject
     * Accessor: List hak akses
     * ===================== */
 
-    public function getHakAksesListAttribute()
-    {
-        return $this->hak_akses
-            ->pluck('hak_akses.hak_akses')
-            ->filter()
-            ->values()
-            ->toArray();
-    }
+    // public function getHakAksesListAttribute()
+    // {
+    //     return $this->hak_akses
+    //         ->pluck('hak_akses.hak_akses')
+    //         ->filter()
+    //         ->values()
+    //         ->toArray();
+    // }
 
     public function getAksesListAttribute()
     {
