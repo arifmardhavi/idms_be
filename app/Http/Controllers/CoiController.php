@@ -15,10 +15,40 @@ class CoiController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $filter = $request->get('filter');
         $coi = Coi::with(['tag_number', 'plo', 'plo.unit'])->orderBy('overdue_date', 'asc')->get();
 
+
+        if ($filter == 'coi_more_than_nine_months') {
+            $coi = $coi->where('due_days', '>', 270)->values();
+        }
+
+        if ($filter == 'coi_less_than_nine_months') {
+            $coi = $coi->where('due_days', '>=', 0)
+                        ->where('due_days', '<=', 270)
+                        ->values();
+        }
+
+        if ($filter == 'coi_expired') {
+            $coi = $coi->where('due_days', '<', 0)->values();
+        }
+
+        if ($filter == 'rla_more_than_nine_months') {
+            $coi = $coi->where('rla_due_days', '>', 270)->values();
+        }
+
+        if ($filter == 'rla_less_than_nine_months') {
+            $coi = $coi->where('rla_due_days', '>=', 0)
+                        ->where('rla_due_days', '<=', 270)
+                        ->values();
+        }
+
+        if ($filter == 'rla_expired') {
+            $coi = $coi->where('rla_due_days', '<', 0)->values();
+        }
+        
         return response()->json([
             'success' => true,
             'message' => 'COI retrieved successfully.',
@@ -543,10 +573,8 @@ class CoiController extends Controller
         return response()->json(['success' => true, 'url' => url('coi_certificates.zip')]);
     }
 
-    public function countCoiDueDays() {
-        $today = strtotime(date('Y-m-d')); //mengambil tanggal saat ini
-        // Inisialisasi variabel count
-        // dd($today);
+    public function countCoiDueDays()
+    {
         $coiMoreThanNineMonths = 0;
         $coiLessThanNineMonths = 0;
         $coiExpired = 0;
@@ -554,34 +582,28 @@ class CoiController extends Controller
         $rlaLessThanNineMonths = 0;
         $rlaExpired = 0;
 
-        // Ambil semua data coi
         $coi = Coi::all();
 
         foreach ($coi as $item) {
-            // Hitung overdue_date untuk coi
-            if (!empty($item->overdue_date)) {
-                $overdueTimestamp = strtotime($item->overdue_date);
-                $nineMonthsLater = strtotime("+9 months", $today);
 
-                if ($overdueTimestamp >= $nineMonthsLater) {
+            if (!is_null($item->due_days)) {
+
+                if ($item->due_days > 270) {
                     $coiMoreThanNineMonths++;
-                } elseif ($overdueTimestamp >= $today && $overdueTimestamp < $nineMonthsLater) {
+                } elseif ($item->due_days >= 0) {
                     $coiLessThanNineMonths++;
-                } elseif ($overdueTimestamp < $today) {
+                } else {
                     $coiExpired++;
                 }
             }
 
-            // Hitung rla_overdue untuk RLA
-            if (!empty($item->rla_overdue)) {
-                $rlaOverdueTimestamp = strtotime($item->rla_overdue);
-                $nineMonthsLater = strtotime("+9 months", $today);
+            if (!is_null($item->rla_due_days)) {
 
-                if ($rlaOverdueTimestamp >= $nineMonthsLater) {
+                if ($item->rla_due_days > 270) {
                     $rlaMoreThanNineMonths++;
-                } elseif ($rlaOverdueTimestamp >= $today && $rlaOverdueTimestamp < $nineMonthsLater) {
+                } elseif ($item->rla_due_days >= 0) {
                     $rlaLessThanNineMonths++;
-                } elseif ($rlaOverdueTimestamp < $today) {
+                } else {
                     $rlaExpired++;
                 }
             }
@@ -599,7 +621,6 @@ class CoiController extends Controller
                 'rla_expired' => $rlaExpired,
             ],
         ], 200);
-
     }
 
 

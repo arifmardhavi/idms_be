@@ -270,6 +270,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']);
     Route::put('/coi/deletefile/{id}', [CoiController::class, 'deleteFileCoi']);
     Route::get('/coi_countduedays', [CoiController::class, 'countCoiDueDays']);
+    Route::get('/coi_filter', [CoiController::class, 'filteringCoi']);
     Route::get('/coi/tag_number/{id}', [CoiController::class, 'showByTagNumber']);
     Route::get('/bapk_cois/{id}', [BapkCoiController::class, 'showByCoi']);
     // IZIN DISNAKER
