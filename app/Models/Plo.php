@@ -9,7 +9,12 @@ class Plo extends BaseModel
 {
     use HasFactory;
     protected $fillable = ['unit_id', 'no_certificate', 'issue_date', 'overdue_date', 'plo_certificate', 'plo_old_certificate', 'rla', 'rla_issue', 'rla_overdue', 'rla_certificate', 'rla_old_certificate'];
-    protected $appends = ['due_days', 'rla_due_days'];
+    protected $appends = [
+        'due_days', 
+        'rla_due_days',
+        'count_report_plo',
+        'count_bapk_plo',
+    ];
 
     protected static function boot()
     {
@@ -91,5 +96,20 @@ class Plo extends BaseModel
     public function reportPlo()
     {
         return $this->hasMany(ReportPlo::class);
+    }
+
+    public function bapkPlo()
+    {
+        return $this->hasMany(BapkPlo::class);
+    }
+
+    public function getCountReportPloAttribute()
+    {
+        return $this->reportPlo()->count();
+    }
+
+    public function getCountBapkPloAttribute()
+    {
+        return $this->bapkPlo()->count();
     }
 }

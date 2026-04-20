@@ -9,7 +9,12 @@ class Coi extends BaseModel
 {
     use HasFactory;
     protected $fillable = ["plo_id", 'tag_number_id', 'no_certificate', 'issue_date', 'overdue_date', 'coi_certificate',"coi_old_certificate" , 'rla', 'rla_issue', 'rla_overdue', 'rla_certificate', 'rla_old_certificate', 're_engineer', 're_engineer_certificate'];
-    protected $appends = ['due_days', 'rla_due_days'];
+    protected $appends = [
+        'due_days', 
+        'rla_due_days',
+        'count_report_coi',
+        'count_bapk_coi',
+    ];
 
     public function getDueDaysAttribute()
     {
@@ -41,5 +46,25 @@ class Coi extends BaseModel
     public function plo()
     {
         return $this->belongsTo(Plo::class);
+    }
+
+    public function reportCoi()
+    {
+        return $this->hasMany(ReportCoi::class);
+    }
+
+    public function bapkCoi()
+    {
+        return $this->hasMany(BapkCoi::class);
+    }
+
+    public function getCountReportCoiAttribute()
+    {
+        return $this->reportCoi()->count();
+    }
+
+    public function getCountBapkCoiAttribute()
+    {
+        return $this->bapkCoi()->count();
     }
 }
