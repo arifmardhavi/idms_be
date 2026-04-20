@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('delivery_material_ohs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('readiness_material_oh_id')->constrained('readiness_material_ohs')->onDelete('cascade');
+            $table->text('description')->nullable();
+            $table->text('delivery_file')->nullable();
+            $table->date('target_date')->nullable();
+            $table->integer('status')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('delivery_material_ohs');
+    }
+};
