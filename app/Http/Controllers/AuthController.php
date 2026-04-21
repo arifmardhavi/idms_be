@@ -94,9 +94,10 @@ class AuthController extends Controller
 
         if (in_array($user->username, $superUsers)) {
             $hakAksesList[] = '*';
+            $user->hak_akses_list = $hakAksesList;
         }
 
-        $user->hak_akses_list = $hakAksesList;
+        
 
 
         // Buat token
