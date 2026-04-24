@@ -10,12 +10,12 @@ class ReadinessMaterialOh extends BaseModel
 {
     use HasFactory;
     protected $fillable = [
-        'event_readiness_oh_id', 
-        'material_name', 
-        'price_estimate', 
-        'type', 
-        'current_status', 
-        'tanggal_target', 
+        'event_readiness_oh_id',
+        'material_name',
+        'price_estimate',
+        'type',
+        'current_status',
+        'tanggal_target',
         'status'
     ];
 
@@ -69,7 +69,7 @@ class ReadinessMaterialOh extends BaseModel
      * oh_status: hanya berdasar tanggal_target (terpisah)
      */
     public function getOhStatusAttribute()
-    {   
+    {
         if (empty($this->tanggal_target)) {
             return null;
         }
@@ -191,6 +191,65 @@ class ReadinessMaterialOh extends BaseModel
         }
 
         return $this->po_material_oh?->contract_new?->contract_price ?? $this->price_estimate;
+    }
+
+    public function getTotalProgressAttribute()
+    {
+        // urutan step dan modelnya
+        $steps = [
+            'rekomendasi_material_oh',
+            'notif_material_oh',
+            'job_plan_material_oh',
+            'pr_material_oh',
+            'tender_material_oh',
+            'po_material_oh',
+            'fabrikasi_material_oh',
+            'delivery_material_oh',
+        ];
+
+        $lastStep = null;
+        $lastStatus = null;
+
+        $this->loadMissing([
+            'rekomendasi_material_oh',
+            'notif_material_oh',
+            'job_plan_material_oh',
+            'pr_material_oh',
+            'tender_material_oh',
+            'po_material_oh',
+            'fabrikasi_material_oh',
+            'delivery_material_oh',
+        ]);
+
+
+        // cari step terakhir yang ada datanya
+        foreach ($steps as $step) {
+            if ($this->$step) {
+                $lastStep = $step;
+                $lastStatus = $this->$step->status ?? null;
+            }
+        }
+
+        // kalau tidak ada step sama sekali
+        if (!$lastStep) {
+            return "0%";
+        }
+
+        // dapatkan posisi step terakhir
+        $stepIndex = array_search($lastStep, $steps) + 1; // +1 karena index mulai dari 0
+
+        // hitung nilai status (0 = 1, 1 = 0.5, selainnya = 0)
+        $statusValue = match($lastStatus) {
+            0 => 1,
+            1 => 0.5,
+            default => 0,
+        };
+
+        // hitung progress
+        $progress = (($stepIndex - 1) + $statusValue) / count($steps) * 100;
+
+        // format dengan 2 angka di belakang koma
+        return number_format($progress, 2) . '%';
     }
 
     protected static function boot()
