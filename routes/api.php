@@ -25,6 +25,7 @@ use App\Http\Controllers\{
     BapkPloController,
     BreakdownReportController,
     ContractJasaController,
+    ContractJasaOhController,
     ContractNewController,
     HistoricalMemorandumController,
     DatasheetController,
@@ -45,6 +46,7 @@ use App\Http\Controllers\{
     IzinOperasiController,
     IzinUsahaController,
     JobPlanJasaController,
+    JobPlanJasaOhController,
     JobPlanMaterialController,
     JobPlanMaterialOhController,
     LampiranMocController,
@@ -56,6 +58,7 @@ use App\Http\Controllers\{
     MocController,
     NibController,
     NotifJasaController,
+    NotifJasaOhController,
     NotifMaterialController,
     NotifMaterialOhController,
     OnstreamInspectionController,
@@ -67,13 +70,16 @@ use App\Http\Controllers\{
     PoMaterialOhController,
     PreventiveController,
     PrJasaController,
+    PrJasaOhController,
     PrMaterialController,
     PrMaterialOhController,
     ProjectController,
     ReadinessJasaController,
+    ReadinessJasaOhController,
     ReadinessMaterialController,
     ReadinessMaterialOhController,
     RekomendasiJasaController,
+    RekomendasiJasaOhController,
     RekomendasiMaterialController,
     RekomendasiMaterialOhController,
     ReportCoiController,
@@ -84,6 +90,7 @@ use App\Http\Controllers\{
     SpkProgressNewController,
     SurveillanceController,
     TenderJasaController,
+    TenderJasaOhController,
     TenderMaterialController,
     TenderMaterialOhController,
     TerminNewController,
@@ -197,6 +204,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('readiness_material', ReadinessMaterialController::class);
     Route::apiResource('readiness_material_oh', ReadinessMaterialOhController::class);
     Route::apiResource('rekomendasi_material', RekomendasiMaterialController::class);
+    Route::apiResource('rekomendasi_material_oh', RekomendasiMaterialOhController::class);
     Route::apiResource('notif_material', NotifMaterialController::class);
     Route::apiResource('notif_material_oh', NotifMaterialOhController::class);
     Route::apiResource('job_plan_material', JobPlanMaterialController::class);
@@ -212,12 +220,19 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('delivery_material', DeliveryMaterialController::class);
     Route::apiResource('delivery_material_oh', DeliveryMaterialOhController::class);
     Route::apiResource('readiness_jasa', ReadinessJasaController::class);
+    Route::apiResource('readiness_jasa_oh', ReadinessJasaOhController::class);
     Route::apiResource('rekomendasi_jasa', RekomendasiJasaController::class);
+    Route::apiResource('rekomendasi_jasa_oh', RekomendasiJasaOhController::class);
     Route::apiResource('notif_jasa', NotifJasaController::class);
+    Route::apiResource('notif_jasa_oh', NotifJasaOhController::class);
     Route::apiResource('job_plan_jasa', JobPlanJasaController::class);
+    Route::apiResource('job_plan_jasa_oh', JobPlanJasaOhController::class);
     Route::apiResource('pr_jasa', PrJasaController::class);
+    Route::apiResource('pr_jasa_oh', PrJasaOhController::class);
     Route::apiResource('tender_jasa', TenderJasaController::class);
+    Route::apiResource('tender_jasa_oh', TenderJasaOhController::class);
     Route::apiResource('contract_jasa', ContractJasaController::class);
+    Route::apiResource('contract_jasa_oh', ContractJasaOhController::class);
     Route::apiResource('open_file_activity', OpenFileActivityController::class);
     Route::apiResource('p_id', P_IdController::class);
     Route::apiResource('izin_usaha', IzinUsahaController::class);
@@ -242,7 +257,6 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('features', FeatureController::class);
     Route::apiResource('hak_akses', HakAksesController::class);
     Route::apiResource('user_hak_akses', UserHakAksesController::class);
-    Route::apiResource('rekomendasi_material_oh', RekomendasiMaterialOhController::class);
 
     /*
     |--------------------------------------------------------------------------
@@ -401,6 +415,7 @@ Route::middleware(['auth:api'])->group(function () {
     // DASHBOARD READINESS JASA
     Route::get('/readiness_jasa/dashboard/{id}', [ReadinessJasaController::class, 'dashboard']);
     Route::put('readiness_jasa/status/{id}', [ReadinessJasaController::class, 'updateStatus']);
+    Route::put('readiness_jasa_oh/status/{id}', [ReadinessJasaOhController::class, 'updateStatus']);
     //INTERNAL INSPECTION
     Route::get('/internal_inspection/laporan_inspection/{id}', [InternalInspectionController::class, 'showByLaporanInspection']);
     //EXTERNAL INSPECTION
@@ -450,6 +465,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/delivery_material_oh/readiness/{id}', [DeliveryMaterialOhController::class, 'showByReadiness']);
     //READINESS JASA
     Route::get('/readiness_jasa/event/{id}', [ReadinessJasaController::class, 'showByEvent']);
+    Route::get('/readiness_jasa_oh/event/{id}', [ReadinessJasaOhController::class, 'showByEvent']);
     // OPEN FILE ACTIVITY
     Route::get('/open_file_activity/user/{id}', [OpenFileActivityController::class, 'showByUserId']);
 

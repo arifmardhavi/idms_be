@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('job_plan_jasa_ohs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('readiness_jasa_oh_id')->constrained('readiness_jasa_ohs')->onDelete('cascade');
+            $table->bigInteger('no_wo')->nullable();
+            $table->text('kak_file')->nullable();
+            $table->text('boq_file')->nullable();
+            $table->bigInteger('durasi_preparation')->nullable();
+            $table->date('target_date')->nullable();
+            $table->integer('status')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('job_plan_jasa_ohs');
+    }
+};
