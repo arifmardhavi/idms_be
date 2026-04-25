@@ -82,7 +82,7 @@ class ReadinessMaterialOh extends BaseModel
         }
         $today = Carbon::today();
         $targetDate = Carbon::parse($this->tanggal_target);
-        $diff = $targetDate->diffInDays($today, false);
+        $diff = $today->diffInDays($targetDate, false);
         return [
             'days_remaining' => $diff,
             'color' => $this->getColorByDiff($diff),
