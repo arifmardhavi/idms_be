@@ -10,8 +10,8 @@ class JobPlanMaterialOh extends BaseModel
     use HasFactory;
     protected $fillable = ['readiness_material_oh_id','no_wo', 'kak_file', 'boq_file', 'target_date', 'status'];
 
-    public function readiness_material()
+    public function readiness_material_oh()
     {
-        return $this->belongsTo(ReadinessMaterial::class, 'readiness_material_id');
+        return $this->belongsTo(ReadinessMaterialOh::class, 'readiness_material_oh_id');
     }
 }
