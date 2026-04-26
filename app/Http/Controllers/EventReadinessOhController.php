@@ -93,7 +93,7 @@ class EventReadinessOhController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'event_name' => 'required|string|unique:event_readinesses,event_name,' . $id,
+            'event_name' => 'required|string|unique:event_readiness_ohs,event_name,' . $id,
             'status' => 'sometimes|integer|in:0,1',
         ]);
 
