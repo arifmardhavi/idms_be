@@ -1,0 +1,178 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\PrMaterialRtnrt;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class PrMaterialRtnrtController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $pr_material = PrMaterialRtnrt::orderBy('id', 'desc')->get();
+        return response()->json([
+            'success' => true,
+            'message' => 'PR Material retrieved successfully.',
+            'data' => $pr_material,
+        ], 200);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'readiness_material_rtnrt_id' => 'required|exists:readiness_material_rtnrts,id|unique:pr_materials,readiness_material_rtnrt_id',
+            'no_pr' => 'nullable|integer',
+            'target_date' => 'nullable|date',
+            'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+
+        $validatedData = $validator->validated();
+
+        try {
+            $pr_material = PrMaterialRtnrt::create($validatedData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'PR Material created successfully.',
+                'data' => $pr_material,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create PR Material.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        $pr_material = PrMaterialRtnrt::find($id);
+
+        if (!$pr_material) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PR Material not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'PR Material retrieved successfully.',
+            'data' => $pr_material,
+        ], 200);
+    }
+
+    public function showByReadiness(string $id)
+    {
+        $pr_material = PrMaterialRtnrt::with(['readiness_material_rtnrt'])->where('readiness_material_rtnrt_id', $id)->orderby('id', 'desc')->get();
+
+        if (!$pr_material) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PR Material not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'PR Material retrieved successfully.',
+            'data' => $pr_material,
+        ], 200);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        $pr_material = PrMaterialRtnrt::find($id);
+
+        if (!$pr_material) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PR Material not found.',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'readiness_material_rtnrt_id' => 'sometimes|exists:readiness_material_rtnrts,id|unique:pr_materials,readiness_material_rtnrt_id,' . $id,
+            'no_pr' => 'sometimes|integer',
+            'target_date' => 'sometimes|date',
+            'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validatedData = $validator->validated();
+
+        try {
+            $pr_material->update($validatedData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'PR Material updated successfully.',
+                'data' => $pr_material,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update PR Material.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $pr_material = PrMaterialRtnrt::find($id);
+
+        if (!$pr_material) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PR Material not found.',
+            ], 404);
+        }
+
+        try {
+            $pr_material->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'PR Material deleted successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete PR Material.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+}

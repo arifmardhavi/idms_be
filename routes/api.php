@@ -31,13 +31,16 @@ use App\Http\Controllers\{
     DatasheetController,
     DeliveryMaterialController,
     DeliveryMaterialOhController,
+    DeliveryMaterialRtnrtController,
     GaDrawingController,
     EngineeringDataController,
     EventReadinessController,
     EventReadinessOhController,
+    EventReadinessRtnrtController,
     ExternalInspectionController,
     FabrikasiMaterialController,
     FabrikasiMaterialOhController,
+    FabrikasiMaterialRtnrtController,
     FeatureController,
     HakAksesController,
     HistoricalEquipmentController,
@@ -49,6 +52,7 @@ use App\Http\Controllers\{
     JobPlanJasaOhController,
     JobPlanMaterialController,
     JobPlanMaterialOhController,
+    JobPlanMaterialRtnrtController,
     LampiranMocController,
     LaporanInspectionController,
     LogActivityController,
@@ -61,6 +65,7 @@ use App\Http\Controllers\{
     NotifJasaOhController,
     NotifMaterialController,
     NotifMaterialOhController,
+    NotifMaterialRtnrtController,
     OnstreamInspectionController,
     OpenFileActivityController,
     OverhaulController,
@@ -68,20 +73,24 @@ use App\Http\Controllers\{
     PirController,
     PoMaterialController,
     PoMaterialOhController,
+    PoMaterialRtnrtController,
     PreventiveController,
     PrJasaController,
     PrJasaOhController,
     PrMaterialController,
     PrMaterialOhController,
+    PrMaterialRtnrtController,
     ProjectController,
     ReadinessJasaController,
     ReadinessJasaOhController,
     ReadinessMaterialController,
     ReadinessMaterialOhController,
+    ReadinessMaterialRtnrtController,
     RekomendasiJasaController,
     RekomendasiJasaOhController,
     RekomendasiMaterialController,
     RekomendasiMaterialOhController,
+    RekomendasiMaterialRtnrtController,
     ReportCoiController,
     ReportIzinDisnakerController,
     ReportIzinOperasiController,
@@ -93,6 +102,7 @@ use App\Http\Controllers\{
     TenderJasaOhController,
     TenderMaterialController,
     TenderMaterialOhController,
+    TenderMaterialRtnrtController,
     TerminNewController,
     TerminReceiptController,
     UserHakAksesController
@@ -201,24 +211,34 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('breakdown_report', BreakdownReportController::class);
     Route::apiResource('event_readiness', EventReadinessController::class);
     Route::apiResource('event_readiness_oh', EventReadinessOhController::class);
+    Route::apiResource('event_readiness_rtnrt', EventReadinessRtnrtController::class);
     Route::apiResource('readiness_material', ReadinessMaterialController::class);
     Route::apiResource('readiness_material_oh', ReadinessMaterialOhController::class);
+    Route::apiResource('readiness_material_rtnrt', ReadinessMaterialRtnrtController::class);
     Route::apiResource('rekomendasi_material', RekomendasiMaterialController::class);
     Route::apiResource('rekomendasi_material_oh', RekomendasiMaterialOhController::class);
+    Route::apiResource('rekomendasi_material_rtnrt', RekomendasiMaterialRtnrtController::class);
     Route::apiResource('notif_material', NotifMaterialController::class);
     Route::apiResource('notif_material_oh', NotifMaterialOhController::class);
+    Route::apiResource('notif_material_rtnrt', NotifMaterialRtnrtController::class);
     Route::apiResource('job_plan_material', JobPlanMaterialController::class);
     Route::apiResource('job_plan_material_oh', JobPlanMaterialOhController::class);
+    Route::apiResource('job_plan_material_rtnrt', JobPlanMaterialRtnrtController::class);
     Route::apiResource('pr_material', PrMaterialController::class);
     Route::apiResource('pr_material_oh', PrMaterialOhController::class);
+    Route::apiResource('pr_material_rtnrt', PrMaterialRtnrtController::class);
     Route::apiResource('tender_material', TenderMaterialController::class);
     Route::apiResource('tender_material_oh', TenderMaterialOhController::class);
+    Route::apiResource('tender_material_rtnrt', TenderMaterialRtnrtController::class);
     Route::apiResource('po_material', PoMaterialController::class);
     Route::apiResource('po_material_oh', PoMaterialOhController::class);
+    Route::apiResource('po_material_rtnrt', PoMaterialRtnrtController::class);
     Route::apiResource('fabrikasi_material', FabrikasiMaterialController::class);
     Route::apiResource('fabrikasi_material_oh', FabrikasiMaterialOhController::class);
+    Route::apiResource('fabrikasi_material_rtnrt', FabrikasiMaterialRtnrtController::class);
     Route::apiResource('delivery_material', DeliveryMaterialController::class);
     Route::apiResource('delivery_material_oh', DeliveryMaterialOhController::class);
+    Route::apiResource('delivery_material_rtnrt', DeliveryMaterialRtnrtController::class);
     Route::apiResource('readiness_jasa', ReadinessJasaController::class);
     Route::apiResource('readiness_jasa_oh', ReadinessJasaOhController::class);
     Route::apiResource('rekomendasi_jasa', RekomendasiJasaController::class);
@@ -408,10 +428,13 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('readiness_material/current_status/{id}', [ReadinessMaterialController::class, 'updateCurrentStatus']);
     Route::put('readiness_material/status/{id}', [ReadinessMaterialController::class, 'updateStatus']);
     // DASHBOARD READINESS MATERIAL OH
-    Route::put('event_readiness_oh/status/{id}', [EventReadinessOhController::class, 'updateStatus']);
-    // Route::get('/readiness_material_oh/dashboard/{id}', [ReadinessMaterialOhController::class, 'dashboard']);
     Route::put('readiness_material_oh/current_status/{id}', [ReadinessMaterialOhController::class, 'updateCurrentStatus']);
     Route::put('readiness_material_oh/status/{id}', [ReadinessMaterialOhController::class, 'updateStatus']);
+    Route::put('event_readiness_oh/status/{id}', [EventReadinessOhController::class, 'updateStatus']);
+    // DASHBOARD READINESS MATERIAL RTNRT
+    Route::put('readiness_material_rtnrt/current_status/{id}', [ReadinessMaterialRtnrtController::class, 'updateCurrentStatus']);
+    Route::put('readiness_material_rtnrt/status/{id}', [ReadinessMaterialRtnrtController::class, 'updateStatus']);
+    Route::put('event_readiness_rtnrt/status/{id}', [EventReadinessRtnrtController::class, 'updateStatus']);
     // DASHBOARD READINESS JASA
     Route::get('/readiness_jasa/dashboard/{id}', [ReadinessJasaController::class, 'dashboard']);
     Route::put('readiness_jasa/status/{id}', [ReadinessJasaController::class, 'updateStatus']);
@@ -434,35 +457,50 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/readiness_material/event/{id}', [ReadinessMaterialController::class, 'showByEvent']);
     //READINESS MATERIAL OH
     Route::get('/readiness_material_oh/event/{id}', [ReadinessMaterialOhController::class, 'showByEvent']);
+    //READINESS MATERIAL RTNRT
+    Route::get('/readiness_material_rtnrt/event/{id}', [ReadinessMaterialRtnrtController::class, 'showByEvent']);
     //REKOMENDASI MATERIAL
     Route::get('/rekomendasi_material/readiness/{id}', [RekomendasiMaterialController::class, 'showByReadiness']);
     Route::get('/rekomendasi_material_oh/readiness/{id}', [RekomendasiMaterialOhController::class, 'showByReadiness']);
+    Route::get('/rekomendasi_material_rtnrt/readiness/{id}', [RekomendasiMaterialRtnrtController::class, 'showByReadiness']);
     //NOTIF MATERIAL
     Route::get('/notif_material/readiness/{id}', [NotifMaterialController::class, 'showByReadiness']);
     //NOTIF MATERIAL OH
     Route::get('/notif_material_oh/readiness/{id}', [NotifMaterialOhController::class, 'showByReadiness']);
+    //NOTIF MATERIAL RTNRT
+    Route::get('/notif_material_rtnrt/readiness/{id}', [NotifMaterialRtnrtController::class, 'showByReadiness']);
     //JOB PLAN MATERIAL
     Route::get('/job_plan_material/readiness/{id}', [JobPlanMaterialController::class, 'showByReadiness']);
     //JOB PLAN MATERIAL OH
     Route::get('/job_plan_material_oh/readiness/{id}', [JobPlanMaterialOhController::class, 'showByReadiness']);
+    //JOB PLAN MATERIAL RTNRT
+    Route::get('/job_plan_material_rtnrt/readiness/{id}', [JobPlanMaterialRtnrtController::class, 'showByReadiness']);
     //PR MATERIAL
     Route::get('/pr_material/readiness/{id}', [PrMaterialController::class, 'showByReadiness']);
     //PR MATERIAL OH
     Route::get('/pr_material_oh/readiness/{id}', [PrMaterialOhController::class, 'showByReadiness']);
+    //PR MATERIAL
+    Route::get('/pr_material_rtnrt/readiness/{id}', [PrMaterialRtnrtController::class, 'showByReadiness']);
     //TENDER MATERIAL
     Route::get('/tender_material/readiness/{id}', [TenderMaterialController::class, 'showByReadiness']);
     //TENDER MATERIAL OH
     Route::get('/tender_material_oh/readiness/{id}', [TenderMaterialOhController::class, 'showByReadiness']);
+    //TENDER MATERIAL RTNRT
+    Route::get('/tender_material_rtnrt/readiness/{id}', [TenderMaterialRtnrtController::class, 'showByReadiness']);
     //PO MATERIAL
     Route::get('/po_material/readiness/{id}', [PoMaterialController::class, 'showByReadiness']);
     //PO MATERIAL OH
     Route::get('/po_material_oh/readiness/{id}', [PoMaterialOhController::class, 'showByReadiness']);
+    //PO MATERIAL RTNRT
+    Route::get('/po_material_rtnrt/readiness/{id}', [PoMaterialRtnrtController::class, 'showByReadiness']);
     //FABRIKASI MATERIAL
     Route::get('/fabrikasi_material/readiness/{id}', [FabrikasiMaterialController::class, 'showByReadiness']);
     Route::get('/fabrikasi_material_oh/readiness/{id}', [FabrikasiMaterialOhController::class, 'showByReadiness']);
+    Route::get('/fabrikasi_material_rtnrt/readiness/{id}', [FabrikasiMaterialRtnrtController::class, 'showByReadiness']);
     //DELIVERY MATERIAL
     Route::get('/delivery_material/readiness/{id}', [DeliveryMaterialController::class, 'showByReadiness']);
     Route::get('/delivery_material_oh/readiness/{id}', [DeliveryMaterialOhController::class, 'showByReadiness']);
+    Route::get('/delivery_material_rtnrt/readiness/{id}', [DeliveryMaterialRtnrtController::class, 'showByReadiness']);
     //READINESS JASA
     Route::get('/readiness_jasa/event/{id}', [ReadinessJasaController::class, 'showByEvent']);
     Route::get('/readiness_jasa_oh/event/{id}', [ReadinessJasaOhController::class, 'showByEvent']);
