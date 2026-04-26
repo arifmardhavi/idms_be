@@ -156,9 +156,6 @@ class PoMaterialController extends Controller
         }
 
         try {
-            if ($po_material->po_file && file_exists(public_path('readiness_ta/material/po/' . $po_material->po_file))) {
-                unlink(public_path('readiness_ta/material/po/' . $po_material->po_file));
-            }
             $po_material->delete();
 
             return response()->json([
