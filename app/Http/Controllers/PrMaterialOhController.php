@@ -27,7 +27,7 @@ class PrMaterialOhController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'readiness_material_oh_id' => 'required|exists:readiness_material_ohs,id|unique:pr_materials,readiness_material_oh_id',
+            'readiness_material_oh_id' => 'required|exists:readiness_material_ohs,id|unique:pr_material_ohs,readiness_material_oh_id',
             'no_pr' => 'nullable|integer',
             'target_date' => 'nullable|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
@@ -114,7 +114,7 @@ class PrMaterialOhController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'readiness_material_oh_id' => 'sometimes|exists:readiness_material_ohs,id|unique:pr_materials,readiness_material_oh_id,' . $id,
+            'readiness_material_oh_id' => 'sometimes|exists:readiness_material_ohs,id|unique:pr_material_ohs,readiness_material_oh_id,' . $id,
             'no_pr' => 'sometimes|integer',
             'target_date' => 'sometimes|date',
             'status' => 'nullable|integer|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
