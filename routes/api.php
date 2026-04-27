@@ -26,6 +26,7 @@ use App\Http\Controllers\{
     BreakdownReportController,
     ContractJasaController,
     ContractJasaOhController,
+    ContractJasaRtnrtController,
     ContractNewController,
     HistoricalMemorandumController,
     DatasheetController,
@@ -50,6 +51,7 @@ use App\Http\Controllers\{
     IzinUsahaController,
     JobPlanJasaController,
     JobPlanJasaOhController,
+    JobPlanJasaRtnrtController,
     JobPlanMaterialController,
     JobPlanMaterialOhController,
     JobPlanMaterialRtnrtController,
@@ -63,6 +65,7 @@ use App\Http\Controllers\{
     NibController,
     NotifJasaController,
     NotifJasaOhController,
+    NotifJasaRtnrtController,
     NotifMaterialController,
     NotifMaterialOhController,
     NotifMaterialRtnrtController,
@@ -77,17 +80,20 @@ use App\Http\Controllers\{
     PreventiveController,
     PrJasaController,
     PrJasaOhController,
+    PrJasaRtnrtController,
     PrMaterialController,
     PrMaterialOhController,
     PrMaterialRtnrtController,
     ProjectController,
     ReadinessJasaController,
     ReadinessJasaOhController,
+    ReadinessJasaRtnrtController,
     ReadinessMaterialController,
     ReadinessMaterialOhController,
     ReadinessMaterialRtnrtController,
     RekomendasiJasaController,
     RekomendasiJasaOhController,
+    RekomendasiJasaRtnrtController,
     RekomendasiMaterialController,
     RekomendasiMaterialOhController,
     RekomendasiMaterialRtnrtController,
@@ -100,6 +106,7 @@ use App\Http\Controllers\{
     SurveillanceController,
     TenderJasaController,
     TenderJasaOhController,
+    TenderJasaRtnrtController,
     TenderMaterialController,
     TenderMaterialOhController,
     TenderMaterialRtnrtController,
@@ -241,18 +248,25 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('delivery_material_rtnrt', DeliveryMaterialRtnrtController::class);
     Route::apiResource('readiness_jasa', ReadinessJasaController::class);
     Route::apiResource('readiness_jasa_oh', ReadinessJasaOhController::class);
+    Route::apiResource('readiness_jasa_rtnrt', ReadinessJasaRtnrtController::class);
     Route::apiResource('rekomendasi_jasa', RekomendasiJasaController::class);
     Route::apiResource('rekomendasi_jasa_oh', RekomendasiJasaOhController::class);
+    Route::apiResource('rekomendasi_jasa_rtnrt', RekomendasiJasaRtnrtController::class);
     Route::apiResource('notif_jasa', NotifJasaController::class);
     Route::apiResource('notif_jasa_oh', NotifJasaOhController::class);
+    Route::apiResource('notif_jasa_rtnrt', NotifJasaRtnrtController::class);
     Route::apiResource('job_plan_jasa', JobPlanJasaController::class);
     Route::apiResource('job_plan_jasa_oh', JobPlanJasaOhController::class);
+    Route::apiResource('job_plan_jasa_rtnrt', JobPlanJasaRtnrtController::class);
     Route::apiResource('pr_jasa', PrJasaController::class);
     Route::apiResource('pr_jasa_oh', PrJasaOhController::class);
+    Route::apiResource('pr_jasa_rtnrt', PrJasaRtnrtController::class);
     Route::apiResource('tender_jasa', TenderJasaController::class);
     Route::apiResource('tender_jasa_oh', TenderJasaOhController::class);
+    Route::apiResource('tender_jasa_rtnrt', TenderJasaRtnrtController::class);
     Route::apiResource('contract_jasa', ContractJasaController::class);
     Route::apiResource('contract_jasa_oh', ContractJasaOhController::class);
+    Route::apiResource('contract_jasa_rtnrt', ContractJasaRtnrtController::class);
     Route::apiResource('open_file_activity', OpenFileActivityController::class);
     Route::apiResource('p_id', P_IdController::class);
     Route::apiResource('izin_usaha', IzinUsahaController::class);
@@ -439,6 +453,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/readiness_jasa/dashboard/{id}', [ReadinessJasaController::class, 'dashboard']);
     Route::put('readiness_jasa/status/{id}', [ReadinessJasaController::class, 'updateStatus']);
     Route::put('readiness_jasa_oh/status/{id}', [ReadinessJasaOhController::class, 'updateStatus']);
+    Route::put('readiness_jasa_rtnrt/status/{id}', [ReadinessJasaRtnrtController::class, 'updateStatus']);
     //INTERNAL INSPECTION
     Route::get('/internal_inspection/laporan_inspection/{id}', [InternalInspectionController::class, 'showByLaporanInspection']);
     //EXTERNAL INSPECTION
@@ -504,6 +519,7 @@ Route::middleware(['auth:api'])->group(function () {
     //READINESS JASA
     Route::get('/readiness_jasa/event/{id}', [ReadinessJasaController::class, 'showByEvent']);
     Route::get('/readiness_jasa_oh/event/{id}', [ReadinessJasaOhController::class, 'showByEvent']);
+    Route::get('/readiness_jasa_rtnrt/event/{id}', [ReadinessJasaRtnrtController::class, 'showByEvent']);
     // OPEN FILE ACTIVITY
     Route::get('/open_file_activity/user/{id}', [OpenFileActivityController::class, 'showByUserId']);
 
