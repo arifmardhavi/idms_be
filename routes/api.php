@@ -442,17 +442,26 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('readiness_material/current_status/{id}', [ReadinessMaterialController::class, 'updateCurrentStatus']);
     Route::put('readiness_material/status/{id}', [ReadinessMaterialController::class, 'updateStatus']);
     // DASHBOARD READINESS MATERIAL OH
+    Route::get('/readiness_material_oh/dashboard/{id}', [ReadinessMaterialOhController::class, 'dashboard']);
     Route::put('readiness_material_oh/current_status/{id}', [ReadinessMaterialOhController::class, 'updateCurrentStatus']);
     Route::put('readiness_material_oh/status/{id}', [ReadinessMaterialOhController::class, 'updateStatus']);
     Route::put('event_readiness_oh/status/{id}', [EventReadinessOhController::class, 'updateStatus']);
     // DASHBOARD READINESS MATERIAL RTNRT
+    Route::get('/readiness_material_rtnrt/dashboard/{id}', [ReadinessMaterialRtnrtController::class, 'dashboard']);
     Route::put('readiness_material_rtnrt/current_status/{id}', [ReadinessMaterialRtnrtController::class, 'updateCurrentStatus']);
     Route::put('readiness_material_rtnrt/status/{id}', [ReadinessMaterialRtnrtController::class, 'updateStatus']);
     Route::put('event_readiness_rtnrt/status/{id}', [EventReadinessRtnrtController::class, 'updateStatus']);
     // DASHBOARD READINESS JASA
     Route::get('/readiness_jasa/dashboard/{id}', [ReadinessJasaController::class, 'dashboard']);
+    Route::put('readiness_jasa/current_status/{id}', [ReadinessJasaController::class, 'updateCurrentStatus']);
     Route::put('readiness_jasa/status/{id}', [ReadinessJasaController::class, 'updateStatus']);
+    // DASHBOARD READINESS JASA OH
+    Route::get('/readiness_jasa_oh/dashboard/{id}', [ReadinessJasaOhController::class, 'dashboard']);
+    Route::put('readiness_jasa_oh/current_status/{id}', [ReadinessJasaOhController::class, 'updateCurrentStatus']);
     Route::put('readiness_jasa_oh/status/{id}', [ReadinessJasaOhController::class, 'updateStatus']);
+    // DASHBOARD READINESS JASA RTNRT
+    Route::get('/readiness_jasa_rtnrt/dashboard/{id}', [ReadinessJasaRtnrtController::class, 'dashboard']);
+    Route::put('readiness_jasa_rtnrt/current_status/{id}', [ReadinessJasaRtnrtController::class, 'updateCurrentStatus']);
     Route::put('readiness_jasa_rtnrt/status/{id}', [ReadinessJasaRtnrtController::class, 'updateStatus']);
     //INTERNAL INSPECTION
     Route::get('/internal_inspection/laporan_inspection/{id}', [InternalInspectionController::class, 'showByLaporanInspection']);

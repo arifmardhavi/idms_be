@@ -176,6 +176,40 @@ class ReadinessJasaOhController extends Controller
         }
     }
 
+    /**
+     * additional function to create or update current status of readiness jasa
+     */
+    public function updateCurrentStatus(Request $request, string $id )
+    {
+        $readiness_jasa = ReadinessJasaOh::find($id);
+        if (!$readiness_jasa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Readiness Jasa OH not found.',
+            ], 404);
+        }
+        $validator = Validator::make($request->all(), [
+            'current_status' => 'sometimes|nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed for current status',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validatedData = $validator->validated();
+        $readiness_jasa->update($validatedData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Current status updated successfully.',
+            'data' => $readiness_jasa,
+        ], 200);
+    }
+
     public function updateStatus(Request $request, string $id )
     {
         $readiness_jasa = ReadinessJasaOh::find($id);
@@ -205,5 +239,73 @@ class ReadinessJasaOhController extends Controller
             'message' => 'Status updated successfully.',
             'data' => $readiness_jasa,
         ], 200);
+    }
+
+    public function dashboard(string $id)
+    {
+        try {
+            $readiness_jasa = ReadinessJasaOh::with([
+                'rekomendasi_jasa_oh',
+                'notif_jasa_oh',
+                'job_plan_jasa_oh',
+                'pr_jasa_oh',
+                'tender_jasa_oh',
+                'contract_jasa_oh',
+            ])->where('event_readiness_oh_id', $id)->get();
+
+            $steps = [
+                'rekomendasi_jasa_oh',
+                'notif_jasa_oh',
+                'job_plan_jasa_oh',
+                'pr_jasa_oh',
+                'tender_jasa_oh',
+                'contract_jasa_oh',
+            ];
+
+            // Hitung jumlah data di setiap step (hanya step terakhir)
+            $stepCounts = array_fill_keys($steps, 0);
+
+            foreach ($readiness_jasa as $jasa) {
+                $lastStep = null;
+                foreach ($steps as $step) {
+                    if ($jasa->$step) {
+                        $lastStep = $step;
+                    }
+                }
+
+                if ($lastStep) {
+                    $stepCounts[$lastStep]++;
+                }
+            }
+
+            // Hitung rata-rata total progress keseluruhan
+            $totalProgressValues = $readiness_jasa->map(function ($item) {
+                return (float) str_replace('%', '', $item->total_progress);
+            });
+
+            $averageProgress = $totalProgressValues->count() > 0
+                ? number_format($totalProgressValues->avg(), 2) . '%'
+                : '0.00%';
+
+            // Tambahkan total data keseluruhan
+            $totalData = $readiness_jasa->count();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dashboard Readiness Jasa OH summary retrieved successfully.',
+                'data' => [
+                    'steps' => $stepCounts,
+                    'average_total_progress' => $averageProgress,
+                    'total_data' => $totalData,
+                ],
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load dashboard data.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

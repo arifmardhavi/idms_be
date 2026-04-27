@@ -245,4 +245,87 @@ class ReadinessMaterialRtnrtController extends Controller
             'data' => $readiness_material,
         ], 200);
     }
+
+    /**
+     * Display dashboard summary for the specified event readiness.
+     */
+
+    public function dashboard(string $id)
+    {
+        try {
+            $materials = ReadinessMaterialRtnrt::with(
+                'rekomendasi_material_rtnrt',
+                'notif_material_rtnrt',
+                'job_plan_material_rtnrt',
+                'pr_material_rtnrt',
+                'tender_material_rtnrt',
+                'po_material_rtnrt',
+                'fabrikasi_material_rtnrt',
+                'delivery_material_rtnrt'
+            )->orderBy('id', 'desc')->where('event_readiness_rtnrt_id', $id)->get();
+
+            $steps = [
+                'rekomendasi_material_rtnrt',
+                'notif_material_rtnrt',
+                'job_plan_material_rtnrt',
+                'pr_material_rtnrt',
+                'tender_material_rtnrt',
+                'po_material_rtnrt',
+                'fabrikasi_material_rtnrt',
+                'delivery_material_rtnrt',
+            ];
+
+            // Hitung jumlah data di setiap step (hanya step terakhir)
+            $stepCounts = array_fill_keys($steps, 0);
+
+            foreach ($materials as $material) {
+                $lastStep = null;
+                foreach ($steps as $step) {
+                    if ($material->$step) {
+                        $lastStep = $step;
+                    }
+                }
+
+                if ($lastStep) {
+                    $stepCounts[$lastStep]++;
+                }
+            }
+
+            // Hitung jumlah berdasarkan type
+            $typeCounts = [
+                'lldi' => $materials->where('type', 0)->count(),
+                'non_lldi' => $materials->where('type', 1)->count(),
+            ];
+
+            // Hitung rata-rata total progress keseluruhan
+            $totalProgressValues = $materials->map(function ($item) {
+                return (float) str_replace('%', '', $item->total_progress);
+            });
+
+            $averageProgress = $totalProgressValues->count() > 0
+                ? number_format($totalProgressValues->avg(), 2) . '%'
+                : '0.00%';
+
+
+            // Tambahkan total data keseluruhan
+            $totalData = $materials->count();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dashboard Readiness Material RT/NRT summary retrieved successfully.',
+                'data' => [
+                    'steps' => $stepCounts,
+                    'types' => $typeCounts,
+                    'average_total_progress' => $averageProgress,
+                    'total_data' => $totalData,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load dashboard data.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

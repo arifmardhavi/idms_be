@@ -245,4 +245,87 @@ class ReadinessMaterialOhController extends Controller
             'data' => $readiness_material,
         ], 200);
     }
+
+    /**
+     * Display dashboard summary for the specified event readiness.
+     */
+
+    public function dashboard(string $id)
+    {
+        try {
+            $materials = ReadinessMaterialOh::with(
+                'rekomendasi_material_oh',
+                'notif_material_oh',
+                'job_plan_material_oh',
+                'pr_material_oh',
+                'tender_material_oh',
+                'po_material_oh',
+                'fabrikasi_material_oh',
+                'delivery_material_oh'
+            )->orderBy('id', 'desc')->where('event_readiness_oh_id', $id)->get();
+
+            $steps = [
+                'rekomendasi_material_oh',
+                'notif_material_oh',
+                'job_plan_material_oh',
+                'pr_material_oh',
+                'tender_material_oh',
+                'po_material_oh',
+                'fabrikasi_material_oh',
+                'delivery_material_oh',
+            ];
+
+            // Hitung jumlah data di setiap step (hanya step terakhir)
+            $stepCounts = array_fill_keys($steps, 0);
+
+            foreach ($materials as $material) {
+                $lastStep = null;
+                foreach ($steps as $step) {
+                    if ($material->$step) {
+                        $lastStep = $step;
+                    }
+                }
+
+                if ($lastStep) {
+                    $stepCounts[$lastStep]++;
+                }
+            }
+
+            // Hitung jumlah berdasarkan type
+            $typeCounts = [
+                'lldi' => $materials->where('type', 0)->count(),
+                'non_lldi' => $materials->where('type', 1)->count(),
+            ];
+
+            // Hitung rata-rata total progress keseluruhan
+            $totalProgressValues = $materials->map(function ($item) {
+                return (float) str_replace('%', '', $item->total_progress);
+            });
+
+            $averageProgress = $totalProgressValues->count() > 0
+                ? number_format($totalProgressValues->avg(), 2) . '%'
+                : '0.00%';
+
+
+            // Tambahkan total data keseluruhan
+            $totalData = $materials->count();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dashboard Readiness Material OH summary retrieved successfully.',
+                'data' => [
+                    'steps' => $stepCounts,
+                    'types' => $typeCounts,
+                    'average_total_progress' => $averageProgress,
+                    'total_data' => $totalData,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load dashboard data.',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
