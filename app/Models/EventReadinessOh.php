@@ -15,10 +15,10 @@ class EventReadinessOh extends BaseModel
     {
         return $this->hasMany(ReadinessMaterialOh::class);
     }
-    // public function readiness_jasa()
-    // {
-    //     return $this->hasMany(ReadinessJasaOh::class);
-    // }
+    public function readiness_jasa()
+    {
+        return $this->hasMany(ReadinessJasaOh::class);
+    }
 
     protected static function boot()
     {
@@ -29,10 +29,10 @@ class EventReadinessOh extends BaseModel
                 $readiness_material->delete();
                 // ini akan otomatis trigger boot()->deleting() di ReadinessMaterial OH
             }
-            // foreach ($event->readiness_jasa as $readiness) {
-            //     $readiness->delete();
-            //     // ini akan otomatis trigger boot()->deleting() di ReadinessJasa OH
-            // }
+            foreach ($event->readiness_jasa as $readiness) {
+                $readiness->delete();
+                // ini akan otomatis trigger boot()->deleting() di ReadinessJasa OH
+            }
         });
     }
 
