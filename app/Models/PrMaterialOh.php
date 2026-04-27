@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PrMaterialOh extends Model
+class PrMaterialOh extends BaseModel
 {
     use HasFactory;
     protected $fillable = ['readiness_material_oh_id','no_pr', 'target_date', 'status'];

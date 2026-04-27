@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ContractJasaRtnrt extends Model
+class ContractJasaRtnrt extends BaseModel
 {
     use HasFactory;
     protected $fillable = ['readiness_jasa_rtnrt_id', 'contract_new_id', 'status'];

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class EventReadinessRtnrt extends Model
+class EventReadinessRtnrt extends BaseModel
 {
     use HasFactory;
     protected $fillable = ['event_name', 'status'];

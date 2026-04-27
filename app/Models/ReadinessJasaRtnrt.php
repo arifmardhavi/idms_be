@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ReadinessJasaRtnrt extends Model
+class ReadinessJasaRtnrt extends BaseModel
 {
     use HasFactory;
     protected $fillable = [

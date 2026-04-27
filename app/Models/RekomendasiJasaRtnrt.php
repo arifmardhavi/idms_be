@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RekomendasiJasaRtnrt extends Model
+class RekomendasiJasaRtnrt extends BaseModel
 {
     use HasFactory;
     protected $fillable = ['readiness_jasa_rtnrt_id', 'historical_memorandum_id', 'rekomendasi_file', 'target_date', 'status'];

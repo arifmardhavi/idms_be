@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class FabrikasiMaterialRtnrt extends Model
+class FabrikasiMaterialRtnrt extends BaseModel
 {
     use HasFactory;
     protected $fillable = ['readiness_material_rtnrt_id','description', 'target_date', 'status'];
