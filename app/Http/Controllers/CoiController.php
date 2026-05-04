@@ -18,37 +18,66 @@ class CoiController extends Controller
     public function index(Request $request)
     {
         $filter = $request->get('filter');
-        $coi = Coi::with(['tag_number', 'plo', 'plo.unit'])->orderBy('overdue_date', 'asc')->get();
+        $search = $request->get('search');
 
+        $query = Coi::with(['tag_number', 'plo', 'plo.unit'])
+            ->orderBy('overdue_date', 'asc');
 
+        // =====================
+        // GLOBAL SEARCH
+        // =====================
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+
+                // field utama COI
+                $q->where('no_certificate', 'like', "%$search%")
+
+                // relasi tag_number
+                ->orWhereHas('tag_number', function ($q2) use ($search) {
+                    $q2->where('tag_number', 'like', "%$search%");
+                })
+
+                // relasi PLO (pakai no_certificate)
+                ->orWhereHas('plo', function ($q3) use ($search) {
+                    $q3->where('no_certificate', 'like', "%$search%");
+                })
+
+                // relasi UNIT (unit_name)
+                ->orWhereHas('plo.unit', function ($q4) use ($search) {
+                    $q4->where('unit_name', 'like', "%$search%");
+                });
+            });
+        }
+
+        // =====================
+        // FILTER (PAKAI TANGGAL, BUKAN ACCESSOR)
+        // =====================
         if ($filter == 'coi_more_than_nine_months') {
-            $coi = $coi->where('due_days', '>', 270)->values();
+            $query->whereRaw('DATEDIFF(overdue_date, CURDATE()) > 270');
         }
 
         if ($filter == 'coi_less_than_nine_months') {
-            $coi = $coi->where('due_days', '>=', 0)
-                        ->where('due_days', '<=', 270)
-                        ->values();
+            $query->whereRaw('DATEDIFF(overdue_date, CURDATE()) BETWEEN 0 AND 270');
         }
 
         if ($filter == 'coi_expired') {
-            $coi = $coi->where('due_days', '<', 0)->values();
+            $query->whereRaw('DATEDIFF(overdue_date, CURDATE()) < 0');
         }
 
         if ($filter == 'rla_more_than_nine_months') {
-            $coi = $coi->where('rla_due_days', '>', 270)->values();
+            $query->whereRaw('DATEDIFF(rla_overdue, CURDATE()) > 270');
         }
 
         if ($filter == 'rla_less_than_nine_months') {
-            $coi = $coi->where('rla_due_days', '>=', 0)
-                        ->where('rla_due_days', '<=', 270)
-                        ->values();
+            $query->whereRaw('DATEDIFF(rla_overdue, CURDATE()) BETWEEN 0 AND 270');
         }
 
         if ($filter == 'rla_expired') {
-            $coi = $coi->where('rla_due_days', '<', 0)->values();
+            $query->whereRaw('DATEDIFF(rla_overdue, CURDATE()) < 0');
         }
-        
+
+        $coi = $query->get();
+
         return response()->json([
             'success' => true,
             'message' => 'COI retrieved successfully.',
