@@ -100,6 +100,7 @@ use App\Http\Controllers\{
     ReportCoiController,
     ReportIzinDisnakerController,
     ReportIzinOperasiController,
+    RkapTaController,
     SertifikatKalibrasiController,
     SpkNewController,
     SpkProgressNewController,
@@ -291,6 +292,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('features', FeatureController::class);
     Route::apiResource('hak_akses', HakAksesController::class);
     Route::apiResource('user_hak_akses', UserHakAksesController::class);
+    Route::apiResource('rkap_ta', RkapTaController::class);
 
     /*
     |--------------------------------------------------------------------------
