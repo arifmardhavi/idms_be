@@ -332,6 +332,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/feature/group', [FeatureController::class, 'showByGroup']);
     Route::get('/user_hak_akses/user/{id}', [UserHakAksesController::class, 'showByUser']);
 
+    // RKAP TA
+    Route::patch('/rkap_ta/update_actual/{id}', [RkapTaController::class, 'updateActual']);
+
     // COI
     Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']);
     Route::put('/coi/deletefile/{id}', [CoiController::class, 'deleteFileCoi']);

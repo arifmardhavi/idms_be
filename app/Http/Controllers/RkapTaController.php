@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\RkapTaCollection;
 use App\Http\Resources\RkapTaResource;
+use App\Models\DetailRkapTa;
 use App\Models\RkapTa;
 use App\Services\RkapTaService;
 use Illuminate\Http\Request;
@@ -149,6 +150,62 @@ class RkapTaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'RKAP deleted successfully.',
+        ]);
+    }
+
+    /**
+     * Additional method to update 'actual' value for a specific period without affecting other data.
+     */
+
+    public function updateActual(Request $request, string $id)
+    {
+        $rkap = RkapTa::find($id);
+
+        if (!$rkap) {
+            return response()->json([
+                'success' => false,
+                'message' => 'RKAP not found.',
+            ], 404);
+        }
+
+        // VALIDASI
+        $validated = $request->validate([
+            'periode' => 'required|integer|min:1|max:12',
+            'actual' => 'nullable|integer|min:0',
+        ]);
+
+        // CARI DETAIL
+        $detail = DetailRkapTa::where('rkap_ta_id', $rkap->id)
+            ->where('periode', $validated['periode'])
+            ->first();
+
+        // kalau periode belum ada
+        if (!$detail) {
+
+            // bikin baru
+            $detail = DetailRkapTa::create([
+                'rkap_ta_id' => $rkap->id,
+                'periode' => $validated['periode'],
+                'plan' => 0,
+                'actual' => $validated['actual'],
+            ]);
+
+        } else {
+
+            // update existing
+            $detail->update([
+                'actual' => $validated['actual'],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Actual updated successfully.',
+            'data' => [
+                'id' => $rkap->id,
+                'periode' => $detail->periode,
+                'actual' => (int) $detail->actual,
+            ]
         ]);
     }
 }
