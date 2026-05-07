@@ -100,6 +100,8 @@ use App\Http\Controllers\{
     ReportCoiController,
     ReportIzinDisnakerController,
     ReportIzinOperasiController,
+    RkapOhController,
+    RkapRtController,
     RkapTaController,
     SertifikatKalibrasiController,
     SpkNewController,
@@ -293,7 +295,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('hak_akses', HakAksesController::class);
     Route::apiResource('user_hak_akses', UserHakAksesController::class);
     Route::apiResource('rkap_ta', RkapTaController::class);
-
+    Route::apiResource('rkap_oh', RkapOhController::class);
+    Route::apiResource('rkap_rt', RkapRtController::class);
     /*
     |--------------------------------------------------------------------------
     | Custom Feature Routes
@@ -334,6 +337,10 @@ Route::middleware(['auth:api'])->group(function () {
 
     // RKAP TA
     Route::patch('/rkap_ta/update_actual/{id}', [RkapTaController::class, 'updateActual']);
+    // RKAP OH
+    Route::patch('/rkap_oh/update_actual/{id}', [RkapOhController::class, 'updateActual']);
+    // RKAP RT
+    Route::patch('/rkap_rt/update_actual/{id}', [RkapRtController::class, 'updateActual']);
 
     // COI
     Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']);
