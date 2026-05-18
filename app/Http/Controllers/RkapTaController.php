@@ -17,7 +17,37 @@ class RkapTaController extends Controller
     public function index(RkapTaService $service)
     {
         $perPage = request()->get('per_page', 10); // default 10
-        $data = RkapTa::with('detailRkapTa')->orderBy('id', 'desc')->paginate($perPage);
+
+        $search = request()->get('search');
+        $sortBy = request()->get('sort_by', 'id'); // default sort by id
+        $sortOrder = request()->get('sort_order', 'desc'); // default desc
+
+        // whitelist kolom yang boleh di-sort
+        $allowedSort = ['id', 'judul', 'created_at'];
+
+        if (!in_array($sortBy, $allowedSort)) {
+            $sortBy = 'id';
+        }
+
+        if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+            $sortOrder = 'desc';
+        }
+
+        $query = RkapTa::with('detailRkapTa');
+
+        // SEARCH
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%");
+                // kalau mau tambah field lain:
+                // ->orWhere('deskripsi', 'like', "%{$search}%");
+            });
+        }
+
+        // SORT
+        $query->orderBy($sortBy, $sortOrder);
+
+        $data = $query->paginate($perPage);
 
         $summary = $service->getSummary();
 
