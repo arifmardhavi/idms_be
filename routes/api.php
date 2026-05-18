@@ -28,6 +28,7 @@ use App\Http\Controllers\{
     ContractJasaOhController,
     ContractJasaRtnrtController,
     ContractNewController,
+    DashboardRkapController,
     HistoricalMemorandumController,
     DatasheetController,
     DeliveryMaterialController,
@@ -299,6 +300,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('rkap_oh', RkapOhController::class);
     Route::apiResource('rkap_rt', RkapRtController::class);
     Route::apiResource('rkap_nr', RkapNrController::class);
+    Route::get('/dashboard_rkap', [DashboardRkapController::class, 'index']);
     /*
     |--------------------------------------------------------------------------
     | Custom Feature Routes
