@@ -24,9 +24,9 @@ class RoleMiddleware
         }
 
         // Cek akses berdasarkan level langsung (kecuali GET)
-        if (!in_array($user->level_user, $levels)) {
-            return response()->json(['error' => 'Tidak memiliki akses'], 403);
-        }
+        // if (!in_array($user->level_user, $levels)) {
+        //     return response()->json(['error' => 'Tidak memiliki akses'], 403);
+        // }
 
         return $next($request);
     }
