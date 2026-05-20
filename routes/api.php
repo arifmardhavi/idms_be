@@ -340,13 +340,13 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/user_hak_akses/user/{id}', [UserHakAksesController::class, 'showByUser']);
 
     // RKAP TA
-    Route::patch('/rkap_ta/update_actual/{id}', [RkapTaController::class, 'updateActual']);
+    Route::put('/rkap_ta/update_actual/{id}', [RkapTaController::class, 'updateActual']);
     // RKAP OH
-    Route::patch('/rkap_oh/update_actual/{id}', [RkapOhController::class, 'updateActual']);
+    Route::put('/rkap_oh/update_actual/{id}', [RkapOhController::class, 'updateActual']);
     // RKAP RT
-    Route::patch('/rkap_rt/update_actual/{id}', [RkapRtController::class, 'updateActual']);
+    Route::put('/rkap_rt/update_actual/{id}', [RkapRtController::class, 'updateActual']);
     // RKAP NR
-    Route::patch('/rkap_nr/update_actual/{id}', [RkapNrController::class, 'updateActual']);
+    Route::put('/rkap_nr/update_actual/{id}', [RkapNrController::class, 'updateActual']);
 
     // COI
     Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']);
