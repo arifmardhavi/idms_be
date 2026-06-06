@@ -357,7 +357,7 @@ class SertifikatKalibrasiController extends Controller
 
     public function downloadSertifikatKalibrasiFile(string $id)
     {
-        $typeFile = request()->get('file', 'file_skhp'); // Default ke 'file_skhp' jika parameter tidak diberikan
+        $typeFile = request()->get('file', 'file_sertifikat_kalibrasi'); // Default ke 'file_sertifikat_kalibrasi' jika parameter tidak diberikan
 
         $sertifikat_kalibrasi = SertifikatKalibrasi::find($id);
 
