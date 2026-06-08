@@ -86,6 +86,7 @@ use App\Http\Controllers\{
     PrMaterialOhController,
     PrMaterialRtnrtController,
     ProjectController,
+    ProjectSpecController,
     ReadinessJasaController,
     ReadinessJasaOhController,
     ReadinessJasaRtnrtController,
@@ -301,6 +302,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('rkap_rt', RkapRtController::class);
     Route::apiResource('rkap_nr', RkapNrController::class);
     Route::get('/dashboard_rkap', [DashboardRkapController::class, 'index']);
+    Route::apiResource('project_spec', ProjectSpecController::class);
     /*
     |--------------------------------------------------------------------------
     | Custom Feature Routes
@@ -331,8 +333,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/amandemen_new/download_file/{id}', [AmandemenNewController::class, 'downloadAmandemenFile']); // Download Amandemen File
     Route::get('/historical_memorandum/download_file/{id}', [HistoricalMemorandumController::class, 'downloadHistoricalMemorandumFile']); // Download Historical Memorandum File
     Route::get('/lampiran_memo/download_file/{id}', [LampiranMemoController::class, 'downloadLampiranMemoFile']); // Download Lampiran Memo File
-
-
+    Route::get('/project_spec/download_file/{id}', [ProjectSpecController::class, 'downloadProjectSpecFile']); // Download Project Spec File
+    
+    
     // User
     Route::put('/users/nonactive/{id}', [UserController::class, 'nonactive']);
     // Feature
