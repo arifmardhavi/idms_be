@@ -63,6 +63,7 @@ use App\Http\Controllers\{
     MdrFolderController,
     MdrItemController,
     MocController,
+    MonitoringEquipmentController,
     NibController,
     NotifJasaController,
     NotifJasaOhController,
@@ -303,6 +304,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('rkap_nr', RkapNrController::class);
     Route::get('/dashboard_rkap', [DashboardRkapController::class, 'index']);
     Route::apiResource('project_spec', ProjectSpecController::class);
+    Route::apiResource('monitoring_equipment', MonitoringEquipmentController::class);
+
     /*
     |--------------------------------------------------------------------------
     | Custom Feature Routes
