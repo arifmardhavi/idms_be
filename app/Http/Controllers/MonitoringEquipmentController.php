@@ -33,7 +33,7 @@ class MonitoringEquipmentController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'tag_number_id' => 'required|exists:tag_numbers,id|unique:monitoring_equipments,tag_number_id',
+            'tag_number_id' => 'required|exists:tag_numbers,id|unique:monitoring_equipment,tag_number_id',
             'criticality' => 'required|string',
             'sece' => 'required|in:0,1', // 0: tidak ada, 1: ada
             'status' => 'required|in:0,1,2,3', // 0: hijau, 1: biru, 2: kuning, 3: merah
