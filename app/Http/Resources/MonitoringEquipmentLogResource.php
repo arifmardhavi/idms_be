@@ -5,19 +5,13 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class MonitoringEquipmentResource extends JsonResource
+class MonitoringEquipmentLogResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
             'tag_number_id' => $this->tag_number_id,
-            'tag_number' => $this->tagNumber?->tag_number,
             'criticality' => (int) $this->criticality,
             'sece' => (int) $this->sece,
             'status' => (int) $this->status,
@@ -29,10 +23,7 @@ class MonitoringEquipmentResource extends JsonResource
             'kendala_perbaikan' => $this->kendala_perbaikan,
             'estimasi_perbaikan' => $this->estimasi_perbaikan,
             'target' => $this->target,
-
-            'logs' => MonitoringEquipmentLogResource::collection(
-                $this->whenLoaded('logs')
-            ),
+            'created_at' => $this->created_at,
         ];
     }
 }

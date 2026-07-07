@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MonitoringEquipment extends BaseModel
+class MonitoringEquipmentLog extends Model
 {
     use HasFactory;
     protected $fillable = [
@@ -28,14 +28,4 @@ class MonitoringEquipment extends BaseModel
     {
         return $this->belongsTo(Tag_number::class);
     }
-
-    public function logs()
-    {
-        return $this->hasMany(
-            MonitoringEquipmentLog::class,
-            'tag_number_id',
-            'tag_number_id'
-        )->latest();
-    }
-
 }

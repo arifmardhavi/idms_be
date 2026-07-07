@@ -354,6 +354,9 @@ Route::middleware(['auth:api'])->group(function () {
     // RKAP NR
     Route::put('/rkap_nr/update_actual/{id}', [RkapNrController::class, 'updateActual']);
 
+    // MONITORING EQUIPMENT
+    Route::put('/monitoring_equipment/update_log/{id}', [MonitoringEquipmentController::class, 'updateLog']);
+
     // COI
     Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']);
     Route::put('/coi/deletefile/{id}', [CoiController::class, 'deleteFileCoi']);
