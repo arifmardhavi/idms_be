@@ -84,10 +84,9 @@ class AuthController extends Controller
             ->get();
 
         $user->hak_akses_list = $data
-            ->pluck('hak_akses.id')
+            ->pluck('hak_akses.hak_akses')
             ->filter()
             ->values()
-            ->map(fn($id) => (string) $id) // Mengubah setiap ID menjadi string
             ->toArray();
 
         // Username yang dapat akses semua
