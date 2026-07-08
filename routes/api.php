@@ -328,8 +328,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/report_izin_operasi/download_file/{id}', [ReportIzinOperasiController::class, 'downloadReportIzinOperasiFile']); // Download Report Izin Operasi File
     Route::get('/izin_disnaker/download_file/{id}', [IzinDisnakerController::class, 'downloadIzinDisnakerFile']); // Download Izin Disnaker File
     Route::get('/report_izin_disnaker/download_file/{id}', [ReportIzinDisnakerController::class, 'downloadReportIzinDisnakerFile']); // Download Report Izin Disnaker File
-    Route::get('contract_new/download/{id}', [ContractNewController::class, 'downloadContractFile']); // Download Contract New File
-    Route::get('/spk/download_file/{id}', [SpkNewController::class, 'downloadSpkFile']); // Download SPK File
+    Route::get('/contract_new/download/{id}', [ContractNewController::class, 'downloadContractFile']); // Download Contract New File
+    Route::get('/spk_new/download_file/{id}', [SpkNewController::class, 'downloadSpkFile']); // Download SPK File
     Route::get('/spk_progress/download_file/{id}', [SpkProgressNewController::class, 'downloadSpkProgressFile']); // Download SPK Progress File
     Route::get('/termin_receipt/download_file/{id}', [TerminReceiptController::class, 'downloadTerminReceiptFile']); // Download Termin Receipt File
     Route::get('/lumpsum_progress_new/download_file/{id}', [LumpsumProgressNewController::class, 'downloadLumpsumProgressFile']); // Download Lumpsum Progress File
