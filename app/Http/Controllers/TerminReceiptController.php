@@ -186,6 +186,6 @@ class TerminReceiptController extends Controller
             ], 404);
         }
 
-        return FileHelper::downloadFile('contract_new/termin_receipt', $termin_receipt->receipt_file);
+        return FileHelper::downloadFile('contract_new/receipt', $termin_receipt->receipt_file);
     }
 }
