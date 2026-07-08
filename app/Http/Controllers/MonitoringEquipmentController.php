@@ -2,232 +2,297 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMonitoringEquipmentRequest;
+use App\Http\Requests\UpdateMonitoringEquipmentRequest;
 use App\Http\Resources\MonitoringEquipmentResource;
 use App\Models\MonitoringEquipment;
 use App\Models\MonitoringEquipmentLog;
+use App\Helpers\BusinessPeriod;
+use App\Http\Resources\ApiResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class MonitoringEquipmentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $monitoringEquipment = MonitoringEquipment::with([
-            'tagNumber',
-            'logs'
-        ])
-        ->whereHas('tagNumber', function ($query) {
-            $query->where('status', 1);
-        })
-        ->get();
+        $perPage = $request->integer('per_page', 10);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Monitoring Equipment retrieved successfully.',
-            'data' => MonitoringEquipmentResource::collection($monitoringEquipment),
-        ], 200);
+        $search = $request->search;
+
+        $sortBy = $request->get('sort_by', 'id');
+
+        $sortOrder = $request->get('sort_order', 'desc');
+        $currentPeriod = BusinessPeriod::current()['code'];
+        $query = MonitoringEquipment::with([
+            'tagNumber',
+            'logs' => function ($query) use ($currentPeriod) {
+            $query->where('period_code', '!=', $currentPeriod)
+                  ->latest('period_code');
+        }
+        ]);
+
+        /**
+         * Search
+         */
+        $query->when($search, function ($q) use ($search) {
+
+            $q->whereHas('tagNumber', function ($tag) use ($search) {
+
+                $tag->where('tag_number', 'like', "%{$search}%");
+
+            });
+
+        });
+
+        /**
+         * Filter Criticality
+         */
+        $query->when(
+            $request->filled('criticality'),
+            fn($q) => $q->where(
+                'criticality',
+                $request->criticality
+            )
+        );
+
+        /**
+         * Filter Status
+         */
+        $query->when(
+            $request->filled('status'),
+            fn($q) => $q->where(
+                'status',
+                $request->status
+            )
+        );
+
+        /**
+         * Filter SECE
+         */
+        $query->when(
+            $request->filled('sece'),
+            fn($q) => $q->where(
+                'sece',
+                $request->sece
+            )
+        );
+
+        /**
+         * Sorting
+         */
+
+        $allowedSort = [
+
+            'id',
+
+            'criticality',
+
+            'status',
+
+            'created_at',
+
+            'updated_at'
+
+        ];
+
+        if (!in_array($sortBy, $allowedSort)) {
+
+            $sortBy = 'id';
+
+        }
+
+        $query->orderBy($sortBy, $sortOrder);
+
+        $data = $query->paginate($perPage);
+
+        return ApiResource::pagination(
+            $data,
+            MonitoringEquipmentResource::class
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreMonitoringEquipmentRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'tag_number_id' => 'required|exists:tag_numbers,id|unique:monitoring_equipment,tag_number_id',
-            'criticality' => 'required|in:0,1,2,3,4', // 0: High, 1: Medium High, 2: Secondary Medium, 3: Negligible, 4: Low
-            'sece' => 'required|in:0,1', // 0: tidak, 1: ya
-            'status' => 'required|in:0,1,2,3', // 0: High, 1: Medium, 2: Low, 3: Breakdown
-            'jenis_kerusakan' => 'required|string',
-            'penyebab' => 'required|string',
-            'penanganan_sementara' => 'required|string',
-            'perbaikan_permanen' => 'required|string',
-            'progress_perbaikan_permanen' => 'required|string',
-            'kendala_perbaikan' => 'required|string',
-            'estimasi_perbaikan' => 'required|integer',
-            'target' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed.',
-                'data' => $validator->errors(),
-            ], 422);
-        }
-
-        $validatedData = $validator->validated();
-
         try {
-            $monitoringEquipment = MonitoringEquipment::create($validatedData);
+
+            $validated = $request->validated();
+
+            $monitoringEquipment = DB::transaction(function () use ($validated) {
+
+                $monitoringEquipment = MonitoringEquipment::create($validated);
+
+                $period = BusinessPeriod::current();
+
+                MonitoringEquipmentLog::create([
+
+                    ...collect($monitoringEquipment->getAttributes())
+                        ->only((new MonitoringEquipmentLog())->getFillable())
+                        ->toArray(),
+
+                    'period_code' => $period['code'],
+                    'period_start' => $period['start'],
+                    'period_end' => $period['end'],
+
+                ]);
+
+                return $monitoringEquipment;
+            });
+
             return response()->json([
                 'success' => true,
                 'message' => 'Monitoring Equipment created successfully.',
                 'data' => new MonitoringEquipmentResource(
-                    $monitoringEquipment->fresh()->load([
-                        'tagNumber',
-                        'logs'
-                    ])
-                ),
+                    $monitoringEquipment->load('tagNumber')
+                )
             ], 201);
-        } catch (\Exception $e) {
+
+        } catch (\Throwable $e) {
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create Monitoring Equipment.',
-                'error' => $e->getMessage(),
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
+
         }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(MonitoringEquipment $monitoringEquipment)
     {
-        $monitoringEquipment = MonitoringEquipment::with([
+        $currentPeriod = BusinessPeriod::current()['code'];
+
+        $monitoringEquipment->load([
             'tagNumber',
-            'logs'
-        ])->find($id);
-        if (!$monitoringEquipment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Monitoring Equipment not found.',
-            ], 404);
-        }
-        return response()->json([
-            'success' => true,
-            'message' => 'Monitoring Equipment retrieved successfully.',
-            'data' => new MonitoringEquipmentResource($monitoringEquipment),
-        ], 200);
+            'logs' => function ($query) use ($currentPeriod) {
+                $query->where('period_code', '!=', $currentPeriod)
+                    ->latest('period_code');
+            }
+        ]);
+
+        return new MonitoringEquipmentResource($monitoringEquipment);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateMonitoringEquipmentRequest $request,MonitoringEquipment $monitoringEquipment)
     {
-        $monitoringEquipment = MonitoringEquipment::find($id);
-        if (!$monitoringEquipment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Monitoring Equipment not found.',
-            ], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'criticality' => 'required|in:0,1,2,3,4', // 0: High, 1: Medium High, 2: Secondary Medium, 3: Negligible, 4: Low
-            'sece' => 'required|in:0,1', // 0: tidak, 1: ya
-            'status' => 'required|in:0,1,2,3', // 0: High, 1: Medium, 2: Low, 3: Breakdown
-            'jenis_kerusakan' => 'required|string',
-            'penyebab' => 'required|string',
-            'penanganan_sementara' => 'required|string',
-            'perbaikan_permanen' => 'required|string',
-            'progress_perbaikan_permanen' => 'required|string',
-            'kendala_perbaikan' => 'required|string',
-            'estimasi_perbaikan' => 'required|integer',
-            'target' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed.',
-                'data' => $validator->errors(),
-            ], 422);
-        }
-
-        $validatedData = $validator->validated();
-
-        try {
-            $monitoringEquipment->update($validatedData);
-            return response()->json([
-                'success' => true,
-                'message' => 'Monitoring Equipment updated successfully.',
-                'data' => new MonitoringEquipmentResource(
-                    $monitoringEquipment->fresh()->load([
-                        'tagNumber',
-                        'logs'
-                    ])
-                ),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update Monitoring Equipment.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    public function updateLog(Request $request, string $id)
-    {
-        $monitoringEquipment = MonitoringEquipment::find($id);
-        if (!$monitoringEquipment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Monitoring Equipment not found.',
-            ], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'criticality' => 'required|in:0,1,2,3,4', // 0: High, 1: Medium High, 2: Secondary Medium, 3: Negligible, 4: Low
-            'sece' => 'required|in:0,1', // 0: tidak, 1: ya
-            'status' => 'required|in:0,1,2,3', // 0: High, 1: Medium, 2: Low, 3: Breakdown
-            'jenis_kerusakan' => 'required|string',
-            'penyebab' => 'required|string',
-            'penanganan_sementara' => 'required|string',
-            'perbaikan_permanen' => 'required|string',
-            'progress_perbaikan_permanen' => 'required|string',
-            'kendala_perbaikan' => 'required|string',
-            'estimasi_perbaikan' => 'required|integer',
-            'target' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed.',
-                'data' => $validator->errors(),
-            ], 422);
-        }
-
-        $validatedData = $validator->validated();
+        $validated = $request->validated();
 
         try {
 
-            DB::transaction(function () use ($monitoringEquipment, $validatedData) {
+            DB::transaction(function () use (&$monitoringEquipment,$validated) 
+            {
 
-                MonitoringEquipmentLog::create(
+                /**
+                 * Update Monitoring Equipment
+                 */
+                $monitoringEquipment->update($validated);
+
+                /**
+                 * Reload Latest Data
+                 */
+                $monitoringEquipment->refresh();
+
+                /**
+                 * Current Business Period
+                 */
+                $period = BusinessPeriod::current();
+
+                /**
+                 * Snapshot Data
+                 */
+                $snapshot = array_merge(
+
                     collect($monitoringEquipment->getAttributes())
                         ->only((new MonitoringEquipmentLog())->getFillable())
-                        ->toArray()
+                        ->toArray(),
+
+                    [
+
+                        'period_code' => $period['code'],
+
+                        'period_start' => $period['start'],
+
+                        'period_end' => $period['end'],
+
+                    ]
+
                 );
 
-                $monitoringEquipment->update($validatedData);
+                /**
+                 * Create / Update Snapshot
+                 */
+                MonitoringEquipmentLog::updateOrCreate(
+
+                    [
+
+                        'tag_number_id' => $monitoringEquipment->tag_number_id,
+
+                        'period_code' => $period['code'],
+
+                    ],
+
+                    $snapshot
+
+                );
+
+                /**
+                 * Cleanup
+                 * Keep only last 3 periods
+                 */
+                MonitoringEquipmentLog::where(
+                    'tag_number_id',
+                    $monitoringEquipment->tag_number_id
+                )
+                    ->whereNotIn(
+                        'period_code',
+                        BusinessPeriod::allowedPeriods()
+                    )
+                    ->delete();
 
             });
 
             return response()->json([
+
                 'success' => true,
-                'message' => 'Monitoring Equipment updated successfully and log created.',
+
+                'message' => 'Monitoring Equipment updated successfully.',
+
                 'data' => new MonitoringEquipmentResource(
-                    $monitoringEquipment->fresh()->load([
-                        'tagNumber',
-                        'logs'
-                    ])
-                ),
+
+                    $monitoringEquipment
+                        ->load([
+                            'tagNumber',
+                            'logs'
+                        ])
+
+                )
+
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
 
             return response()->json([
+
                 'success' => false,
+
                 'message' => 'Failed to update Monitoring Equipment.',
-                'error' => $e->getMessage(),
+
+                'error' => config('app.debug')
+                    ? $e->getMessage()
+                    : null
+
             ], 500);
 
         }
@@ -236,28 +301,43 @@ class MonitoringEquipmentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(MonitoringEquipment $monitoringEquipment)
     {
-        $monitoringEquipment = MonitoringEquipment::find($id);
-        if (!$monitoringEquipment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Monitoring Equipment not found.',
-            ], 404);
-        }
-
         try {
-            $monitoringEquipment->delete();
+
+            DB::transaction(function () use ($monitoringEquipment) {
+
+                MonitoringEquipmentLog::where(
+                    'tag_number_id',
+                    $monitoringEquipment->tag_number_id
+                )->delete();
+
+                $monitoringEquipment->delete();
+
+            });
+
             return response()->json([
+
                 'success' => true,
-                'message' => 'Monitoring Equipment deleted successfully.',
-            ], 200);
-        } catch (\Exception $e) {
+
+                'message' => 'Monitoring Equipment deleted successfully.'
+
+            ]);
+
+        } catch (\Throwable $e) {
+
             return response()->json([
+
                 'success' => false,
+
                 'message' => 'Failed to delete Monitoring Equipment.',
-                'error' => $e->getMessage(),
+
+                'error' => config('app.debug')
+                    ? $e->getMessage()
+                    : null
+
             ], 500);
+
         }
     }
 }
