@@ -330,7 +330,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/report_izin_disnaker/download_file/{id}', [ReportIzinDisnakerController::class, 'downloadReportIzinDisnakerFile']); // Download Report Izin Disnaker File
     Route::get('/contract_new/download/{id}', [ContractNewController::class, 'downloadContractFile']); // Download Contract New File
     Route::get('/spk_new/download_file/{id}', [SpkNewController::class, 'downloadSpkFile']); // Download SPK File
-    Route::get('/spk_progress/download_file/{id}', [SpkProgressNewController::class, 'downloadSpkProgressFile']); // Download SPK Progress File
+    Route::get('/spk_progress_new/download_file/{id}', [SpkProgressNewController::class, 'downloadSpkProgressFile']); // Download SPK Progress File
     Route::get('/termin_receipt/download_file/{id}', [TerminReceiptController::class, 'downloadTerminReceiptFile']); // Download Termin Receipt File
     Route::get('/lumpsum_progress_new/download_file/{id}', [LumpsumProgressNewController::class, 'downloadLumpsumProgressFile']); // Download Lumpsum Progress File
     Route::get('/amandemen_new/download_file/{id}', [AmandemenNewController::class, 'downloadAmandemenFile']); // Download Amandemen File
