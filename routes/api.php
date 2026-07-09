@@ -304,6 +304,11 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('rkap_nr', RkapNrController::class);
     Route::get('/dashboard_rkap', [DashboardRkapController::class, 'index']);
     Route::apiResource('project_spec', ProjectSpecController::class);
+
+    // MONITORING EQUIPMENT
+    Route::put('/monitoring_equipment/update_log/{id}', [MonitoringEquipmentController::class, 'updateLog']);
+    Route::get('/monitoring_equipment/template', [MonitoringEquipmentController::class,'downloadTemplate']);
+    Route::post('/monitoring_equipment/import', [MonitoringEquipmentController::class, 'import']);
     Route::apiResource('monitoring_equipment', MonitoringEquipmentController::class);
 
     /*
@@ -353,10 +358,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('/rkap_rt/update_actual/{id}', [RkapRtController::class, 'updateActual']);
     // RKAP NR
     Route::put('/rkap_nr/update_actual/{id}', [RkapNrController::class, 'updateActual']);
-
-    // MONITORING EQUIPMENT
-    Route::put('/monitoring_equipment/update_log/{id}', [MonitoringEquipmentController::class, 'updateLog']);
-
+    
     // COI
     Route::post('/coi/download', [CoiController::class, 'downloadCoiCertificates']);
     Route::put('/coi/deletefile/{id}', [CoiController::class, 'deleteFileCoi']);

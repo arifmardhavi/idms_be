@@ -18,9 +18,11 @@ class MonitoringEquipmentLogResource extends JsonResource
 
             'tag_number_id' => $this->tag_number_id,
 
-            'criticality' => (int) $this->criticality,
+            'tag_number' => optional($this->tagNumber)->tag_number,
 
-            'sece' => (int) $this->sece,
+            'criticality' => $this->tagNumber->criticality ?? null,
+
+            'sece' => $this->tagNumber->sece ?? null,
 
             'status' => (int) $this->status,
 

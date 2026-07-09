@@ -20,9 +20,9 @@ class MonitoringEquipmentResource extends JsonResource
 
             'tag_number' => optional($this->tagNumber)->tag_number,
 
-            'criticality' => (int) $this->criticality,
+            'criticality' => $this->tagNumber->criticality ?? null,
 
-            'sece' => (int) $this->sece,
+            'sece' => $this->tagNumber->sece ?? null,
 
             'status' => (int) $this->status,
 

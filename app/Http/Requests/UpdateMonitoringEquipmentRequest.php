@@ -27,10 +27,6 @@ class UpdateMonitoringEquipmentRequest extends BaseRequest
 
             ],
 
-            'criticality' => 'nullable|in:0,1,2,3,4', // 0: High, 1: Medium High, 2: Secondary Medium, 3: Negligible, 4: Low
-
-            'sece' => 'nullable|in:0,1', // 0: Tidak, 1: Ya
-
             'status' => 'nullable|in:0,1,2,3', // 0: High, 1: Medium, 2: Low, 3: Breakdown
 
             'jenis_kerusakan' => 'nullable|string|max:255',

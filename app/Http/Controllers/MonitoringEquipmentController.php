@@ -11,6 +11,11 @@ use App\Helpers\BusinessPeriod;
 use App\Http\Resources\ApiResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\ImportMonitoringEquipmentRequest;
+use App\Services\MonitoringEquipmentImportService;
+use App\Exports\MonitoringEquipmentTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 class MonitoringEquipmentController extends Controller
 {
@@ -49,17 +54,6 @@ class MonitoringEquipmentController extends Controller
         });
 
         /**
-         * Filter Criticality
-         */
-        $query->when(
-            $request->filled('criticality'),
-            fn($q) => $q->where(
-                'criticality',
-                $request->criticality
-            )
-        );
-
-        /**
          * Filter Status
          */
         $query->when(
@@ -71,25 +65,12 @@ class MonitoringEquipmentController extends Controller
         );
 
         /**
-         * Filter SECE
-         */
-        $query->when(
-            $request->filled('sece'),
-            fn($q) => $q->where(
-                'sece',
-                $request->sece
-            )
-        );
-
-        /**
          * Sorting
          */
 
         $allowedSort = [
 
             'id',
-
-            'criticality',
 
             'status',
 
@@ -339,5 +320,27 @@ class MonitoringEquipmentController extends Controller
             ], 500);
 
         }
+    }
+
+    public function import(
+    ImportMonitoringEquipmentRequest $request, MonitoringEquipmentImportService $service)
+    {
+        return $service->import(
+            $request->file('file')
+        );
+    }
+
+    /**
+     * Download Excel Template
+     */
+    public function downloadTemplate()
+    {
+        return Excel::download(
+
+            new MonitoringEquipmentTemplateExport(),
+
+            'Monitoring_Equipment_Template.xlsx'
+
+        );
     }
 }

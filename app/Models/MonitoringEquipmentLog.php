@@ -15,10 +15,6 @@ class MonitoringEquipmentLog extends Model
 
         'tag_number_id',
 
-        'criticality',
-
-        'sece',
-
         'status',
 
         'jenis_kerusakan',

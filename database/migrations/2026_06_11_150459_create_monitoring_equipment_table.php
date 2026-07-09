@@ -19,8 +19,6 @@ return new class extends Migration
                 ->constrained('tag_numbers')
                 ->cascadeOnDelete();
 
-            $table->char('criticality', 2)->nullable();
-            $table->char('sece', 1)->nullable();
             $table->char('status', 2)->nullable();
 
             $table->string('jenis_kerusakan')->nullable();
@@ -37,9 +35,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique('tag_number_id');
-            $table->index('criticality');
             $table->index('status');
-            $table->index('sece');
 
         });
     }

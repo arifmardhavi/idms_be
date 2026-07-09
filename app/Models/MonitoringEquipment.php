@@ -15,10 +15,6 @@ class MonitoringEquipment extends BaseModel
 
         'tag_number_id',
 
-        'criticality',
-
-        'sece',
-
         'status',
 
         'jenis_kerusakan',
