@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Tag_number extends BaseModel
 {
     use HasFactory;
-    protected $fillable = ['unit_id','type_id' , 'tag_number', 'description', 'status'];
+    protected $fillable = ['unit_id','type_id' , 'tag_number', 'criticality', 'sece', 'description', 'status'];
 
     protected $casts = [
         'status' => 'integer',
