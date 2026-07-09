@@ -10,6 +10,12 @@ class Tag_number extends BaseModel
     use HasFactory;
     protected $fillable = ['unit_id','type_id' , 'tag_number', 'description', 'status'];
 
+    protected $casts = [
+        'status' => 'integer',
+        'criticality' => 'integer',
+        'sece' => 'integer',
+    ];
+
     public function type()
     {
         return $this->belongsTo(Type::class);
