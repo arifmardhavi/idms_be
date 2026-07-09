@@ -309,6 +309,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('/monitoring_equipment/update_log/{id}', [MonitoringEquipmentController::class, 'updateLog']);
     Route::get('/monitoring_equipment/template', [MonitoringEquipmentController::class,'downloadTemplate']);
     Route::post('/monitoring_equipment/import', [MonitoringEquipmentController::class, 'import']);
+    Route::get('/monitoring_equipment/export', [MonitoringEquipmentController::class, 'export']);
+    Route::get('/monitoring_equipment/export/logs', [MonitoringEquipmentController::class, 'exportLogs']);
     Route::apiResource('monitoring_equipment', MonitoringEquipmentController::class);
 
     /*

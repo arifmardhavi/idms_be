@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ImportMonitoringEquipmentRequest;
 use App\Services\MonitoringEquipmentImportService;
 use App\Exports\MonitoringEquipmentTemplateExport;
+use App\Exports\MonitoringEquipmentExport;
+use App\Exports\MonitoringEquipmentLogExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 
@@ -340,6 +342,60 @@ class MonitoringEquipmentController extends Controller
             new MonitoringEquipmentTemplateExport(),
 
             'Monitoring_Equipment_Template.xlsx'
+
+        );
+    }
+
+
+    /**
+     * Export Monitoring Equipment Data
+     */
+    public function export(Request $request)
+    {
+        return Excel::download(
+
+            new MonitoringEquipmentExport(
+
+                $request->only([
+                    'search',
+                    'criticality',
+                    'status',
+                    'sece'
+                ])
+
+            ),
+
+            'Monitoring_Equipment_' . now()->format('Ymd_His') . '.xlsx'
+
+        );
+    }
+
+    /**
+     * Export Monitoring Equipment Logs Data
+     */
+    public function exportLogs(Request $request)
+    {
+        return Excel::download(
+
+            new MonitoringEquipmentLogExport(
+
+                $request->only([
+
+                    'search',
+
+                    'period_code',
+
+                    'criticality',
+
+                    'status'
+
+                ])
+
+            ),
+
+            'Monitoring_Equipment_Logs_' .
+            now()->format('Ymd_His') .
+            '.xlsx'
 
         );
     }
