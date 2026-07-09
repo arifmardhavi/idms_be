@@ -13,6 +13,70 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class TagNumberImport implements ToCollection, WithHeadingRow
 {
     public $errors = [];
+    private function mapCriticality(?string $criticality): ?int
+    {
+        if (blank($criticality)) {
+            return null;
+        }
+
+        return match (strtolower(trim($criticality))) {
+
+            'high' => 0,
+
+            'medium high' => 1,
+
+            'secondary medium' => 2,
+
+            'negligible' => 3,
+
+            'low' => 4,
+
+            default => null,
+
+        };
+    }
+
+    private function mapSece(?string $sece): ?int
+    {
+        if (blank($sece)) {
+            return null;
+        }
+
+        return match (strtolower(trim($sece))) {
+
+            'ya' => 1,
+
+            'yes' => 1,
+
+            'tidak' => 0,
+
+            'no' => 0,
+
+            default => null,
+
+        };
+    }
+
+    private function mapStatus(?string $status): ?int
+    {
+        if (blank($status)) {
+            return null;
+        }
+
+        return match (strtolower(trim($status))) {
+
+            'aktif' => 1,
+
+            'active' => 1,
+
+            'nonaktif' => 0,
+
+            'nonactive' => 0,
+
+            default => 1,
+
+        };
+    }
 
     public function collection(Collection $rows)
     {
@@ -58,9 +122,9 @@ class TagNumberImport implements ToCollection, WithHeadingRow
                 // 'category_id' => $categoryId,
                 'type_id' => $typeId,
                 'tag_number' => strtoupper($tagNumberValue),
-                'sece' => $row['sece'] ?? null,
-                'criticality' => $row['criticality'] ?? null,
-                'status' => $row['status'] ?? 1,
+                'sece' => $this->mapSece($row['sece']) ?? null,
+                'criticality' => $this->mapCriticality($row['criticality']) ?? null,
+                'status' => $this->mapStatus($row['status']) ?? 1,
                 'description' => $row['deskripsi'] ?? null,
             ]);
         }

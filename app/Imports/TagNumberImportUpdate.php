@@ -13,6 +13,70 @@ class TagNumberImportUpdate implements ToCollection, WithHeadingRow
 {
     public $errors = [];
 
+    private function mapCriticality(?string $criticality): ?int
+    {
+        if (blank($criticality)) {
+            return null;
+        }
+
+        return match (strtolower(trim($criticality))) {
+
+            'high' => 0,
+
+            'medium high' => 1,
+
+            'secondary medium' => 2,
+
+            'negligible' => 3,
+
+            'low' => 4,
+
+            default => null,
+
+        };
+    }
+
+    private function mapSece(?string $sece): ?int
+    {
+        if (blank($sece)) {
+            return null;
+        }
+
+        return match (strtolower(trim($sece))) {
+
+            'ya' => 1,
+
+            'yes' => 1,
+
+            'tidak' => 0,
+
+            'no' => 0,
+
+            default => null,
+
+        };
+    }
+
+    private function mapStatus(?string $status): ?int
+    {
+        if (blank($status)) {
+            return null;
+        }
+
+        return match (strtolower(trim($status))) {
+
+            'aktif' => 1,
+
+            'active' => 1,
+
+            'nonaktif' => 0,
+
+            'nonactive' => 0,
+
+            default => 1,
+
+        };
+    }
     public function collection(Collection $rows)
     {
         // Load reference data (minimize query)
@@ -57,9 +121,9 @@ class TagNumberImportUpdate implements ToCollection, WithHeadingRow
             $tagNumber->update([
                 'unit_id'     => $unitId,
                 'type_id'     => $typeId,
-                'sece'        => $row['sece'] ?? $tagNumber->sece,
-                'criticality' => $row['criticality'] ?? $tagNumber->criticality,
-                'status'      => $row['status'] ?? $tagNumber->status,
+                'sece'        => $this->mapSece($row['sece']) ?? $tagNumber->sece,
+                'criticality' => $this->mapCriticality($row['criticality']) ?? $tagNumber->criticality,
+                'status'      => $this->mapStatus($row['status']) ?? $tagNumber->status,
                 'description' => $row['deskripsi'] ?? $tagNumber->description,
             ]);
         }
