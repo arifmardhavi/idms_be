@@ -58,6 +58,8 @@ class TagNumberImport implements ToCollection, WithHeadingRow
                 // 'category_id' => $categoryId,
                 'type_id' => $typeId,
                 'tag_number' => strtoupper($tagNumberValue),
+                'sece' => $row['sece'] ?? null,
+                'criticality' => $row['criticality'] ?? null,
                 'status' => $row['status'] ?? 1,
                 'description' => $row['deskripsi'] ?? null,
             ]);

@@ -40,6 +40,8 @@ class Tag_numberController extends Controller
             'description' => 'nullable|string',
             'type_id' => 'required|exists:types,id',
             'unit_id' => 'required|exists:units,id',
+            'sece' => 'nullable|in:0,1', // 0: Tidak, 1: Ya
+            'criticality' => 'nullable|in:0,1,2,3,4', // 0: High, 1: Medium High, 2: Secondary Medium, 3: Negligible, 4: Low
             'status' => 'required|in:0,1',
         ]);
 
@@ -222,6 +224,8 @@ class Tag_numberController extends Controller
             'description' => 'nullable|string',
             'type_id' => 'required|exists:types,id',
             'unit_id' => 'required|exists:units,id',
+            'sece' => 'nullable|in:0,1', // 0: Tidak, 1: Ya
+            'criticality' => 'nullable|in:0,1,2,3,4', // 0: High, 1: Medium High, 2: Secondary Medium, 3: Negligible, 4: Low
             'status' => 'required|in:0,1',
         ]);
 

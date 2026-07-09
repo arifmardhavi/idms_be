@@ -57,6 +57,8 @@ class TagNumberImportUpdate implements ToCollection, WithHeadingRow
             $tagNumber->update([
                 'unit_id'     => $unitId,
                 'type_id'     => $typeId,
+                'sece'        => $row['sece'] ?? $tagNumber->sece,
+                'criticality' => $row['criticality'] ?? $tagNumber->criticality,
                 'status'      => $row['status'] ?? $tagNumber->status,
                 'description' => $row['deskripsi'] ?? $tagNumber->description,
             ]);
