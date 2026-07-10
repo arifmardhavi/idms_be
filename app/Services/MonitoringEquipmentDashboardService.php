@@ -96,59 +96,150 @@ class MonitoringEquipmentDashboardService
      * SQL AGGREGATE
      * ===================================================
      */
-    private function aggregateSql(
-        string $statusColumn
-    ): string {
-
+    private function aggregateSql(string $statusColumn): string
+    {
         return "
-        COUNT(*) total,
 
-        /* ===========================
+        /* ============================================================
             ALL
-        =========================== */
+        ============================================================ */
 
-        SUM(CASE WHEN {$statusColumn}=0 THEN 1 ELSE 0 END) all_high,
-        SUM(CASE WHEN {$statusColumn}=1 THEN 1 ELSE 0 END) all_medium,
-        SUM(CASE WHEN {$statusColumn}=2 THEN 1 ELSE 0 END) all_low,
-        SUM(CASE WHEN {$statusColumn}=3 THEN 1 ELSE 0 END) all_breakdown,
+        COUNT(*) as total,
 
-        /* ===========================
-            SECE = YA
-        =========================== */
+        SUM(CASE WHEN {$statusColumn}=0 THEN 1 ELSE 0 END) as all_high,
+        SUM(CASE WHEN {$statusColumn}=1 THEN 1 ELSE 0 END) as all_medium,
+        SUM(CASE WHEN {$statusColumn}=2 THEN 1 ELSE 0 END) as all_low,
+        SUM(CASE WHEN {$statusColumn}=3 THEN 1 ELSE 0 END) as all_breakdown,
 
-        SUM(CASE WHEN tag_numbers.sece=1 AND {$statusColumn}=0 THEN 1 ELSE 0 END) sece_high,
-        SUM(CASE WHEN tag_numbers.sece=1 AND {$statusColumn}=1 THEN 1 ELSE 0 END) sece_medium,
-        SUM(CASE WHEN tag_numbers.sece=1 AND {$statusColumn}=2 THEN 1 ELSE 0 END) sece_low,
-        SUM(CASE WHEN tag_numbers.sece=1 AND {$statusColumn}=3 THEN 1 ELSE 0 END) sece_breakdown,
+        /* ============================================================
+            SECE (PRIORITAS PERTAMA)
+        ============================================================ */
 
-        /* ===========================
-            Criticality High
-        =========================== */
+        SUM(CASE
+            WHEN tag_numbers.sece = 1
+            AND {$statusColumn}=0
+            THEN 1 ELSE 0
+        END) as sece_high,
 
-        SUM(CASE WHEN tag_numbers.criticality=0 AND {$statusColumn}=0 THEN 1 ELSE 0 END) ch_high,
-        SUM(CASE WHEN tag_numbers.criticality=0 AND {$statusColumn}=1 THEN 1 ELSE 0 END) ch_medium,
-        SUM(CASE WHEN tag_numbers.criticality=0 AND {$statusColumn}=2 THEN 1 ELSE 0 END) ch_low,
-        SUM(CASE WHEN tag_numbers.criticality=0 AND {$statusColumn}=3 THEN 1 ELSE 0 END) ch_breakdown,
+        SUM(CASE
+            WHEN tag_numbers.sece = 1
+            AND {$statusColumn}=1
+            THEN 1 ELSE 0
+        END) as sece_medium,
 
-        /* ===========================
-            Criticality Medium High
-        =========================== */
+        SUM(CASE
+            WHEN tag_numbers.sece = 1
+            AND {$statusColumn}=2
+            THEN 1 ELSE 0
+        END) as sece_low,
 
-        SUM(CASE WHEN tag_numbers.criticality=1 AND {$statusColumn}=0 THEN 1 ELSE 0 END) cmh_high,
-        SUM(CASE WHEN tag_numbers.criticality=1 AND {$statusColumn}=1 THEN 1 ELSE 0 END) cmh_medium,
-        SUM(CASE WHEN tag_numbers.criticality=1 AND {$statusColumn}=2 THEN 1 ELSE 0 END) cmh_low,
-        SUM(CASE WHEN tag_numbers.criticality=1 AND {$statusColumn}=3 THEN 1 ELSE 0 END) cmh_breakdown,
+        SUM(CASE
+            WHEN tag_numbers.sece = 1
+            AND {$statusColumn}=3
+            THEN 1 ELSE 0
+        END) as sece_breakdown,
 
-        /* ===========================
-            Criticality Other
-        =========================== */
+        /* ============================================================
+            CRITICALITY HIGH
+            (HANYA YANG BUKAN SECE)
+        ============================================================ */
 
-        SUM(CASE WHEN tag_numbers.criticality IN(2,3,4) AND {$statusColumn}=0 THEN 1 ELSE 0 END) other_high,
-        SUM(CASE WHEN tag_numbers.criticality IN(2,3,4) AND {$statusColumn}=1 THEN 1 ELSE 0 END) other_medium,
-        SUM(CASE WHEN tag_numbers.criticality IN(2,3,4) AND {$statusColumn}=2 THEN 1 ELSE 0 END) other_low,
-        SUM(CASE WHEN tag_numbers.criticality IN(2,3,4) AND {$statusColumn}=3 THEN 1 ELSE 0 END) other_breakdown
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality = 0
+            AND {$statusColumn}=0
+            THEN 1 ELSE 0
+        END) as ch_high,
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality = 0
+            AND {$statusColumn}=1
+            THEN 1 ELSE 0
+        END) as ch_medium,
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality = 0
+            AND {$statusColumn}=2
+            THEN 1 ELSE 0
+        END) as ch_low,
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality = 0
+            AND {$statusColumn}=3
+            THEN 1 ELSE 0
+        END) as ch_breakdown,
+
+        /* ============================================================
+            CRITICALITY MEDIUM HIGH
+            (HANYA YANG BUKAN SECE)
+        ============================================================ */
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality = 1
+            AND {$statusColumn}=0
+            THEN 1 ELSE 0
+        END) as cmh_high,
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality = 1
+            AND {$statusColumn}=1
+            THEN 1 ELSE 0
+        END) as cmh_medium,
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality = 1
+            AND {$statusColumn}=2
+            THEN 1 ELSE 0
+        END) as cmh_low,
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality = 1
+            AND {$statusColumn}=3
+            THEN 1 ELSE 0
+        END) as cmh_breakdown,
+
+        /* ============================================================
+            CRITICALITY OTHER
+            (Secondary Medium, Negligible, Low)
+            HANYA YANG BUKAN SECE
+        ============================================================ */
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality IN (2,3,4)
+            AND {$statusColumn}=0
+            THEN 1 ELSE 0
+        END) as other_high,
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality IN (2,3,4)
+            AND {$statusColumn}=1
+            THEN 1 ELSE 0
+        END) as other_medium,
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality IN (2,3,4)
+            AND {$statusColumn}=2
+            THEN 1 ELSE 0
+        END) as other_low,
+
+        SUM(CASE
+            WHEN tag_numbers.sece = 0
+            AND tag_numbers.criticality IN (2,3,4)
+            AND {$statusColumn}=3
+            THEN 1 ELSE 0
+        END) as other_breakdown
+
         ";
-
     }
 
     /**
@@ -156,39 +247,150 @@ class MonitoringEquipmentDashboardService
      * TRANSFORM
      * ===================================================
      */
+
     private function transform($r): array
     {
-
         return [
 
-            'all'=>$this->group(
-                $r,
-                'all'
-            ),
+            /**
+             * Semua Data
+             */
+            'all' => [
 
-            'sece_yes'=>$this->group(
-                $r,
-                'sece'
-            ),
+                'high' => (int) $r->all_high,
 
-            'criticality_high'=>$this->group(
-                $r,
-                'ch'
-            ),
+                'medium' => (int) $r->all_medium,
 
-            'criticality_medium_high'=>$this->group(
-                $r,
-                'cmh'
-            ),
+                'low' => (int) $r->all_low,
 
-            'criticality_other'=>$this->group(
-                $r,
-                'other'
-            )
+                'breakdown' => (int) $r->all_breakdown,
+
+                'total' => (int) $r->total,
+
+            ],
+
+            /**
+             * Status High
+             */
+            'high' => [
+
+                'sece_yes' => (int) $r->sece_high,
+
+                'criticality_high' => (int) $r->ch_high,
+
+                'criticality_medium_high' => (int) $r->cmh_high,
+
+                'criticality_other' => (int) $r->other_high,
+
+                'total' =>
+                    (int) $r->sece_high +
+                    (int) $r->ch_high +
+                    (int) $r->cmh_high +
+                    (int) $r->other_high,
+
+            ],
+
+            /**
+             * Status Medium
+             */
+            'medium' => [
+
+                'sece_yes' => (int) $r->sece_medium,
+
+                'criticality_high' => (int) $r->ch_medium,
+
+                'criticality_medium_high' => (int) $r->cmh_medium,
+
+                'criticality_other' => (int) $r->other_medium,
+
+                'total' =>
+                    (int) $r->sece_medium +
+                    (int) $r->ch_medium +
+                    (int) $r->cmh_medium +
+                    (int) $r->other_medium,
+
+            ],
+
+            /**
+             * Status Low
+             */
+            'low' => [
+
+                'sece_yes' => (int) $r->sece_low,
+
+                'criticality_high' => (int) $r->ch_low,
+
+                'criticality_medium_high' => (int) $r->cmh_low,
+
+                'criticality_other' => (int) $r->other_low,
+
+                'total' =>
+                    (int) $r->sece_low +
+                    (int) $r->ch_low +
+                    (int) $r->cmh_low +
+                    (int) $r->other_low,
+
+            ],
+
+            /**
+             * Status Breakdown
+             */
+            'breakdown' => [
+
+                'sece_yes' => (int) $r->sece_breakdown,
+
+                'criticality_high' => (int) $r->ch_breakdown,
+
+                'criticality_medium_high' => (int) $r->cmh_breakdown,
+
+                'criticality_other' => (int) $r->other_breakdown,
+
+                'total' =>
+                    (int) $r->sece_breakdown +
+                    (int) $r->ch_breakdown +
+                    (int) $r->cmh_breakdown +
+                    (int) $r->other_breakdown,
+
+            ],
 
         ];
-
     }
+
+
+
+    // private function transform($r): array
+    // {
+
+    //     return [
+
+    //         'all'=>$this->group(
+    //             $r,
+    //             'all'
+    //         ),
+
+    //         'sece_yes'=>$this->group(
+    //             $r,
+    //             'sece'
+    //         ),
+
+    //         'criticality_high'=>$this->group(
+    //             $r,
+    //             'ch'
+    //         ),
+
+    //         'criticality_medium_high'=>$this->group(
+    //             $r,
+    //             'cmh'
+    //         ),
+
+    //         'criticality_other'=>$this->group(
+    //             $r,
+    //             'other'
+    //         )
+
+    //     ];
+
+    // }
 
     /**
      * ===================================================
