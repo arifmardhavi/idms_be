@@ -17,6 +17,7 @@ use App\Exports\MonitoringEquipmentTemplateExport;
 use App\Exports\MonitoringEquipmentExport;
 use App\Exports\MonitoringEquipmentLogExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Services\MonitoringEquipmentDashboardService;
 
 
 class MonitoringEquipmentController extends Controller
@@ -398,5 +399,36 @@ class MonitoringEquipmentController extends Controller
             '.xlsx'
 
         );
+    }
+
+    public function dashboard(MonitoringEquipmentDashboardService $service)
+    {
+        try {
+
+            return response()->json([
+
+                'success' => true,
+
+                'message' => 'Dashboard Monitoring Equipment.',
+
+                'data' => $service->getDashboard()
+
+            ]);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+
+                'success' => false,
+
+                'message' => 'Failed load dashboard.',
+
+                'error' => config('app.debug')
+                    ? $e->getMessage()
+                    : null
+
+            ],500);
+
+        }
     }
 }
