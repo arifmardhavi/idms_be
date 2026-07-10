@@ -23,11 +23,14 @@ class DashboardRkapService
         $totalRt = $this->getTotal($rt);
         $totalNr = $this->getTotal($nr);
 
+        $totalPerPeriode = $this->getTotalPerPeriode($ta, $oh, $rt, $nr);
+
         return [
             'rkap_ta' => $ta,
             'rkap_oh' => $oh,
             'rkap_rt' => $rt,
             'rkap_nr' => $nr,
+            'total_per_periode' => $totalPerPeriode,
 
             'all_rkap' => [
                 'rkap_ta' => $totalTa,
@@ -91,5 +94,36 @@ class DashboardRkapService
         return $plan > 0
             ? round((($plan - $actual) / $plan) * 100, 2)
             : 0;
+    }
+
+    private function getTotalPerPeriode(
+        array $ta,
+        array $oh,
+        array $rt,
+        array $nr
+    ): array 
+    {
+
+        return collect(range(1, 12))->map(function ($periode) use ($ta, $oh, $rt, $nr) {
+
+            $plan =
+                ($ta[$periode - 1]['plan'] ?? 0) +
+                ($oh[$periode - 1]['plan'] ?? 0) +
+                ($rt[$periode - 1]['plan'] ?? 0) +
+                ($nr[$periode - 1]['plan'] ?? 0);
+
+            $actual =
+                ($ta[$periode - 1]['actual'] ?? 0) +
+                ($oh[$periode - 1]['actual'] ?? 0) +
+                ($rt[$periode - 1]['actual'] ?? 0) +
+                ($nr[$periode - 1]['actual'] ?? 0);
+
+            return [
+                'periode' => $periode,
+                'plan' => round($plan, 2),
+                'actual' => round($actual, 2),
+                'selisih' => $this->calculatePercent($actual, $plan),
+            ];
+        })->toArray();
     }
 }
