@@ -25,7 +25,7 @@ class TagNumberImportUpdate implements ToCollection, WithHeadingRow
 
             'medium high' => 1,
 
-            'secondary medium' => 2,
+            'medium' => 2,
 
             'negligible' => 3,
 

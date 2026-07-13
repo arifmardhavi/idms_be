@@ -174,7 +174,7 @@ class MonitoringEquipmentLogExport implements
         return match((int)$value){
             0=>'High',
             1=>'Medium High',
-            2=>'Secondary Medium',
+            2=>'Medium',
             3=>'Negligible',
             4=>'Low',
             default=>null

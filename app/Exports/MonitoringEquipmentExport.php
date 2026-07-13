@@ -184,7 +184,7 @@ class MonitoringEquipmentExport implements
             null => '-',
             '0', 0 => 'High',
             '1', 1 => 'Medium High',
-            '2', 2 => 'Secondary Medium',
+            '2', 2 => 'Medium',
             '3', 3 => 'Negligible',
             '4', 4 => 'Low',
             default => '-',

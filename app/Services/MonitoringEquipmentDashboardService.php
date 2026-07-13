@@ -207,7 +207,7 @@ class MonitoringEquipmentDashboardService
 
         /* ============================================================
             CRITICALITY OTHER
-            (Secondary Medium, Negligible, Low)
+            (Medium, Negligible, Low)
             HANYA YANG BUKAN SECE
         ============================================================ */
 
