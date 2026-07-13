@@ -171,32 +171,35 @@ class MonitoringEquipmentLogExport implements
 
     private function criticality($value)
     {
-        return match((int)$value){
-            0=>'High',
-            1=>'Medium High',
-            2=>'Medium',
-            3=>'Negligible',
-            4=>'Low',
+        return match($value){
+            null=> '-',
+            '0',0=>'High',
+            '1',1=>'Medium High',
+            '2',2=>'Medium',
+            '3',3=>'Negligible',
+            '4',4=>'Low',
             default=>null
         };
     }
 
     private function sece($value)
     {
-        return match((int)$value){
-            0=>'Tidak',
-            1=>'Ya',
+        return match($value){
+            null=> '-',
+            '0',0=>'Tidak',
+            '1',1=>'Ya',
             default=>null
         };
     }
 
     private function status($value)
     {
-        return match((int)$value){
-            0=>'High',
-            1=>'Medium',
-            2=>'Low',
-            3=>'Breakdown',
+        return match($value){
+            null=> '-',
+            '0',0=>'High',
+            '1',1=>'Medium',
+            '2',2=>'Low',
+            '3',3=>'Breakdown',
             default=>null
         };
     }
