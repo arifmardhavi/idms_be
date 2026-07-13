@@ -56,14 +56,18 @@ class MonitoringEquipmentExport implements
         }
 
         /**
-         * Criticality
+         * Filter Criticality
          */
         if (isset($this->filters['criticality'])) {
 
-            $query->where(
-                'criticality',
-                $this->filters['criticality']
-            );
+            $query->whereHas('tagNumber', function (Builder $q) {
+
+                $q->where(
+                    'criticality',
+                    $this->filters['criticality']
+                );
+
+            });
 
         }
 
@@ -80,14 +84,18 @@ class MonitoringEquipmentExport implements
         }
 
         /**
-         * SECE
+         * Filter SECE
          */
         if (isset($this->filters['sece'])) {
 
-            $query->where(
-                'sece',
-                $this->filters['sece']
-            );
+            $query->whereHas('tagNumber', function (Builder $q) {
+
+                $q->where(
+                    'sece',
+                    $this->filters['sece']
+                );
+
+            });
 
         }
 
@@ -134,6 +142,8 @@ class MonitoringEquipmentExport implements
     public function map($row): array
     {
         static $no = 0;
+        $criticality = optional($row->tagNumber)->criticality;
+        $sece = optional($row->tagNumber)->sece;
 
         return [
 
@@ -141,9 +151,9 @@ class MonitoringEquipmentExport implements
 
             optional($row->tagNumber)->tag_number,
 
-            $this->criticality($row->criticality),
+            $this->criticality($criticality),
 
-            $this->sece($row->sece),
+            $this->sece($sece),
 
             $this->status($row->status),
 
@@ -170,49 +180,40 @@ class MonitoringEquipmentExport implements
 
     private function criticality($value): ?string
     {
-        return match ((int) $value) {
-
-            0 => 'High',
-
-            1 => 'Medium High',
-
-            2 => 'Secondary Medium',
-
-            3 => 'Negligible',
-
-            4 => 'Low',
-
-            default => null
-
+        return match ($value) {
+            null => '-',
+            '0', 0 => 'High',
+            '1', 1 => 'Medium High',
+            '2', 2 => 'Secondary Medium',
+            '3', 3 => 'Negligible',
+            '4', 4 => 'Low',
+            default => '-',
         };
     }
 
     private function sece($value): ?string
     {
-        return match ((int) $value) {
-
-            0 => 'Tidak',
-
-            1 => 'Ya',
-
-            default => null
-
+        return match ($value) {
+            null => '-',
+            '0', 0 => 'Tidak',
+            '1', 1 => 'Ya',
+            default => '-',
         };
     }
 
     private function status($value): ?string
     {
-        return match ((int) $value) {
+        return match ($value) {
+            null => '-',
+            '0', 0 => 'High',
 
-            0 => 'High',
+            '1', 1 => 'Medium',
 
-            1 => 'Medium',
+            '2', 2 => 'Low',
 
-            2 => 'Low',
+            '3', 3 => 'Breakdown',
 
-            3 => 'Breakdown',
-
-            default => null
+            default => '-'
 
         };
     }

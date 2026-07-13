@@ -29,67 +29,193 @@ class MonitoringEquipmentController extends Controller
     {
         $perPage = $request->integer('per_page', 10);
 
-        $search = $request->search;
+        $search = $request->get('search');
 
         $sortBy = $request->get('sort_by', 'id');
 
-        $sortOrder = $request->get('sort_order', 'desc');
+        $sortOrder = strtolower($request->get('sort_order', 'desc')) == 'asc'
+            ? 'asc'
+            : 'desc';
+
         $currentPeriod = BusinessPeriod::current()['code'];
-        $query = MonitoringEquipment::with([
-            'tagNumber',
-            'logs' => function ($query) use ($currentPeriod) {
-            $query->where('period_code', '!=', $currentPeriod)
-                  ->latest('period_code');
-        }
-        ]);
+
+        $query = MonitoringEquipment::query()
+
+            ->leftJoin(
+                'tag_numbers',
+                'tag_numbers.id',
+                '=',
+                'monitoring_equipment.tag_number_id'
+            )
+
+            ->select('monitoring_equipment.*')
+
+            ->with([
+                'tagNumber',
+                'logs' => function ($query) use ($currentPeriod) {
+
+                    $query->where(
+                        'period_code',
+                        '!=',
+                        $currentPeriod
+                    )->latest('period_code');
+
+                }
+
+            ]);
 
         /**
-         * Search
+         * =====================================================
+         * GLOBAL SEARCH
+         * =====================================================
          */
         $query->when($search, function ($q) use ($search) {
 
-            $q->whereHas('tagNumber', function ($tag) use ($search) {
+            $q->where(function ($query) use ($search) {
 
-                $tag->where('tag_number', 'like', "%{$search}%");
+                $query
+
+                    ->where(
+                        'tag_numbers.tag_number',
+                        'like',
+                        "%{$search}%"
+                    )
+
+                    ->orWhere(
+                        'monitoring_equipment.jenis_kerusakan',
+                        'like',
+                        "%{$search}%"
+                    )
+
+                    ->orWhere(
+                        'monitoring_equipment.penyebab',
+                        'like',
+                        "%{$search}%"
+                    )
+
+                    ->orWhere(
+                        'monitoring_equipment.penanganan_sementara',
+                        'like',
+                        "%{$search}%"
+                    )
+
+                    ->orWhere(
+                        'monitoring_equipment.perbaikan_permanen',
+                        'like',
+                        "%{$search}%"
+                    )
+
+                    ->orWhere(
+                        'monitoring_equipment.progress_perbaikan_permanen',
+                        'like',
+                        "%{$search}%"
+                    )
+
+                    ->orWhere(
+                        'monitoring_equipment.kendala_perbaikan',
+                        'like',
+                        "%{$search}%"
+                    )
+
+                    ->orWhere(
+                        'monitoring_equipment.estimasi_perbaikan',
+                        'like',
+                        "%{$search}%"
+                    )
+
+                    ->orWhere(
+                        'monitoring_equipment.target',
+                        'like',
+                        "%{$search}%"
+                    );
 
             });
 
         });
 
         /**
-         * Filter Status
+         * =====================================================
+         * FILTER
+         * =====================================================
+         */
+
+        /**
+         * Status
          */
         $query->when(
             $request->filled('status'),
-            fn($q) => $q->where(
-                'status',
+            fn ($q) => $q->where(
+                'monitoring_equipment.status',
                 $request->status
             )
         );
 
         /**
-         * Sorting
+         * Criticality
+         */
+        $query->when(
+            $request->filled('criticality'),
+            fn ($q) => $q->where(
+                'tag_numbers.criticality',
+                $request->criticality
+            )
+        );
+
+        /**
+         * SECE
+         */
+        $query->when(
+            $request->filled('sece'),
+            fn ($q) => $q->where(
+                'tag_numbers.sece',
+                $request->sece
+            )
+        );
+
+        /**
+         * =====================================================
+         * SORTING
+         * =====================================================
          */
 
         $allowedSort = [
 
-            'id',
+            'id' => 'monitoring_equipment.id',
 
-            'status',
+            'tag_number' => 'tag_numbers.tag_number',
 
-            'created_at',
+            'criticality' => 'tag_numbers.criticality',
 
-            'updated_at'
+            'sece' => 'tag_numbers.sece',
+
+            'status' => 'monitoring_equipment.status',
+
+            'jenis_kerusakan' => 'monitoring_equipment.jenis_kerusakan',
+
+            'penyebab' => 'monitoring_equipment.penyebab',
+
+            'penanganan_sementara' => 'monitoring_equipment.penanganan_sementara',
+
+            'perbaikan_permanen' => 'monitoring_equipment.perbaikan_permanen',
+
+            'progress_perbaikan_permanen' => 'monitoring_equipment.progress_perbaikan_permanen',
+
+            'kendala_perbaikan' => 'monitoring_equipment.kendala_perbaikan',
+
+            'estimasi_perbaikan' => 'monitoring_equipment.estimasi_perbaikan',
+
+            'target' => 'monitoring_equipment.target',
+
+            'created_at' => 'monitoring_equipment.created_at',
+
+            'updated_at' => 'monitoring_equipment.updated_at',
 
         ];
 
-        if (!in_array($sortBy, $allowedSort)) {
-
-            $sortBy = 'id';
-
-        }
-
-        $query->orderBy($sortBy, $sortOrder);
+        $query->orderBy(
+            $allowedSort[$sortBy] ?? 'monitoring_equipment.id',
+            $sortOrder
+        );
 
         $data = $query->paginate($perPage);
 
