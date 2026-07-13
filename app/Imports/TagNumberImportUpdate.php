@@ -117,13 +117,17 @@ class TagNumberImportUpdate implements ToCollection, WithHeadingRow
                 continue;
             }
 
+            $status = isset($row['status'])
+                ? $this->mapStatus($row['status'])
+                : $tagNumber->status;
+
             // UPDATE DATA (tanpa mengubah tag_number)
             $tagNumber->update([
                 'unit_id'     => $unitId,
                 'type_id'     => $typeId,
                 'sece'        => $this->mapSece($row['sece']) ?? $tagNumber->sece,
                 'criticality' => $this->mapCriticality($row['criticality']) ?? $tagNumber->criticality,
-                'status'      => $this->mapStatus($row['status']) ?? $tagNumber->status,
+                'status'      => $status,
                 'description' => $row['deskripsi'] ?? $tagNumber->description,
             ]);
         }
