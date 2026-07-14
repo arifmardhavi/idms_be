@@ -26,14 +26,22 @@ class RkapRtResource extends JsonResource
                 'plan' => $plan,
                 'actual' => $actual,
                 'selisih' => $plan - $actual,
-                'total' => $actual
+                'total' => $actual,
             ];
         });
+
+        $totalPlan = $dataPeriode->sum('plan');
+        $totalActual = $dataPeriode->sum('actual');
 
         return [
             'id' => $this->id,
             'judul' => $this->judul,
             'data_periode' => $dataPeriode->values(),
+            'total_value' => [
+                'plan' => $totalPlan,
+                'actual' => $totalActual,
+                'selisih' => $totalPlan - $totalActual,
+            ],
         ];
     }
 }
