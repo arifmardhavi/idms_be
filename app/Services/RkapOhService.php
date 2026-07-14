@@ -10,25 +10,38 @@ class RkapOhService
 {
     public function getSummary(): array
     {
-        $grandTotal = (int) DetailRkapOh::sum('actual');
+        $grandTotal = DetailRkapOh::selectRaw('
+                SUM(plan) as total_plan,
+                SUM(actual) as total_actual
+            ')
+            ->first();
 
         $totalPerPeriod = DetailRkapOh::select(
                 'periode',
-                DB::raw('SUM(actual) as total')
+                DB::raw('SUM(plan) as total_plan'),
+                DB::raw('SUM(actual) as total_actual')
             )
             ->groupBy('periode')
-            ->pluck('total', 'periode')
-            ->toArray();
+            ->get()
+            ->keyBy('periode');
 
         $formatted = collect(range(1, 12))->map(function ($periode) use ($totalPerPeriod) {
+
+            $row = $totalPerPeriod->get($periode);
+
             return [
-                'periode' => (int) $periode,
-                'total' => (int) ($totalPerPeriod[$periode] ?? 0),
+                'periode' => $periode,
+                'total_plan' => (int) ($row->total_plan ?? 0),
+                'total_actual' => (int) ($row->total_actual ?? 0),
             ];
         })->values();
 
         return [
-            'total_all_periode' => $grandTotal,
+            'total_all_periode' => [
+                'total_plan' => (int) ($grandTotal->total_plan ?? 0),
+                'total_actual' => (int) ($grandTotal->total_actual ?? 0),
+            ],
+
             'total_per_periode' => $formatted,
         ];
     }
@@ -62,24 +75,40 @@ class RkapOhService
 
     public function getSummaryByRkap(int $rkapId): array
     {
-        $grandTotal = (int) DetailRkapOh::where('rkap_oh_id', $rkapId)
-            ->sum('actual');
+        $grandTotal = DetailRkapOh::where('rkap_oh_id', $rkapId)
+            ->selectRaw('
+                SUM(plan) as total_plan,
+                SUM(actual) as total_actual
+            ')
+            ->first();
 
         $totalPerPeriod = DetailRkapOh::where('rkap_oh_id', $rkapId)
-            ->select('periode', DB::raw('SUM(actual) as total'))
+            ->select(
+                'periode',
+                DB::raw('SUM(plan) as total_plan'),
+                DB::raw('SUM(actual) as total_actual')
+            )
             ->groupBy('periode')
-            ->pluck('total', 'periode')
-            ->toArray();
+            ->get()
+            ->keyBy('periode');
 
         $formatted = collect(range(1, 12))->map(function ($periode) use ($totalPerPeriod) {
+
+            $row = $totalPerPeriod->get($periode);
+
             return [
-                'periode' => (int) $periode,
-                'total' => (int) ($totalPerPeriod[$periode] ?? 0),
+                'periode' => $periode,
+                'total_plan' => (int) ($row->total_plan ?? 0),
+                'total_actual' => (int) ($row->total_actual ?? 0),
             ];
         })->values();
 
         return [
-            'total_all_periode' => $grandTotal,
+            'total_all_periode' => [
+                'total_plan' => (int) ($grandTotal->total_plan ?? 0),
+                'total_actual' => (int) ($grandTotal->total_actual ?? 0),
+            ],
+
             'total_per_periode' => $formatted,
         ];
     }
