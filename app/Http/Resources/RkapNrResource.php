@@ -26,7 +26,6 @@ class RkapNrResource extends JsonResource
                 'plan' => $plan,
                 'actual' => $actual,
                 'selisih' => $plan - $actual,
-                'total' => $actual,
             ];
         });
 
