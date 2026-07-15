@@ -208,7 +208,7 @@ class ContractNew extends BaseModel
 
         if ($status == 0) { // selesai
             return [
-                'deviation' => abs($actual - $plan),
+                'deviation' => round($actual - $plan, 2),
                 'color' => 'blue',
             ];
         }
