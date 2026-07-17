@@ -353,44 +353,58 @@ class MonitoringEquipmentDashboardService
 
             ],
 
+            /**
+             * Summary
+             */
+            'summary' => [
+
+                'sece_yes' =>
+
+                    (int) $r->sece_high +
+
+                    (int) $r->sece_medium +
+
+                    (int) $r->sece_low +
+
+                    (int) $r->sece_breakdown,
+
+                'criticality_high' =>
+
+                    (int) $r->ch_high +
+
+                    (int) $r->ch_medium +
+
+                    (int) $r->ch_low +
+
+                    (int) $r->ch_breakdown,
+
+                'criticality_medium_high' =>
+
+                    (int) $r->cmh_high +
+
+                    (int) $r->cmh_medium +
+
+                    (int) $r->cmh_low +
+
+                    (int) $r->cmh_breakdown,
+
+                'criticality_other' =>
+
+                    (int) $r->other_high +
+
+                    (int) $r->other_medium +
+
+                    (int) $r->other_low +
+
+                    (int) $r->other_breakdown,
+
+                'grand_total' => (int) $r->total,
+
+            ],
+
         ];
     }
 
-
-
-    // private function transform($r): array
-    // {
-
-    //     return [
-
-    //         'all'=>$this->group(
-    //             $r,
-    //             'all'
-    //         ),
-
-    //         'sece_yes'=>$this->group(
-    //             $r,
-    //             'sece'
-    //         ),
-
-    //         'criticality_high'=>$this->group(
-    //             $r,
-    //             'ch'
-    //         ),
-
-    //         'criticality_medium_high'=>$this->group(
-    //             $r,
-    //             'cmh'
-    //         ),
-
-    //         'criticality_other'=>$this->group(
-    //             $r,
-    //             'other'
-    //         )
-
-    //     ];
-
-    // }
 
     /**
      * ===================================================
