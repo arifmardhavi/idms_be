@@ -56,6 +56,7 @@ use App\Http\Controllers\{
     JobPlanMaterialController,
     JobPlanMaterialOhController,
     JobPlanMaterialRtnrtController,
+    KondisiPeralatanController,
     LampiranMocController,
     LaporanInspectionController,
     LogActivityController,
@@ -110,6 +111,7 @@ use App\Http\Controllers\{
     SertifikatKalibrasiController,
     SpkNewController,
     SpkProgressNewController,
+    StatusPeralatanController,
     SurveillanceController,
     TenderJasaController,
     TenderJasaOhController,
@@ -304,6 +306,15 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('rkap_nr', RkapNrController::class);
     Route::get('/dashboard_rkap', [DashboardRkapController::class, 'index']);
     Route::apiResource('project_spec', ProjectSpecController::class);
+    
+    // Status Peralatan
+    Route::get('/status_peralatan/active', [StatusPeralatanController::class, 'showActive']);
+    Route::put('/status_peralatan/update_active/{id}', [StatusPeralatanController::class, 'updateActive']);
+    Route::apiResource('status_peralatan', StatusPeralatanController::class);
+    // Kondisi Peralatan
+    Route::get('/kondisi_peralatan/active', [KondisiPeralatanController::class, 'showActive']);
+    Route::put('/kondisi_peralatan/update_active/{id}', [KondisiPeralatanController::class, 'updateActive']);
+    Route::apiResource('kondisi_peralatan', KondisiPeralatanController::class);
 
     // MONITORING EQUIPMENT
     Route::put('/monitoring_equipment/update_log/{id}', [MonitoringEquipmentController::class, 'updateLog']);

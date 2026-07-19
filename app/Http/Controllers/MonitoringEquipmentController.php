@@ -92,7 +92,12 @@ class MonitoringEquipmentController extends Controller
                         'like',
                         "%{$search}%"
                     )
-
+                    
+                    ->orWhere(
+                        'monitoring_equipment.kondisi_peralatan',
+                        'like',
+                        "%{$search}%"
+                    )
                     ->orWhere(
                         'monitoring_equipment.penanganan_sementara',
                         'like',
@@ -187,6 +192,8 @@ class MonitoringEquipmentController extends Controller
             'criticality' => 'tag_numbers.criticality',
 
             'sece' => 'tag_numbers.sece',
+
+            'kondisi_peralatan' => 'monitoring_equipment.kondisi_peralatan',
 
             'status' => 'monitoring_equipment.status',
 

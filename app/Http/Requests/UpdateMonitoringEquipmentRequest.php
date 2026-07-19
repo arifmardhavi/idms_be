@@ -27,7 +27,9 @@ class UpdateMonitoringEquipmentRequest extends BaseRequest
 
             ],
 
-            'status' => 'nullable|in:0,1,2,3', // 0: High, 1: Medium, 2: Low, 3: Breakdown
+            'kondisi_peralatan' => 'nullable|string|max:255',
+
+            'status' => 'nullable|string|max:255',
 
             'jenis_kerusakan' => 'nullable|string|max:255',
 

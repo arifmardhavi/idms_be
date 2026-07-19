@@ -125,7 +125,9 @@ class MonitoringEquipmentImportService
 
                         'tag_number_id' => $tag->id,
 
-                        'status' => $this->mapStatus($row['status'] ?? null),
+                        'kondisi_peralatan' => $row['kondisi_peralatan'] ?? null,
+
+                        'status' => $row['status'] ?? null,
 
                         'jenis_kerusakan' => $row['jenis_kerusakan'] ?? null,
 

@@ -15,6 +15,8 @@ class MonitoringEquipmentLog extends Model
 
         'tag_number_id',
 
+        'kondisi_peralatan',
+
         'status',
 
         'jenis_kerusakan',

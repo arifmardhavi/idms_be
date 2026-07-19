@@ -24,7 +24,9 @@ class MonitoringEquipmentLogResource extends JsonResource
 
             'sece' => $this->tagNumber->sece ?? null,
 
-            'status' => (int) $this->status,
+            'kondisi_peralatan' => $this->kondisi_peralatan,
+
+            'status' => $this->status,
 
             'jenis_kerusakan' => $this->jenis_kerusakan,
 

@@ -15,6 +15,8 @@ class MonitoringEquipment extends BaseModel
 
         'tag_number_id',
 
+        'kondisi_peralatan',
+
         'status',
 
         'jenis_kerusakan',
