@@ -106,10 +106,10 @@ class MonitoringEquipmentDashboardService
 
         COUNT(*) as total,
 
-        SUM(CASE WHEN ({$statusColumn}=0 OR {$statusColumn} IS NULL) THEN 1 ELSE 0 END) as all_high,
-        SUM(CASE WHEN {$statusColumn}=1 THEN 1 ELSE 0 END) as all_medium,
-        SUM(CASE WHEN {$statusColumn}=2 THEN 1 ELSE 0 END) as all_low,
-        SUM(CASE WHEN {$statusColumn}=3 THEN 1 ELSE 0 END) as all_breakdown,
+        SUM(CASE WHEN ({$statusColumn}='High' OR {$statusColumn} IS NULL) THEN 1 ELSE 0 END) as all_high,
+        SUM(CASE WHEN {$statusColumn}='Medium' THEN 1 ELSE 0 END) as all_medium,
+        SUM(CASE WHEN {$statusColumn}='Low' THEN 1 ELSE 0 END) as all_low,
+        SUM(CASE WHEN {$statusColumn}='Breakdown' THEN 1 ELSE 0 END) as all_breakdown,
 
         /* ============================================================
             SECE (PRIORITAS PERTAMA)
@@ -117,25 +117,25 @@ class MonitoringEquipmentDashboardService
 
         SUM(CASE
             WHEN tag_numbers.sece = 1
-            AND ({$statusColumn}=0 OR {$statusColumn} IS NULL)
+            AND ({$statusColumn}='High' OR {$statusColumn} IS NULL)
             THEN 1 ELSE 0
         END) as sece_high,
 
         SUM(CASE
             WHEN tag_numbers.sece = 1
-            AND {$statusColumn}=1
+            AND {$statusColumn}='Medium'
             THEN 1 ELSE 0
         END) as sece_medium,
 
         SUM(CASE
             WHEN tag_numbers.sece = 1
-            AND {$statusColumn}=2
+            AND {$statusColumn}='Low'
             THEN 1 ELSE 0
         END) as sece_low,
 
         SUM(CASE
             WHEN tag_numbers.sece = 1
-            AND {$statusColumn}=3
+            AND {$statusColumn}='Breakdown'
             THEN 1 ELSE 0
         END) as sece_breakdown,
 
@@ -146,28 +146,28 @@ class MonitoringEquipmentDashboardService
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality = 0
-            AND ({$statusColumn}=0 OR {$statusColumn} IS NULL)
+            AND ({$statusColumn}='High' OR {$statusColumn} IS NULL)
             THEN 1 ELSE 0
         END) as ch_high,
 
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality = 0
-            AND {$statusColumn}=1
+            AND {$statusColumn}='Medium'
             THEN 1 ELSE 0
         END) as ch_medium,
 
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality = 0
-            AND {$statusColumn}=2
+            AND {$statusColumn}='Low'
             THEN 1 ELSE 0
         END) as ch_low,
 
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality = 0
-            AND {$statusColumn}=3
+            AND {$statusColumn}='Breakdown'
             THEN 1 ELSE 0
         END) as ch_breakdown,
 
@@ -178,28 +178,28 @@ class MonitoringEquipmentDashboardService
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality = 1
-            AND ({$statusColumn}=0 OR {$statusColumn} IS NULL)
+            AND ({$statusColumn}='High' OR {$statusColumn} IS NULL)
             THEN 1 ELSE 0
         END) as cmh_high,
 
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality = 1
-            AND {$statusColumn}=1
+            AND {$statusColumn}='Medium'
             THEN 1 ELSE 0
         END) as cmh_medium,
 
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality = 1
-            AND {$statusColumn}=2
+            AND {$statusColumn}='Low'
             THEN 1 ELSE 0
         END) as cmh_low,
 
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality = 1
-            AND {$statusColumn}=3
+            AND {$statusColumn}='Breakdown'
             THEN 1 ELSE 0
         END) as cmh_breakdown,
 
@@ -210,28 +210,28 @@ class MonitoringEquipmentDashboardService
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality IN (2,3,4)
-            AND ({$statusColumn}=0 OR {$statusColumn} IS NULL)
+            AND ({$statusColumn}='High' OR {$statusColumn} IS NULL)
             THEN 1 ELSE 0
         END) as other_high,
 
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality IN (2,3,4)
-            AND {$statusColumn}=1
+            AND {$statusColumn}='Medium'
             THEN 1 ELSE 0
         END) as other_medium,
 
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality IN (2,3,4)
-            AND {$statusColumn}=2
+            AND {$statusColumn}='Low'
             THEN 1 ELSE 0
         END) as other_low,
 
         SUM(CASE
             WHEN tag_numbers.sece = 0
             AND tag_numbers.criticality IN (2,3,4)
-            AND {$statusColumn}=3
+            AND {$statusColumn}='Breakdown'
             THEN 1 ELSE 0
         END) as other_breakdown,
 
@@ -252,7 +252,7 @@ class MonitoringEquipmentDashboardService
                     AND tag_numbers.criticality IS NULL
                 )
             )
-            AND ({$statusColumn}=0 OR {$statusColumn} IS NULL)
+            AND ({$statusColumn}='High' OR {$statusColumn} IS NULL)
             THEN 1 ELSE 0
         END) as uncategorized_high,
 
@@ -266,7 +266,7 @@ class MonitoringEquipmentDashboardService
                     AND tag_numbers.criticality IS NULL
                 )
             )
-            AND {$statusColumn}=1
+            AND {$statusColumn}='Medium'
             THEN 1 ELSE 0
         END) as uncategorized_medium,
 
@@ -280,7 +280,7 @@ class MonitoringEquipmentDashboardService
                     AND tag_numbers.criticality IS NULL
                 )
             )
-            AND {$statusColumn}=2
+            AND {$statusColumn}='Low'
             THEN 1 ELSE 0
         END) as uncategorized_low,
 
@@ -294,7 +294,7 @@ class MonitoringEquipmentDashboardService
                     AND tag_numbers.criticality IS NULL
                 )
             )
-            AND {$statusColumn}=3
+            AND {$statusColumn}='Breakdown'
             THEN 1 ELSE 0
         END) as uncategorized_breakdown
 
