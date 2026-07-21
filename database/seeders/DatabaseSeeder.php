@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             RkapNrSeeder::class,
             RkapOhSeeder::class,
             RkapRtSeeder::class,
+            StatusPeralatanSeeder::class,
+            KondisiPeralatanSeeder::class,
             MonitoringEquipmentSeeder::class,
         ]);
     }
