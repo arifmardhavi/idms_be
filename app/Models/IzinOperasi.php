@@ -9,7 +9,7 @@ class IzinOperasi extends BaseModel
 {
     use HasFactory;
     protected $fillable = ['unit_id', 'no_certificate', 'issue_date', 'overdue_date', 'izin_operasi_certificate', 'izin_operasi_old_certificate', 'rla', 'rla_issue', 'rla_overdue', 'rla_certificate', 'rla_old_certificate'];
-    protected $appends = ['due_days', 'rla_due_days'];
+    protected $appends = ['due_days', 'rla_due_days', 'count_report_izin_operasi'];
 
     protected static function boot()
     {
@@ -91,5 +91,10 @@ class IzinOperasi extends BaseModel
     public function reportIzinOperasi()
     {
         return $this->hasMany(ReportIzinOperasi::class);
+    }
+
+    public function getCountReportIzinOperasiAttribute()
+    {
+        return $this->reportIzinOperasi()->count();
     }
 }

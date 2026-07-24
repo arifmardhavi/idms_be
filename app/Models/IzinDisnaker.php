@@ -9,7 +9,7 @@ class IzinDisnaker extends BaseModel
 {
     use HasFactory;
     protected $fillable = ["plo_id", 'tag_number_id', 'no_certificate', 'issue_date', 'overdue_date', 'izin_disnaker_certificate',"izin_disnaker_old_certificate" , 'rla', 'rla_issue', 'rla_overdue', 'rla_certificate', 'rla_old_certificate', 're_engineer', 're_engineer_certificate'];
-    protected $appends = ['due_days', 'rla_due_days'];
+    protected $appends = ['due_days', 'rla_due_days', 'count_report_izin_disnaker'];
 
     public function getDueDaysAttribute()
     {
@@ -41,5 +41,15 @@ class IzinDisnaker extends BaseModel
     public function plo()
     {
         return $this->belongsTo(Plo::class);
+    }
+
+    public function reportIzinDisnaker()
+    {
+        return $this->hasMany(ReportIzinDisnaker::class);
+    }
+
+    public function getCountReportIzinDisnakerAttribute()
+    {
+        return $this->reportIzinDisnaker()->count();
     }
 }
