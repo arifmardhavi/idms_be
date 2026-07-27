@@ -36,7 +36,7 @@ class TagNumberImportService
         }
 
         $headers = array_map(function ($header) {
-            return str($header)->trim()->toString();
+            return str($header)->trim()->slug('_')->toString();
         }, array_shift($sheet));
 
         $units = Unit::pluck('id', 'unit_name')

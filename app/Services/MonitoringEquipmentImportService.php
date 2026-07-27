@@ -39,7 +39,7 @@ class MonitoringEquipmentImportService
         $headers = array_map(function ($header) {
             return str($header)
                 ->trim()
-                ->snake()
+                ->slug('_')
                 ->toString();
         }, array_shift($sheet));
 

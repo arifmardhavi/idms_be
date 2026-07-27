@@ -7,6 +7,7 @@ use App\Services\TagNumberImportUpdateService;
 use App\Models\Tag_number;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class Tag_numberController extends Controller
 {
