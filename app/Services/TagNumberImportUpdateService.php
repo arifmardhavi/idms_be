@@ -121,8 +121,8 @@ class TagNumberImportUpdateService
                 'id' => $existing->id,
                 'unit_id' => $unitId,
                 'type_id' => $typeId,
-                'sece' => $this->mapSece($row['sece'] ?? null) ?? $existing->sece,
-                'criticality' => $this->mapCriticality($row['criticality'] ?? null) ?? $existing->criticality,
+                'sece' => $this->mapSece($row['sece'] ?? null),
+                'criticality' => $this->mapCriticality($row['criticality'] ?? null),
                 'status' => $status,
                 'description' => $row['deskripsi'] ?? $existing->description,
             ];
