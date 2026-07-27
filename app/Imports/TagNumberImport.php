@@ -44,6 +44,8 @@ class TagNumberImport implements ToCollection, WithHeadingRow
 
         return match (strtolower(trim($sece))) {
 
+            'iya' => 1,
+
             'ya' => 1,
 
             'yes' => 1,
