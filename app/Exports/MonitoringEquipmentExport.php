@@ -116,6 +116,8 @@ class MonitoringEquipmentExport implements
 
             'SECE',
 
+            'Kondisi Peralatan',
+
             'Status',
 
             'Jenis Kerusakan',
@@ -133,8 +135,6 @@ class MonitoringEquipmentExport implements
             'Estimasi Perbaikan',
 
             'Target',
-
-            'Updated At',
 
         ];
     }
@@ -155,6 +155,8 @@ class MonitoringEquipmentExport implements
 
             $this->sece($sece),
 
+            $row->kondisi_peralatan,
+
             $this->status($row->status),
 
             $row->jenis_kerusakan,
@@ -172,8 +174,6 @@ class MonitoringEquipmentExport implements
             $row->estimasi_perbaikan,
 
             $row->target,
-
-            optional($row->updated_at)->format('d-m-Y H:i'),
 
         ];
     }

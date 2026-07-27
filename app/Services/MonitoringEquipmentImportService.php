@@ -13,26 +13,6 @@ use Maatwebsite\Excel\Facades\Excel;
 class MonitoringEquipmentImportService
 {
 
-    private function mapStatus(?string $status): ?int
-    {
-        if (blank($status)) {
-            return null;
-        }
-
-        return match (strtolower(trim($status))) {
-
-            'high' => 0,
-
-            'medium' => 1,
-
-            'low' => 2,
-
-            'breakdown' => 3,
-
-            default => null,
-
-        };
-    }
     public function import(UploadedFile $file): array
     {
         $sheet = Excel::toArray([], $file)[0];
