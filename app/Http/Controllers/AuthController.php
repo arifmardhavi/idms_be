@@ -78,6 +78,9 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Buat token
+        $token = JWTAuth::fromUser($user);
+
         // add hak akses to user
         $data = UserHakAkses::with('hak_akses')
             ->where('user_id', $user->id)
@@ -100,8 +103,7 @@ class AuthController extends Controller
         
 
 
-        // Buat token
-        $token = JWTAuth::fromUser($user);
+        
 
         return response()->json([
             'success' => true,
