@@ -31,7 +31,7 @@ class MonitoringEquipmentController extends Controller
 
         $search = $request->get('search');
 
-        $sortBy = $request->get('sort_by', 'id');
+        $sortBy = $request->get('sort_by', 'status');
 
         $sortOrder = strtolower($request->get('sort_order', 'desc')) == 'asc'
             ? 'asc'
@@ -219,10 +219,16 @@ class MonitoringEquipmentController extends Controller
 
         ];
 
-        $query->orderBy(
-            $allowedSort[$sortBy] ?? 'monitoring_equipment.id',
-            $sortOrder
-        );
+        if ($sortBy === 'status') {
+            $query->orderByRaw(
+                "FIELD(monitoring_equipment.status, 'Breakdown', 'Low', 'Medium', 'High') " . $sortOrder
+            );
+        } else {
+            $query->orderBy(
+                $allowedSort[$sortBy] ?? 'monitoring_equipment.id',
+                $sortOrder
+            );
+        }
 
         $data = $query->paginate($perPage);
 
