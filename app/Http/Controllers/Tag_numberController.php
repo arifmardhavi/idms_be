@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\TagNumberImport;
-use App\Imports\TagNumberImportUpdate;
+use App\Services\TagNumberImportService;
+use App\Services\TagNumberImportUpdateService;
 use App\Models\Tag_number;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Maatwebsite\Excel\Facades\Excel;
 
 class Tag_numberController extends Controller
 {
@@ -318,20 +316,24 @@ class Tag_numberController extends Controller
             'file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
-        $import = new TagNumberImport();
-        Excel::import($import, $request->file('file'));
+        $service = new TagNumberImportService();
+        $result = $service->import($request->file('file'));
 
-        if (!empty($import->errors)) {
+        if (!$result['success']) {
+            return response()->json($result, 422);
+        }
+
+        if ($result['summary']['failed'] > 0) {
             return response()->json([
                 'status' => 'warning',
                 'message' => 'Beberapa data gagal diimport',
-                'errors' => $import->errors
+                'errors' => $result['summary']['errors']
             ], 422);
         }
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Data berhasil diimport',
+            'message' => $result['message'],
         ]);
     }
     public function importUpdate(Request $request) {
@@ -339,20 +341,24 @@ class Tag_numberController extends Controller
             'file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
-        $import = new TagNumberImportUpdate();
-        Excel::import($import, $request->file('file'));
+        $service = new TagNumberImportUpdateService();
+        $result = $service->import($request->file('file'));
 
-        if (!empty($import->errors)) {
+        if (!$result['success']) {
+            return response()->json($result, 422);
+        }
+
+        if ($result['summary']['failed'] > 0) {
             return response()->json([
                 'status' => 'warning',
                 'message' => 'Beberapa data gagal diimport',
-                'errors' => $import->errors
+                'errors' => $result['summary']['errors']
             ], 422);
         }
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Data berhasil diimport',
+            'message' => $result['message'],
         ]);
     }
 }
