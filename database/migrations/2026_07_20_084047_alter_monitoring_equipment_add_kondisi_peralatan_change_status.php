@@ -45,7 +45,7 @@ return new class extends Migration
 
             $table->dropColumn('kondisi_peralatan');
 
-            $table->char('status', 2)
+            $table->string('status')
                 ->nullable()
                 ->change();
 
@@ -55,7 +55,7 @@ return new class extends Migration
 
             $table->dropColumn('kondisi_peralatan');
 
-            $table->char('status', 2)
+            $table->string('status')
                 ->nullable()
                 ->change();
 
