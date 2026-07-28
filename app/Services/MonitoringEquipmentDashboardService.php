@@ -65,6 +65,14 @@ class MonitoringEquipmentDashboardService
     ): array
     {
 
+        $latestPeriod = MonitoringEquipmentLog::query()
+            ->where('period_code', '<=', $period)
+            ->max('period_code');
+
+        if (!$latestPeriod) {
+            return $this->transform(null);
+        }
+
         $row = MonitoringEquipmentLog::query()
 
             ->join(
@@ -76,7 +84,7 @@ class MonitoringEquipmentDashboardService
 
             ->where(
                 'monitoring_equipment_logs.period_code',
-                $period
+                $latestPeriod
             )
 
             ->selectRaw(

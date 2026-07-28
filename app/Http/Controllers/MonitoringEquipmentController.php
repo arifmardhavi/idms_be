@@ -371,6 +371,44 @@ class MonitoringEquipmentController extends Controller
                 );
 
                 /**
+                 * Fill missing previous periods
+                 */
+                $logFillable = (new MonitoringEquipmentLog())->getFillable();
+
+                foreach ([BusinessPeriod::previous(2), BusinessPeriod::previous(1)] as $prev) {
+                    $hasLog = MonitoringEquipmentLog::where('tag_number_id', $monitoringEquipment->tag_number_id)
+                        ->where('period_code', $prev['code'])
+                        ->exists();
+
+                    if ($hasLog) {
+                        continue;
+                    }
+
+                    $latestAvailable = MonitoringEquipmentLog::where('tag_number_id', $monitoringEquipment->tag_number_id)
+                        ->where('period_code', '<', $prev['code'])
+                        ->max('period_code');
+
+                    if (!$latestAvailable) {
+                        continue;
+                    }
+
+                    $source = MonitoringEquipmentLog::where('tag_number_id', $monitoringEquipment->tag_number_id)
+                        ->where('period_code', $latestAvailable)
+                        ->first();
+
+                    if ($source) {
+                        MonitoringEquipmentLog::create(array_merge(
+                            collect($source->toArray())->only($logFillable)->toArray(),
+                            [
+                                'period_code' => $prev['code'],
+                                'period_start' => $prev['start'],
+                                'period_end' => $prev['end'],
+                            ]
+                        ));
+                    }
+                }
+
+                /**
                  * Cleanup
                  * Keep only last 3 periods
                  */
@@ -430,10 +468,14 @@ class MonitoringEquipmentController extends Controller
 
             DB::transaction(function () use ($monitoringEquipment) {
 
+                $period = BusinessPeriod::current();
+
                 MonitoringEquipmentLog::where(
                     'tag_number_id',
                     $monitoringEquipment->tag_number_id
-                )->delete();
+                )
+                    ->where('period_code', $period['code'])
+                    ->delete();
 
                 $monitoringEquipment->delete();
 

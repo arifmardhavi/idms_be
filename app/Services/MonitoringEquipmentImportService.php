@@ -167,7 +167,11 @@ class MonitoringEquipmentImportService
             $equipmentUpdate,
             $logInsert,
             $logUpdate,
-            $allowedPeriods
+            $allowedPeriods,
+            $periodCode,
+            $periodStart,
+            $periodEnd,
+            $logFillable
         ) {
             if ($equipmentInsert) {
                 MonitoringEquipment::insert($equipmentInsert);
@@ -187,6 +191,76 @@ class MonitoringEquipmentImportService
                 $id = $item['id'];
                 MonitoringEquipmentLog::where('id', $id)
                     ->update(collect($item)->except('id')->toArray());
+            }
+
+            $allEquipmentIds = MonitoringEquipment::pluck('tag_number_id')->toArray();
+
+            $currentExistingIds = MonitoringEquipmentLog::where('period_code', $periodCode)
+                ->pluck('tag_number_id')
+                ->toArray();
+
+            $currentMissingIds = array_values(array_diff($allEquipmentIds, $currentExistingIds));
+
+            if ($currentMissingIds) {
+                $latestAvailable = MonitoringEquipmentLog::whereIn('tag_number_id', $currentMissingIds)
+                    ->where('period_code', '<', $periodCode)
+                    ->max('period_code');
+
+                if ($latestAvailable) {
+                    $toCopy = MonitoringEquipmentLog::whereIn('tag_number_id', $currentMissingIds)
+                        ->where('period_code', $latestAvailable)
+                        ->get()
+                        ->map(fn($log) => array_merge(
+                            collect($log->toArray())->only($logFillable)->toArray(),
+                            [
+                                'period_code' => $periodCode,
+                                'period_start' => $periodStart,
+                                'period_end' => $periodEnd,
+                            ]
+                        ))
+                        ->toArray();
+
+                    if ($toCopy) {
+                        MonitoringEquipmentLog::insert($toCopy);
+                    }
+                }
+            }
+
+            foreach ([BusinessPeriod::previous(2), BusinessPeriod::previous(1)] as $prev) {
+                $prevExistingIds = MonitoringEquipmentLog::where('period_code', $prev['code'])
+                    ->pluck('tag_number_id')
+                    ->toArray();
+
+                $prevMissingIds = array_values(array_diff($allEquipmentIds, $prevExistingIds));
+
+                if (empty($prevMissingIds)) {
+                    continue;
+                }
+
+                $latestAvailable = MonitoringEquipmentLog::whereIn('tag_number_id', $prevMissingIds)
+                    ->where('period_code', '<', $prev['code'])
+                    ->max('period_code');
+
+                if (!$latestAvailable) {
+                    continue;
+                }
+
+                $toCopy = MonitoringEquipmentLog::whereIn('tag_number_id', $prevMissingIds)
+                    ->where('period_code', $latestAvailable)
+                    ->get()
+                    ->map(fn($log) => array_merge(
+                        collect($log->toArray())->only($logFillable)->toArray(),
+                        [
+                            'period_code' => $prev['code'],
+                            'period_start' => $prev['start'],
+                            'period_end' => $prev['end'],
+                        ]
+                    ))
+                    ->toArray();
+
+                if ($toCopy) {
+                    MonitoringEquipmentLog::insert($toCopy);
+                }
             }
 
             MonitoringEquipmentLog::whereNotIn('period_code', $allowedPeriods)->delete();

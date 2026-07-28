@@ -89,19 +89,13 @@ class BusinessPeriod
 
     public static function dashboardPeriods(): array
     {
-        $current = self::current();
-
         return [
 
-            'current' => $current['code'],
+            'current' => self::previous(0)['code'],
 
-            'last_month' => Carbon::parse($current['start'])
-                ->subMonth()
-                ->format('Y-m'),
+            'last_month' => self::previous(1)['code'],
 
-            'two_months_ago' => Carbon::parse($current['start'])
-                ->subMonths(2)
-                ->format('Y-m'),
+            'two_months_ago' => self::previous(2)['code'],
 
         ];
     }
