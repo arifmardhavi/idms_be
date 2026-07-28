@@ -15,6 +15,12 @@ class MonitoringEquipmentDashboardService
 
         return [
 
+            'periods' => [
+                'current'         => BusinessPeriod::current()['code'],
+                'last_month'      => BusinessPeriod::previous(1)['code'],
+                'two_months_ago'  => BusinessPeriod::previous(2)['code'],
+            ],
+
             'current' => $this->current(),
 
             'last_month' => $this->history(
