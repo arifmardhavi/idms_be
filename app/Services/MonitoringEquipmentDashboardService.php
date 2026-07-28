@@ -317,6 +317,32 @@ class MonitoringEquipmentDashboardService
 
     private function transform($r): array
     {
+        if (!$r) {
+            $zero = [
+                'sece_yes' => 0,
+                'criticality_high' => 0,
+                'criticality_medium_high' => 0,
+                'criticality_other' => 0,
+                'uncategorized' => 0,
+                'total' => 0,
+            ];
+            return [
+                'all' => ['high' => 0, 'medium' => 0, 'low' => 0, 'breakdown' => 0, 'total' => 0],
+                'high' => $zero,
+                'medium' => $zero,
+                'low' => $zero,
+                'breakdown' => $zero,
+                'summary' => [
+                    'sece_yes' => 0,
+                    'criticality_high' => 0,
+                    'criticality_medium_high' => 0,
+                    'criticality_other' => 0,
+                    'uncategorized' => 0,
+                    'grand_total' => 0,
+                ],
+            ];
+        }
+
         /**
          * ==========================
          * ALL
