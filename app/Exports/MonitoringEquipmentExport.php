@@ -36,7 +36,7 @@ class MonitoringEquipmentExport implements
     public function collection()
     {
         $query = MonitoringEquipment::query()
-            ->with('tagNumber');
+            ->with(['tagNumber.type.category']);
 
         /**
          * Search
@@ -112,6 +112,10 @@ class MonitoringEquipmentExport implements
 
             'Tag Number',
 
+            'Deskripsi Peralatan',
+
+            'Kategori Peralatan',
+
             'Criticality',
 
             'SECE',
@@ -144,12 +148,17 @@ class MonitoringEquipmentExport implements
         static $no = 0;
         $criticality = optional($row->tagNumber)->criticality;
         $sece = optional($row->tagNumber)->sece;
+        $category = $row->tagNumber->type?->category?->category_name;
 
         return [
 
             ++$no,
 
             optional($row->tagNumber)->tag_number,
+
+            optional($row->tagNumber)->description,
+
+            $category,
 
             $this->criticality($criticality),
 
@@ -205,13 +214,13 @@ class MonitoringEquipmentExport implements
     {
         return match ($value) {
             null => '-',
-            '0', 0 => 'High',
+            'High', 0 => 'High',
 
-            '1', 1 => 'Medium',
+            'Medium', 1 => 'Medium',
 
-            '2', 2 => 'Low',
+            'Low', 2 => 'Low',
 
-            '3', 3 => 'Breakdown',
+            'Breakdown', 3 => 'Breakdown',
 
             default => '-'
 
@@ -228,11 +237,11 @@ class MonitoringEquipmentExport implements
 
                 $sheet->freezePane('A2');
 
-                $sheet->getStyle('A1:N1')
+                $sheet->getStyle('A1:P1')
                     ->getFont()
                     ->setBold(true);
 
-                $sheet->getStyle('A1:N1')
+                $sheet->getStyle('A1:P1')
                     ->getFill()
                     ->setFillType(Fill::FILL_SOLID)
                     ->getStartColor()
