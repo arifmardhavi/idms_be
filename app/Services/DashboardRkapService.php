@@ -11,13 +11,13 @@ class DashboardRkapService
 {
     public function getData($usd = null): array
     {
-        // 🔥 per RKAP (per periode)
+        //  per RKAP (per periode)
         $ta = $this->groupByPeriode(DetailRkapTa::class, $usd);
         $oh = $this->groupByPeriode(DetailRkapOh::class, $usd);
         $rt = $this->groupByPeriode(DetailRkapRt::class, $usd);
         $nr = $this->groupByPeriode(DetailRkapNr::class, $usd);
 
-        // 🔥 total per RKAP
+        //  total per RKAP
         $totalTa = $this->getTotal($ta);
         $totalOh = $this->getTotal($oh);
         $totalRt = $this->getTotal($rt);
@@ -32,6 +32,12 @@ class DashboardRkapService
             'rkap_nr' => $nr,
             'total_per_periode' => $totalPerPeriode,
 
+            'rkap_ta_kumulatif' => $this->cumulative($ta),
+            'rkap_oh_kumulatif' => $this->cumulative($oh),
+            'rkap_rt_kumulatif' => $this->cumulative($rt),
+            'rkap_nr_kumulatif' => $this->cumulative($nr),
+            'total_per_periode_kumulatif' => $this->cumulative($totalPerPeriode, true),
+
             'all_rkap' => [
                 'rkap_ta' => $totalTa,
                 'rkap_oh' => $totalOh,
@@ -42,7 +48,7 @@ class DashboardRkapService
     }
 
     /**
-     * 🔥 GROUP BY PERIODE (1–12)
+     *  GROUP BY PERIODE (1–12)
      */
     private function groupByPeriode($model, $usd = null): array
     {
@@ -56,7 +62,7 @@ class DashboardRkapService
             $plan = (float) ($rows[$periode]->plan ?? 0);
             $actual = (float) ($rows[$periode]->actual ?? 0);
 
-            // 🔥 konversi USD (kalau ada)
+            //  konversi USD (kalau ada)
             if ($usd) {
                 $plan = $plan / $usd;
                 $actual = $actual / $usd;
@@ -72,7 +78,7 @@ class DashboardRkapService
     }
 
     /**
-     * 🔥 TOTAL PER RKAP
+     * TOTAL PER RKAP
      */
     private function getTotal(array $data): array
     {
@@ -87,13 +93,36 @@ class DashboardRkapService
     }
 
     /**
-     * 🔥 HITUNG PERSENTASE
+     * HITUNG PERSENTASE
      */
     private function calculatePercent($plan, $actual): float
     {
         return $plan > 0
             ? round((($plan - $actual) / $plan) * 100, 2)
             : 0;
+    }
+
+    /**
+     * RUNNING TOTAL KUMULATIF (P1..N)
+     */
+    private function cumulative(array $data, bool $swapped = false): array
+    {
+        $cumPlan = 0;
+        $cumActual = 0;
+
+        return collect($data)->map(function ($item) use (&$cumPlan, &$cumActual, $swapped) {
+            $cumPlan += $item['plan'];
+            $cumActual += $item['actual'];
+
+            return [
+                'periode' => $item['periode'],
+                'plan' => round($cumPlan, 2),
+                'actual' => round($cumActual, 2),
+                'selisih' => $swapped
+                    ? $this->calculatePercent($cumActual, $cumPlan)
+                    : $this->calculatePercent($cumPlan, $cumActual),
+            ];
+        })->values()->toArray();
     }
 
     private function getTotalPerPeriode(
