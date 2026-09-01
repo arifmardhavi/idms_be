@@ -8,15 +8,18 @@ class LogActivity extends Model
 {
     protected $fillable = [
         'user_id',
-        'module',
         'action',
-        'changes',
+        'module',
+        'record_id',
+        'record_label',
+        'description',
+        'metadata',
         'ip_address',
-        'user_agent'
+        'user_agent',
     ];
 
     protected $casts = [
-        'changes' => 'array'
+        'metadata' => 'array',
     ];
 
     public function user()

@@ -241,6 +241,12 @@ class IzinUsahaController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'IzinUsaha', [
+            'recordId'    => $izin_usaha->id,
+            'recordLabel' => $izin_usaha->no_izin ?? $izin_usaha->id,
+            'metadata'    => ['file' => $izin_usaha->izin_usaha_file],
+        ]);
+
         return FileHelper::downloadFile('izin_usaha', $izin_usaha->izin_usaha_file);
     }
 }

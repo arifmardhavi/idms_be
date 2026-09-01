@@ -398,6 +398,12 @@ class AmandemenNewController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'AmandemenNew', [
+            'recordId'    => $amandemenNew->id,
+            'recordLabel' => $amandemenNew->no_amandemen ?? $amandemenNew->id,
+            'metadata'    => ['file' => $file],
+        ]);
+
         return FileHelper::downloadFile($destinationPath, $file);
     }
 }

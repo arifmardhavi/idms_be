@@ -59,7 +59,7 @@ use App\Http\Controllers\{
     KondisiPeralatanController,
     LampiranMocController,
     LaporanInspectionController,
-    LogActivityController,
+    ActivityController,
     LumpsumProgressNewController,
     MdrFolderController,
     MdrItemController,
@@ -73,7 +73,6 @@ use App\Http\Controllers\{
     NotifMaterialOhController,
     NotifMaterialRtnrtController,
     OnstreamInspectionController,
-    OpenFileActivityController,
     OverhaulController,
     P_IdController,
     PirController,
@@ -144,10 +143,16 @@ Route::middleware(['auth:api'])->group(function () {
     // AUTH
     Route::post('/me', [AuthController::class, 'me']);
 
-    // LOG ACTIVITIES
-    Route::get('log_activities', [LogActivityController::class, 'index']);
-    Route::get('log_activities/user', [LogActivityController::class, 'showByAllUsers']);
-    Route::get('log_activities/user/{user_id}', [LogActivityController::class, 'showByUser']);
+    // ACTIVITY LOG & RANKING
+    Route::get('activity', [ActivityController::class, 'index']);
+    Route::post('activity/visit', [ActivityController::class, 'visit']);
+    Route::get('activity/ranking/active', [ActivityController::class, 'rankingActive']);
+    Route::get('activity/ranking/contributor', [ActivityController::class, 'rankingContributor']);
+    Route::get('activity/stats/overview', [ActivityController::class, 'statsOverview']);
+    Route::get('activity/stats/trend', [ActivityController::class, 'statsTrend']);
+    Route::get('activity/stats/by-action', [ActivityController::class, 'statsByAction']);
+    Route::get('activity/stats/by-module', [ActivityController::class, 'statsByModule']);
+    Route::get('activity/stats/by-user', [ActivityController::class, 'statsByUser']);
 
     Route::apiResource('units', UnitController::class)->only(['index', 'show']);
     Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
@@ -276,7 +281,6 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('contract_jasa', ContractJasaController::class);
     Route::apiResource('contract_jasa_oh', ContractJasaOhController::class);
     Route::apiResource('contract_jasa_rtnrt', ContractJasaRtnrtController::class);
-    Route::apiResource('open_file_activity', OpenFileActivityController::class);
     Route::apiResource('p_id', P_IdController::class);
     Route::apiResource('izin_usaha', IzinUsahaController::class);
     Route::apiResource('izin_disnaker', IzinDisnakerController::class);
@@ -572,8 +576,6 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/readiness_jasa/event/{id}', [ReadinessJasaController::class, 'showByEvent']);
     Route::get('/readiness_jasa_oh/event/{id}', [ReadinessJasaOhController::class, 'showByEvent']);
     Route::get('/readiness_jasa_rtnrt/event/{id}', [ReadinessJasaRtnrtController::class, 'showByEvent']);
-    // OPEN FILE ACTIVITY
-    Route::get('/open_file_activity/user/{id}', [OpenFileActivityController::class, 'showByUserId']);
 
 
 });

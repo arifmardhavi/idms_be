@@ -448,6 +448,10 @@ class PloController extends Controller
     
         $zip->close();
     
+        activity()->log('download', 'Plo', [
+            'metadata' => ['count' => count($plos ?? [])],
+        ]);
+
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
         return response()->json(['success' => true, 'url' => url('plo_certificates.zip')]);
     }
@@ -560,6 +564,12 @@ class PloController extends Controller
                 'message' => 'File not found.',
             ], 404);
         }
+
+        activity()->log('download', 'Plo', [
+            'recordId'    => $plo->id,
+            'recordLabel' => $plo->no_certificate ?? $plo->id,
+            'metadata'    => ['file' => $file],
+        ]);
 
         return FileHelper::downloadFile($destinationPath, $file);
     }

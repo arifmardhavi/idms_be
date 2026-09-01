@@ -166,6 +166,12 @@ class ProjectSpecController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'ProjectSpec', [
+            'recordId'    => $projectSpec->id,
+            'recordLabel' => $projectSpec->nama_spesifikasi ?? $projectSpec->id,
+            'metadata'    => ['file' => $projectSpec->project_spec_file],
+        ]);
+
         return FileHelper::downloadFile('project_specs', $projectSpec->project_spec_file);
     }
 }

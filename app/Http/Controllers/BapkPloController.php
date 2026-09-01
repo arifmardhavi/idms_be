@@ -212,6 +212,12 @@ class BapkPloController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'BapkPlo', [
+            'recordId'    => $bapkPlo->id,
+            'recordLabel' => $bapkPlo->no_certificate ?? $bapkPlo->id,
+            'metadata'    => ['file' => $bapkPlo->bapk_plo],
+        ]);
+
         return FileHelper::downloadFile('plo/bapk', $bapkPlo->bapk_plo);
     }
 }

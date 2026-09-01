@@ -83,33 +83,6 @@ class User extends Authenticatable implements JWTSubject
 
 
     /** =====================
-     * Relasi ke OpenFileActivity
-     * ===================== */
-    public function openFileActivities()
-    {
-        return $this->hasMany(OpenFileActivity::class, 'user_id');
-    }
-
-    /** =====================
-     * Accessor: Total semua file open
-     * ===================== */
-    public function getTotalFileOpenAttribute()
-    {
-        return $this->openFileActivities()->count();
-    }
-
-    /** =====================
-     * Accessor: Breakdown file open per fitur
-     * ===================== */
-    public function getFileOpenPerFeatureAttribute()
-    {
-        return $this->openFileActivities()
-            ->select('features', DB::raw('COUNT(*) as total'))
-            ->groupBy('features')
-            ->pluck('total', 'features');
-    }
-
-    /** =====================
     * Accessor: List hak akses
     * ===================== */
 

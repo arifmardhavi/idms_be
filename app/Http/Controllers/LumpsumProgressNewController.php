@@ -184,6 +184,12 @@ class LumpsumProgressNewController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'LumpsumProgressNew', [
+            'recordId'    => $lumpsum_progress->id,
+            'recordLabel' => $lumpsum_progress->no_progress ?? $lumpsum_progress->id,
+            'metadata'    => ['file' => $lumpsum_progress->progress_file],
+        ]);
+
         return FileHelper::downloadFile('contract_new/lumpsum/progress', $lumpsum_progress->progress_file);
     }
 }

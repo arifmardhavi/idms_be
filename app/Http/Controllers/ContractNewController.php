@@ -436,6 +436,12 @@ class ContractNewController extends Controller
 
             $fileName = $contract->contract_file;
 
+            activity()->log('download', 'ContractNew', [
+                'recordId'    => $contract->id,
+                'recordLabel' => $contract->no_contract ?? $contract->id,
+                'metadata'    => ['file' => $contract->contract_file],
+            ]);
+
             return response()->download(
                 $filePath,
                 $fileName,

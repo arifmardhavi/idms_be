@@ -212,6 +212,12 @@ class BapkCoiController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'BapkCoi', [
+            'recordId'    => $bapkCoi->id,
+            'recordLabel' => $bapkCoi->no_certificate ?? $bapkCoi->id,
+            'metadata'    => ['file' => $bapkCoi->bapk_coi],
+        ]);
+
         return FileHelper::downloadFile('coi/bapk', $bapkCoi->bapk_coi);
     }
 }

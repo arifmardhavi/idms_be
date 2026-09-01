@@ -536,6 +536,10 @@ class IzinDisnakerController extends Controller
         
         $zip->close();
         
+        activity()->log('download', 'IzinDisnaker', [
+            'metadata' => ['count' => count($izinDisnaker ?? [])],
+        ]);
+
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
         return response()->json(['success' => true, 'url' => url('izin_disnaker_certificates.zip')]);
     }
@@ -653,6 +657,12 @@ class IzinDisnakerController extends Controller
                 'message' => 'File not found.',
             ], 404);
         }
+
+        activity()->log('download', 'IzinDisnaker', [
+            'recordId'    => $izinDisnaker->id,
+            'recordLabel' => $izinDisnaker->no_certificate ?? $izinDisnaker->id,
+            'metadata'    => ['file' => $file],
+        ]);
 
         return FileHelper::downloadFile($destinationPath, $file);
     }

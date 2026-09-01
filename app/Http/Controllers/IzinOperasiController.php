@@ -446,6 +446,10 @@ class IzinOperasiController extends Controller
     
         $zip->close();
     
+        activity()->log('download', 'IzinOperasi', [
+            'metadata' => ['count' => count($izinOperasis ?? [])],
+        ]);
+
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
         return response()->json(['success' => true, 'url' => url('izin_operasi_certificates.zip')]);
     }
@@ -558,6 +562,12 @@ class IzinOperasiController extends Controller
                 'message' => 'File not found.',
             ], 404);
         }
+
+        activity()->log('download', 'IzinOperasi', [
+            'recordId'    => $izinOperasi->id,
+            'recordLabel' => $izinOperasi->no_certificate ?? $izinOperasi->id,
+            'metadata'    => ['file' => $file],
+        ]);
 
         return FileHelper::downloadFile($destinationPath, $file);
     }

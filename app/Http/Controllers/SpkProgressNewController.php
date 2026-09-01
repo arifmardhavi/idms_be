@@ -203,6 +203,12 @@ class SpkProgressNewController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'SpkProgressNew', [
+            'recordId'    => $spkProgressNew->id,
+            'recordLabel' => $spkProgressNew->no_progress ?? $spkProgressNew->id,
+            'metadata'    => ['file' => $spkProgressNew->progress_file],
+        ]);
+
         return FileHelper::downloadFile('contract_new/spk/progress', $spkProgressNew->progress_file);
     }
 }

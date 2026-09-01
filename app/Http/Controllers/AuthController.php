@@ -94,16 +94,14 @@ class AuthController extends Controller
 
         // Username yang dapat akses semua
         $superUsers = ['admin', 'superadmin', 'faza.ahmad'];
-
         if (in_array($user->username, $superUsers)) {
             $hakAksesList[] = '*';
             $user->hak_akses_list = $hakAksesList;
         }
 
-        
-
-
-        
+        activity()->log('login', 'Auth', [
+            'userId' => $user->id,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -141,7 +139,16 @@ class AuthController extends Controller
 
     public function logout()
     {
+        $user = auth()->user();
+
         JWTAuth::invalidate(JWTAuth::getToken());
+
+        if ($user) {
+            activity()->log('logout', 'Auth', [
+                'userId' => $user->id,
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Logout berhasil.',

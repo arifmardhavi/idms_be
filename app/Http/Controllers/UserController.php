@@ -16,7 +16,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('contract_news:id', 'openFileActivities')->orderBy('id', 'desc')->get();
+        $users = User::with('contract_news:id')->orderBy('id', 'desc')->get();
         $data = $users->map(function ($user) {
             return [
                 'id' => $user->id,

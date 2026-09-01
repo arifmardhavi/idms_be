@@ -261,6 +261,12 @@ class ReportIzinOperasiController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'ReportIzinOperasi', [
+            'recordId'    => $report->id,
+            'recordLabel' => $report->no_izin ?? $report->id,
+            'metadata'    => ['file' => $report->report_izin_operasi],
+        ]);
+
         return FileHelper::downloadFile('izin_operasi/reports', $report->report_izin_operasi);
     }
 }

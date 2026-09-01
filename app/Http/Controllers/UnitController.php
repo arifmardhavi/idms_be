@@ -254,6 +254,8 @@ class UnitController extends Controller
             // border
             'border' => ['onlyHeader' => true, 'onlyData' => true],
         ];
+        activity()->log('export', 'Unit');
+
         return Excel::download(new DynamicExport($data, $columns, $options), 'Unit-report.xlsx');
 
     }

@@ -312,6 +312,10 @@ class SkhpController extends Controller
     
         $zip->close();
     
+        activity()->log('download', 'Skhp', [
+            'metadata' => ['count' => count($skhps ?? [])],
+        ]);
+
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
         return response()->json(['success' => true, 'url' => url('file_skhp.zip')]);
     }
@@ -398,6 +402,12 @@ class SkhpController extends Controller
                 'message' => 'File not found.',
             ], 404);
         }
+
+        activity()->log('download', 'Skhp', [
+            'recordId'    => $skhp->id,
+            'recordLabel' => $skhp->no_skhp ?? $skhp->id,
+            'metadata'    => ['file' => $file],
+        ]);
 
         return FileHelper::downloadFile($destinationPath, $file);
     }

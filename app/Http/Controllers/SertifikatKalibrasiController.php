@@ -311,6 +311,10 @@ class SertifikatKalibrasiController extends Controller
     
         $zip->close();
     
+        activity()->log('download', 'SertifikatKalibrasi', [
+            'metadata' => ['count' => count($sertifikat_kalibrasis ?? [])],
+        ]);
+
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
         return response()->json(['success' => true, 'url' => url('file_sertifikat_kalibrasi.zip')]);
     }
@@ -397,6 +401,12 @@ class SertifikatKalibrasiController extends Controller
                 'message' => 'File not found.',
             ], 404);
         }
+
+        activity()->log('download', 'SertifikatKalibrasi', [
+            'recordId'    => $sertifikat_kalibrasi->id,
+            'recordLabel' => $sertifikat_kalibrasi->no_sertifikat ?? $sertifikat_kalibrasi->id,
+            'metadata'    => ['file' => $file],
+        ]);
 
         return FileHelper::downloadFile($destinationPath, $file);
     }

@@ -261,6 +261,12 @@ class ReportCoiController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'ReportCoi', [
+            'recordId'    => $report->id,
+            'recordLabel' => $report->no_certificate ?? $report->id,
+            'metadata'    => ['file' => $report->report_coi],
+        ]);
+
         return FileHelper::downloadFile('coi/reports', $report->report_coi);
     }
 }

@@ -244,6 +244,12 @@ class P_IdController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'P_id', [
+            'recordId'    => $p_id->id,
+            'recordLabel' => $p_id->p_id ?? $p_id->id,
+            'metadata'    => ['file' => $p_id->p_id_file],
+        ]);
+
         return FileHelper::downloadFile('p_id', $p_id->p_id_file);
     }
 }

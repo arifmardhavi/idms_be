@@ -238,6 +238,12 @@ class SpkNewController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'SpkNew', [
+            'recordId'    => $spk->id,
+            'recordLabel' => $spk->no_spk ?? $spk->id,
+            'metadata'    => ['file' => $file],
+        ]);
+
         return FileHelper::downloadFile($destinationPath, $file);
     }
 }

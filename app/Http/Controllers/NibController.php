@@ -166,6 +166,12 @@ class NibController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'Nib', [
+            'recordId'    => $nib->id,
+            'recordLabel' => $nib->no_nib ?? $nib->id,
+            'metadata'    => ['file' => $nib->nib_file],
+        ]);
+
         return FileHelper::downloadFile('nib', $nib->nib_file);
     }
 }

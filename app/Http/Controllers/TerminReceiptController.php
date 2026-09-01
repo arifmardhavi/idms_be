@@ -186,6 +186,12 @@ class TerminReceiptController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'TerminReceiptNew', [
+            'recordId'    => $termin_receipt->id,
+            'recordLabel' => $termin_receipt->id,
+            'metadata'    => ['file' => $termin_receipt->receipt_file],
+        ]);
+
         return FileHelper::downloadFile('contract_new/lumpsum/receipt', $termin_receipt->receipt_file);
     }
 }

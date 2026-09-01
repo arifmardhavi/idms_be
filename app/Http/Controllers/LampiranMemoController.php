@@ -224,6 +224,10 @@ class LampiranMemoController extends Controller
         $zip->close();
     
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
+        activity()->log('download', 'LampiranMemo', [
+            'metadata' => ['count' => $lampiranMemos->count()],
+        ]);
+
         return response()->json(['success' => true, 'url' => url('file_lampiran_memo.zip')]);
     }
 
@@ -244,6 +248,12 @@ class LampiranMemoController extends Controller
                 'message' => 'Lampiran Memorandum file not found.',
             ], 404);
         }
+
+        activity()->log('download', 'LampiranMemo', [
+            'recordId'    => $lampiranMemo->id,
+            'recordLabel' => $lampiranMemo->no_memo ?? $lampiranMemo->id,
+            'metadata'    => ['file' => $lampiranMemo->lampiran_memo],
+        ]);
 
         return FileHelper::downloadFile('historical_memorandum/lampiran', $lampiranMemo->lampiran_memo);
     }

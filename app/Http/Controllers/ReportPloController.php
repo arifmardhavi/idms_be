@@ -262,6 +262,12 @@ class ReportPloController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'ReportPlo', [
+            'recordId'    => $report->id,
+            'recordLabel' => $report->no_certificate ?? $report->id,
+            'metadata'    => ['file' => $report->report_plo],
+        ]);
+
         return FileHelper::downloadFile('plo/reports', $report->report_plo);
     }
 }

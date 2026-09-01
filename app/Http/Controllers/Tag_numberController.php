@@ -332,6 +332,10 @@ class Tag_numberController extends Controller
             ], 422);
         }
 
+        activity()->log('import', 'Tag_number', [
+            'object' => ($result['summary']['success'] ?? 0) . ' data',
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => $result['message'],
@@ -356,6 +360,10 @@ class Tag_numberController extends Controller
                 'errors' => $result['summary']['errors']
             ], 422);
         }
+
+        activity()->log('import', 'Tag_number', [
+            'object' => ($result['summary']['success'] ?? 0) . ' data',
+        ]);
 
         return response()->json([
             'status' => 'success',

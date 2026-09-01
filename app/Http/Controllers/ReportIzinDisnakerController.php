@@ -266,6 +266,12 @@ class ReportIzinDisnakerController extends Controller
             ], 404);
         }
 
+        activity()->log('download', 'ReportIzinDisnaker', [
+            'recordId'    => $report->id,
+            'recordLabel' => $report->no_izin ?? $report->id,
+            'metadata'    => ['file' => $report->report_izin_disnaker],
+        ]);
+
         return FileHelper::downloadFile('izin_disnaker/reports', $report->report_izin_disnaker);
     }
 }

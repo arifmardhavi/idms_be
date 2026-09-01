@@ -598,6 +598,10 @@ class CoiController extends Controller
     
         $zip->close();
     
+        activity()->log('download', 'Coi', [
+            'metadata' => ['count' => count($cois ?? [])],
+        ]);
+
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
         return response()->json(['success' => true, 'url' => url('coi_certificates.zip')]);
     }
@@ -707,6 +711,12 @@ class CoiController extends Controller
                 'message' => 'File not found.',
             ], 404);
         }
+
+        activity()->log('download', 'Coi', [
+            'recordId'    => $coi->id,
+            'recordLabel' => $coi->no_certificate ?? $coi->id,
+            'metadata'    => ['file' => $file],
+        ]);
 
         return FileHelper::downloadFile($destinationPath, $file);
     }

@@ -273,6 +273,10 @@ class HistoricalMemorandumController extends Controller
         $zip->close();
     
         // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
+        activity()->log('download', 'HistoricalMemorandum', [
+            'metadata' => ['count' => $historical_memorandums->count()],
+        ]);
+
         return response()->json(['success' => true, 'url' => url('file_historical_memorandum.zip')]);
     }
 
@@ -293,6 +297,12 @@ class HistoricalMemorandumController extends Controller
                 'message' => 'Historical Memorandum file not found.',
             ], 404);
         }
+
+        activity()->log('download', 'HistoricalMemorandum', [
+            'recordId'    => $historicalMemorandum->id,
+            'recordLabel' => $historicalMemorandum->no_memo ?? $historicalMemorandum->id,
+            'metadata'    => ['file' => $historicalMemorandum->memorandum_file],
+        ]);
 
         return FileHelper::downloadFile('historical_memorandum', $historicalMemorandum->memorandum_file);
     }

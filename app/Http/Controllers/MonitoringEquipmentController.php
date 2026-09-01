@@ -509,9 +509,15 @@ class MonitoringEquipmentController extends Controller
     public function import(
     ImportMonitoringEquipmentRequest $request, MonitoringEquipmentImportService $service)
     {
-        return $service->import(
+        $count = $service->import(
             $request->file('file')
         );
+
+        activity()->log('import', 'MonitoringEquipment', [
+            'object' => ($count['summary']['success'] ?? 0) . ' data',
+        ]);
+
+        return $count;
     }
 
     /**
@@ -534,6 +540,8 @@ class MonitoringEquipmentController extends Controller
      */
     public function export(Request $request)
     {
+        activity()->log('export', 'MonitoringEquipment');
+
         return Excel::download(
 
             new MonitoringEquipmentExport(
@@ -557,6 +565,8 @@ class MonitoringEquipmentController extends Controller
      */
     public function exportLogs(Request $request)
     {
+        activity()->log('export', 'MonitoringEquipment');
+
         return Excel::download(
 
             new MonitoringEquipmentLogExport(
