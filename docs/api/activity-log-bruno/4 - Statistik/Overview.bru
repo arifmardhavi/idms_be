@@ -1,0 +1,15 @@
+meta {
+  name: Overview (KPI)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/activity/stats/overview
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

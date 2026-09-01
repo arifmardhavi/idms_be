@@ -1,0 +1,15 @@
+meta {
+  name: Index (semua / filter)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/activity?user_id=1&action=login&module=Auth&per_page=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

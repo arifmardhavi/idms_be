@@ -1,0 +1,159 @@
+{
+  "info": {
+    "name": "Activity Log & Ranking (IDMS)",
+    "description": "Collection API untuk centralized activity log & ranking system IDMS. Setelah login, token JWT otomatis disimpan ke variabel `token` (via Test script pada request Login), dan dipakai untuk semua endpoint lainnya.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8100", "type": "string" },
+    { "key": "token", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1. Autentikasi",
+      "item": [
+        {
+          "name": "Login (ambil token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin1\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api", "login"] },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.token) {",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "  pm.environment.set('token', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/logout", "host": ["{{baseUrl}}"], "path": ["api", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Daftar Log Aktivitas",
+      "item": [
+        {
+          "name": "Index (semua / filter)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/activity?user_id=1&action=login&module=Auth&per_page=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "activity"],
+              "query": [
+                { "key": "user_id", "value": "1", "description": "filter user (opsional)" },
+                { "key": "action", "value": "login", "description": "filter aksi: login|logout|visit|view|download|export|create|update|delete|import (opsional)" },
+                { "key": "module", "value": "Auth", "description": "filter modul (opsional)" },
+                { "key": "from", "value": "2026-09-01", "description": "tanggal awal (opsional)" },
+                { "key": "to", "value": "2026-09-30", "description": "tanggal akhir (opsional)" },
+                { "key": "per_page", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Rekam Kunjungan (>=5 detik)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feature\": \"Dashboard\",\n  \"duration_seconds\": 10\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/activity/visit", "host": ["{{baseUrl}}"], "path": ["api", "activity", "visit"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Ranking",
+      "item": [
+        {
+          "name": "Top-10 Most Active User",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/activity/ranking/active", "host": ["{{baseUrl}}"], "path": ["api", "activity", "ranking", "active"] }
+          }
+        },
+        {
+          "name": "Top-10 Most Contributor",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/activity/ranking/contributor", "host": ["{{baseUrl}}"], "path": ["api", "activity", "ranking", "contributor"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Statistik (untuk chart)",
+      "item": [
+        {
+          "name": "Overview (KPI)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/activity/stats/overview", "host": ["{{baseUrl}}"], "path": ["api", "activity", "stats", "overview"] }
+          }
+        },
+        {
+          "name": "Trend Harian",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/activity/stats/trend?group=day", "host": ["{{baseUrl}}"], "path": ["api", "activity", "stats", "trend"], "query": [{ "key": "group", "value": "day" }] }
+          }
+        },
+        {
+          "name": "Trend Bulanan",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/activity/stats/trend?group=month", "host": ["{{baseUrl}}"], "path": ["api", "activity", "stats", "trend"], "query": [{ "key": "group", "value": "month" }] }
+          }
+        },
+        {
+          "name": "Distribusi per Aksi",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/activity/stats/by-action", "host": ["{{baseUrl}}"], "path": ["api", "activity", "stats", "by-action"] }
+          }
+        },
+        {
+          "name": "Distribusi per Modul",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/activity/stats/by-module", "host": ["{{baseUrl}}"], "path": ["api", "activity", "stats", "by-module"] }
+          }
+        },
+        {
+          "name": "Aktivitas per User",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/activity/stats/by-user", "host": ["{{baseUrl}}"], "path": ["api", "activity", "stats", "by-user"] }
+          }
+        }
+      ]
+    }
+  ]
+}

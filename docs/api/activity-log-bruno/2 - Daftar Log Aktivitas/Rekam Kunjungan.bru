@@ -1,0 +1,22 @@
+meta {
+  name: Rekam Kunjungan (untuk >=5 detik)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/activity/visit
+  body: json
+  auth: bearer
+}
+
+body:json {
+  {
+    "feature": "Dashboard",
+    "duration_seconds": 10
+  }
+}
+
+auth:bearer {
+  token: {{token}}
+}

@@ -1,0 +1,13 @@
+{
+  "version": "1",
+  "name": "Activity Log & Ranking (IDMS)",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "vars": {
+    "baseUrl": "http://127.0.0.1:8100",
+    "token": ""
+  }
+}

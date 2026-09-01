@@ -1,0 +1,15 @@
+meta {
+  name: Trend Harian
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/activity/stats/trend?group=day
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

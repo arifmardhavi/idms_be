@@ -1,0 +1,15 @@
+meta {
+  name: Aktivitas per User
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/activity/stats/by-user
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

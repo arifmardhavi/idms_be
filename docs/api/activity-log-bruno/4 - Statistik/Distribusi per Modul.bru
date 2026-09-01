@@ -1,0 +1,15 @@
+meta {
+  name: Distribusi per Modul
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/activity/stats/by-module
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

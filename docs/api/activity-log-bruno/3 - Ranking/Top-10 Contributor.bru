@@ -1,0 +1,15 @@
+meta {
+  name: Top-10 Most Contributor
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/activity/ranking/contributor
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
