@@ -42,6 +42,8 @@ class GlobalActivityObserver
         'IzinDisnaker'          => 'no_izin',
         'Nib'                   => 'no_nib',
         'Ems'                   => 'no_ems',
+        'Gms'                   => 'title',
+        'EcaFsca'               => 'functional_location',
         'Contract'              => 'no_contract',
         'ContractNew'           => 'no_contract',
         'ContractJasa'          => 'no_contract',

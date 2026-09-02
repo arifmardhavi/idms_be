@@ -1537,6 +1537,74 @@ Content-Type: application/json
 
 ---
 
+### GMS
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| `GET` | `/api/gms` | Daftar GMS (mendukung search, filter, pagination) |
+| `GET` | `/api/gms/{id}` | Detail GMS |
+| `POST` | `/api/gms` | Tambah GMS (+ upload file) |
+| `PUT` | `/api/gms/{id}` | Update GMS (+ ganti file opsional) |
+| `DELETE` | `/api/gms/{id}` | Hapus GMS |
+| `GET` | `/api/gms/download_file/{id}` | Download file GMS |
+| `POST` | `/api/gms/download` | Download banyak file GMS (ZIP), kirim array `ids` |
+
+**Query Parameters pada `GET /api/gms`:**
+
+| Parameter | Tipe | Deskripsi |
+|-----------|------|-----------|
+| `search` | string | Cari berdasarkan `title` (opsional) |
+| `tanggal_start` | date | Filter tanggal mulai (opsional) |
+| `tanggal_end` | date | Filter tanggal akhir (opsional) |
+| `sort_by` | string | Kolom sorting, default `created_at` (opsional) |
+| `sort_order` | string | `asc`/`desc`, default `desc` (opsional) |
+| `per_page` | integer | Aktifkan pagination. Kosongkan untuk menampilkan semua data |
+
+**Body `POST /api/gms` (multipart/form-data):**
+
+| Field | Tipe | Deskripsi |
+|-------|------|-----------|
+| `title` | string | Nama/judul GMS (required) |
+| `tanggal` | date | Tanggal GMS (required) |
+| `gms_file` | file | File GMS, semua tipe (opsional) |
+
+---
+
+### ECA FSCA
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| `GET` | `/api/eca_fsca` | Daftar ECA FSCA (mendukung search, filter, pagination) |
+| `GET` | `/api/eca_fsca/{id}` | Detail ECA FSCA |
+| `POST` | `/api/eca_fsca` | Tambah ECA FSCA (+ upload file) |
+| `PUT` | `/api/eca_fsca/{id}` | Update ECA FSCA (+ ganti file opsional) |
+| `DELETE` | `/api/eca_fsca/{id}` | Hapus ECA FSCA |
+| `GET` | `/api/eca_fsca/download_file/{id}` | Download file ECA FSCA |
+| `POST` | `/api/eca_fsca/download` | Download banyak file ECA FSCA (ZIP), kirim array `ids` |
+
+**Query Parameters pada `GET /api/eca_fsca`:**
+
+| Parameter | Tipe | Deskripsi |
+|-----------|------|-----------|
+| `search` | string | Cari berdasarkan `functional_location` atau nama unit (opsional) |
+| `unit_id` | integer | Filter berdasarkan unit (opsional) |
+| `tanggal_start` | date | Filter tanggal mulai (opsional) |
+| `tanggal_end` | date | Filter tanggal akhir (opsional) |
+| `sort_by` | string | Kolom sorting, default `created_at` (opsional) |
+| `sort_order` | string | `asc`/`desc`, default `desc` (opsional) |
+| `per_page` | integer | Aktifkan pagination. Kosongkan untuk menampilkan semua data |
+
+**Body `POST /api/eca_fsca` (multipart/form-data):**
+
+| Field | Tipe | Deskripsi |
+|-------|------|-----------|
+| `unit_id` | integer | ID unit (FK → units) (required) |
+| `functional_location` | string | Functional location (required) |
+| `tanggal` | date | Tanggal ECA FSCA (required) |
+| `eca_fsca_file` | file | File ECA FSCA, semua tipe (opsional) |
+
+---
+
 ## 14. User Management Endpoints
 
 ### Users

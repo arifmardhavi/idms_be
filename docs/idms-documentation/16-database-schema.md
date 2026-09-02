@@ -657,6 +657,27 @@
 | created_at | timestamp | | |
 | updated_at | timestamp | | |
 
+#### `gms`
+| Field | Type | Constraint | Keterangan |
+|-------|------|------------|------------|
+| id | bigint | PK, auto-increment | |
+| title | varchar | NOT NULL | Nama/judul GMS |
+| tanggal | date | NULLABLE | Tanggal GMS |
+| gms_file | text | NULLABLE | Nama file GMS (tersimpan di public/gms) |
+| created_at | timestamp | | |
+| updated_at | timestamp | | |
+
+#### `eca_fscas`
+| Field | Type | Constraint | Keterangan |
+|-------|------|------------|------------|
+| id | bigint | PK, auto-increment | |
+| unit_id | bigint | FK → units.id, CASCADE | Relasi ke units (satu unit bisa punya banyak ECA FSCA) |
+| functional_location | varchar | NOT NULL | Functional location |
+| tanggal | date | NULLABLE | Tanggal ECA FSCA |
+| eca_fsca_file | text | NULLABLE | Nama file ECA FSCA (tersimpan di public/eca_fsca) |
+| created_at | timestamp | | |
+| updated_at | timestamp | | |
+
 ---
 
 ### 2.7 Inspection

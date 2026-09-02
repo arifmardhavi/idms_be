@@ -1,0 +1,196 @@
+{
+  "info": {
+    "name": "GMS (IDMS)",
+    "description": "Collection API untuk modul GMS (CRUD + file upload). Setelah login, token JWT otomatis disimpan ke variabel `token` (via Test script pada request Login), lalu dipakai untuk semua endpoint lainnya. Variabel `gms_id` otomatis terisi dari respon Store untuk dipakai pada request Show/Update/Delete/Download.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8100", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "gms_id", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1. Autentikasi",
+      "item": [
+        {
+          "name": "Login (ambil token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin1\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api", "login"] },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.token) {",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "  pm.environment.set('token', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/logout", "host": ["{{baseUrl}}"], "path": ["api", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. GMS",
+      "item": [
+        {
+          "name": "Index (semua data)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/gms", "host": ["{{baseUrl}}"], "path": ["api", "gms"] }
+          }
+        },
+        {
+          "name": "Index + search & range tanggal",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/gms?search=2026&tanggal_start=2026-01-01&tanggal_end=2026-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gms"],
+              "query": [
+                { "key": "search", "value": "2026", "description": "cari berdasarkan title (opsional)" },
+                { "key": "tanggal_start", "value": "2026-01-01", "description": "filter tanggal mulai (opsional)" },
+                { "key": "tanggal_end", "value": "2026-12-31", "description": "filter tanggal akhir (opsional)" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Index + pagination",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/gms?per_page=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gms"],
+              "query": [
+                { "key": "per_page", "value": "5", "description": "aktifkan pagination (kosongkan untuk semua data)" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/gms/{{gms_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gms", "{{gms_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Store (tambah)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "multipart/form-data" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "GMS-2026-001", "type": "text", "description": "judul/nama GMS (required)" },
+                { "key": "tanggal", "value": "2026-09-01", "type": "text", "description": "tanggal (required)" },
+                { "key": "gms_file", "value": "", "type": "file", "description": "file GMS, semua tipe (opsional)" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/gms", "host": ["{{baseUrl}}"], "path": ["api", "gms"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.id) {",
+                  "  pm.collectionVariables.set('gms_id', String(json.data.id));",
+                  "  pm.environment.set('gms_id', String(json.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "multipart/form-data" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "GMS-2026-001-updated", "type": "text", "description": "judul/nama GMS (opsional)" },
+                { "key": "tanggal", "value": "2026-09-02", "type": "text", "description": "tanggal (opsional)" },
+                { "key": "gms_file", "value": "", "type": "file", "description": "file GMS baru, ganti file lama bila ada (opsional)" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/gms/{{gms_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gms", "{{gms_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/gms/{{gms_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gms", "{{gms_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Download file",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/gms/download_file/{{gms_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gms", "download_file", "{{gms_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Download banyak file (ZIP)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [1, 2, 3]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/gms/download", "host": ["{{baseUrl}}"], "path": ["api", "gms", "download"] }
+          }
+        }
+      ]
+    }
+  ]
+}

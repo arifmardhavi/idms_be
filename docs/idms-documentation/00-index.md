@@ -63,6 +63,8 @@ IDMS adalah platform digital untuk mengelola data inspeksi teknis, kepatuhan reg
 | **PIR** | Plant Inspection Report |
 | **MOC** | Management of Change |
 | **EMS** | Equipment Management System (dokumen terkait peralatan) |
+| **GMS** | Gas Management System (dokumen terkait gas) |
+| **ECA FSCA** | Electrical/Equipment Criticality Assessment (dokumen terkait assessmen) |
 
 ## Cara Membaca Dokumentasi
 

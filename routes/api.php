@@ -35,8 +35,10 @@ use App\Http\Controllers\{
     DeliveryMaterialOhController,
     DeliveryMaterialRtnrtController,
     GaDrawingController,
+    GmsController,
     EngineeringDataController,
     EmsController,
+    EcaFscaController,
     EventReadinessController,
     EventReadinessOhController,
     EventReadinessRtnrtController,
@@ -304,6 +306,12 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/ems/tag_number/{id}', [EmsController::class, 'showByTagNumber']);
     Route::get('/ems/download_file/{id}', [EmsController::class, 'downloadEmsFile']); // Download EMS File
     Route::post('/ems/download', [EmsController::class, 'downloadEmsFiles']); // Download banyak EMS File (ZIP)
+    Route::apiResource('gms', GmsController::class);
+    Route::get('/gms/download_file/{id}', [GmsController::class, 'downloadGmsFile']); // Download GMS File
+    Route::post('/gms/download', [GmsController::class, 'downloadGmsFiles']); // Download banyak GMS File (ZIP)
+    Route::apiResource('eca_fsca', EcaFscaController::class);
+    Route::get('/eca_fsca/download_file/{id}', [EcaFscaController::class, 'downloadEcaFscaFile']); // Download ECA FSCA File
+    Route::post('/eca_fsca/download', [EcaFscaController::class, 'downloadEcaFscaFiles']); // Download banyak ECA FSCA File (ZIP)
     Route::apiResource('bapk_coi', BapkCoiController::class);
     Route::apiResource('bapk_plo', BapkPloController::class);
     Route::apiResource('features', FeatureController::class);
