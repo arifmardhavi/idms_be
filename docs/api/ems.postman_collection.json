@@ -130,7 +130,7 @@
                 { "key": "tag_number_id", "value": "7", "type": "text", "description": "id tag number (required)" },
                 { "key": "no_ems", "value": "EMS-2026-001", "type": "text", "description": "nomor EMS (required)" },
                 { "key": "tanggal", "value": "2026-09-01", "type": "text", "description": "tanggal (required)" },
-                { "key": "file", "value": "", "type": "file", "description": "file EMS, semua tipe (opsional)" }
+                { "key": "ems_file", "value": "", "type": "file", "description": "file EMS, semua tipe (opsional)" }
               ]
             },
             "url": { "raw": "{{baseUrl}}/api/ems", "host": ["{{baseUrl}}"], "path": ["api", "ems"] }
@@ -162,7 +162,7 @@
                 { "key": "tag_number_id", "value": "7", "type": "text", "description": "id tag number (opsional)" },
                 { "key": "no_ems", "value": "EMS-2026-001-updated", "type": "text", "description": "nomor EMS (opsional)" },
                 { "key": "tanggal", "value": "2026-09-02", "type": "text", "description": "tanggal (opsional)" },
-                { "key": "file", "value": "", "type": "file", "description": "file EMS baru, ganti file lama bila ada (opsional)" }
+                { "key": "ems_file", "value": "", "type": "file", "description": "file EMS baru, ganti file lama bila ada (opsional)" }
               ]
             },
             "url": {
@@ -192,6 +192,18 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "ems", "download_file", "{{ems_id}}"]
             }
+          }
+        },
+        {
+          "name": "Download banyak file (ZIP)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [1, 2, 3]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/ems/download", "host": ["{{baseUrl}}"], "path": ["api", "ems", "download"] }
           }
         }
       ]

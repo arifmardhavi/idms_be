@@ -1521,6 +1521,7 @@ Content-Type: application/json
 | `DELETE` | `/api/ems/{id}` | Hapus EMS |
 | `GET` | `/api/ems/tag_number/{id}` | EMS berdasarkan tag number |
 | `GET` | `/api/ems/download_file/{id}` | Download file EMS |
+| `POST` | `/api/ems/download` | Download banyak file EMS (ZIP), kirim array `ids` |
 
 **Query Parameters pada `GET /api/ems`:**
 

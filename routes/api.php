@@ -303,6 +303,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('ems', EmsController::class);
     Route::get('/ems/tag_number/{id}', [EmsController::class, 'showByTagNumber']);
     Route::get('/ems/download_file/{id}', [EmsController::class, 'downloadEmsFile']); // Download EMS File
+    Route::post('/ems/download', [EmsController::class, 'downloadEmsFiles']); // Download banyak EMS File (ZIP)
     Route::apiResource('bapk_coi', BapkCoiController::class);
     Route::apiResource('bapk_plo', BapkPloController::class);
     Route::apiResource('features', FeatureController::class);

@@ -73,7 +73,7 @@ class EmsController extends Controller
             'tag_number_id' => 'required|exists:tag_numbers,id',
             'no_ems' => 'required|string|max:255',
             'tanggal' => 'required|date',
-            'file' => 'nullable|file|max:30720',
+            'ems_file' => 'nullable|file',
         ]);
 
         if ($validator->fails()) {
@@ -87,8 +87,8 @@ class EmsController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            if ($request->hasFile('file')) {
-                $validatedData['file'] = FileHelper::uploadWithVersion($request->file('file'), 'ems');
+            if ($request->hasFile('ems_file')) {
+                $validatedData['ems_file'] = FileHelper::uploadWithVersion($request->file('ems_file'), 'ems');
             }
 
             $ems = Ems::create($validatedData);
@@ -146,7 +146,7 @@ class EmsController extends Controller
             'tag_number_id' => 'sometimes|required|exists:tag_numbers,id',
             'no_ems' => 'sometimes|required|string|max:255',
             'tanggal' => 'sometimes|required|date',
-            'file' => 'sometimes|nullable|file|max:30720',
+            'ems_file' => 'sometimes|nullable|file',
         ]);
 
         if ($validator->fails()) {
@@ -160,12 +160,12 @@ class EmsController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            if ($request->hasFile('file')) {
+            if ($request->hasFile('ems_file')) {
                 // Hapus file lama jika ada
-                if ($ems->file) {
-                    FileHelper::deleteFile($ems->file, 'ems');
+                if ($ems->ems_file) {
+                    FileHelper::deleteFile($ems->ems_file, 'ems');
                 }
-                $validatedData['file'] = FileHelper::uploadWithVersion($request->file('file'), 'ems');
+                $validatedData['ems_file'] = FileHelper::uploadWithVersion($request->file('ems_file'), 'ems');
             }
 
             $ems->update($validatedData);
@@ -239,7 +239,7 @@ class EmsController extends Controller
             ], 404);
         }
 
-        if (!$ems->file) {
+        if (!$ems->ems_file) {
             return response()->json([
                 'success' => false,
                 'message' => 'File not found.',
@@ -249,9 +249,49 @@ class EmsController extends Controller
         activity()->log('download', 'Ems', [
             'recordId'    => $ems->id,
             'recordLabel' => $ems->no_ems ?? $ems->id,
-            'metadata'    => ['file' => $ems->file],
+            'metadata'    => ['file' => $ems->ems_file],
         ]);
 
-        return FileHelper::downloadFile('ems', $ems->file);
+        return FileHelper::downloadFile('ems', $ems->ems_file);
+    }
+
+    public function downloadEmsFiles(Request $request)
+    {
+        $ids = $request->input('ids');  // Mendapatkan IDs dari frontend
+
+        // Ambil data EMS berdasarkan ID yang dipilih
+        $emss = Ems::whereIn('id', $ids)->get();
+
+        // Buat file ZIP untuk menyimpan file EMS
+        $zip = new \ZipArchive();
+        $zipFilePath = public_path('ems_files.zip');
+
+        if (file_exists($zipFilePath)) {
+            unlink($zipFilePath);
+        }
+
+        if ($zip->open($zipFilePath, \ZipArchive::CREATE) !== TRUE) {
+            return response()->json(['success' => false, 'message' => 'Gagal membuat file ZIP.']);
+        }
+
+        foreach ($emss as $ems) {
+            // Cek jika file EMS ada dan file tersebut valid
+            if ($ems->ems_file) {
+                $filePath = public_path('ems/' . $ems->ems_file);
+                if (file_exists($filePath)) {
+                    // Menambahkan file ke dalam ZIP
+                    $zip->addFile($filePath, basename($filePath));
+                }
+            }
+        }
+
+        $zip->close();
+
+        activity()->log('download', 'Ems', [
+            'metadata' => ['count' => count($emss ?? [])],
+        ]);
+
+        // Kirimkan URL untuk mendownload file ZIP yang sudah jadi
+        return response()->json(['success' => true, 'url' => url('ems_files.zip')]);
     }
 }

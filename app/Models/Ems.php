@@ -13,7 +13,7 @@ class Ems extends BaseModel
         'tag_number_id',
         'no_ems',
         'tanggal',
-        'file',
+        'ems_file',
     ];
 
     protected static function boot()
@@ -21,8 +21,8 @@ class Ems extends BaseModel
         parent::boot();
 
         static::deleting(function ($ems) {
-            if ($ems->file) {
-                $filePath = public_path('ems/' . $ems->file);
+            if ($ems->ems_file) {
+                $filePath = public_path('ems/' . $ems->ems_file);
                 if (file_exists($filePath)) {
                     unlink($filePath);
                 }
