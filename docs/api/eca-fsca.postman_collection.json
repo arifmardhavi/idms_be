@@ -1,0 +1,212 @@
+{
+  "info": {
+    "name": "ECA FSCA (IDMS)",
+    "description": "Collection API untuk modul ECA FSCA (CRUD + file upload). Setelah login, token JWT otomatis disimpan ke variabel `token` (via Test script pada request Login), lalu dipakai untuk semua endpoint lainnya. Variabel `eca_fsca_id` otomatis terisi dari respon Store untuk dipakai pada request Show/Update/Delete/Download.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8100", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "eca_fsca_id", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1. Autentikasi",
+      "item": [
+        {
+          "name": "Login (ambil token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin1\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api", "login"] },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.token) {",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "  pm.environment.set('token', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/logout", "host": ["{{baseUrl}}"], "path": ["api", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. ECA FSCA",
+      "item": [
+        {
+          "name": "Index (semua data)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/eca_fsca", "host": ["{{baseUrl}}"], "path": ["api", "eca_fsca"] }
+          }
+        },
+        {
+          "name": "Index + filter unit_id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/eca_fsca?unit_id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "eca_fsca"],
+              "query": [
+                { "key": "unit_id", "value": "1", "description": "filter berdasarkan unit id (opsional)" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Index + search & range tanggal",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/eca_fsca?search=CDU&tanggal_start=2026-01-01&tanggal_end=2026-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "eca_fsca"],
+              "query": [
+                { "key": "search", "value": "CDU", "description": "cari berdasarkan functional_location atau nama unit (opsional)" },
+                { "key": "tanggal_start", "value": "2026-01-01", "description": "filter tanggal mulai (opsional)" },
+                { "key": "tanggal_end", "value": "2026-12-31", "description": "filter tanggal akhir (opsional)" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Index + pagination",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/eca_fsca?per_page=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "eca_fsca"],
+              "query": [
+                { "key": "per_page", "value": "5", "description": "aktifkan pagination (kosongkan untuk semua data)" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/eca_fsca/{{eca_fsca_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "eca_fsca", "{{eca_fsca_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Store (tambah)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "multipart/form-data" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "unit_id", "value": "1", "type": "text", "description": "id unit (required)" },
+                { "key": "functional_location", "value": "FL-001", "type": "text", "description": "functional location (required)" },
+                { "key": "tanggal", "value": "2026-09-01", "type": "text", "description": "tanggal (required)" },
+                { "key": "eca_fsca_file", "value": "", "type": "file", "description": "file ECA FSCA, semua tipe (opsional)" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/eca_fsca", "host": ["{{baseUrl}}"], "path": ["api", "eca_fsca"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.id) {",
+                  "  pm.collectionVariables.set('eca_fsca_id', String(json.data.id));",
+                  "  pm.environment.set('eca_fsca_id', String(json.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "multipart/form-data" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "unit_id", "value": "1", "type": "text", "description": "id unit (opsional)" },
+                { "key": "functional_location", "value": "FL-001-updated", "type": "text", "description": "functional location (opsional)" },
+                { "key": "tanggal", "value": "2026-09-02", "type": "text", "description": "tanggal (opsional)" },
+                { "key": "eca_fsca_file", "value": "", "type": "file", "description": "file ECA FSCA baru, ganti file lama bila ada (opsional)" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/eca_fsca/{{eca_fsca_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "eca_fsca", "{{eca_fsca_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/eca_fsca/{{eca_fsca_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "eca_fsca", "{{eca_fsca_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Download file",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/eca_fsca/download_file/{{eca_fsca_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "eca_fsca", "download_file", "{{eca_fsca_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Download banyak file (ZIP)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [1, 2, 3]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/eca_fsca/download", "host": ["{{baseUrl}}"], "path": ["api", "eca_fsca", "download"] }
+          }
+        }
+      ]
+    }
+  ]
+}
