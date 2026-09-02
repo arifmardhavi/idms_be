@@ -1510,6 +1510,30 @@ Content-Type: application/json
 | `PUT` | `/api/pir/{id}` | Update PIR |
 | `DELETE` | `/api/pir/{id}` | Hapus PIR |
 
+### EMS
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| `GET` | `/api/ems` | Daftar EMS (mendukung search, filter, pagination) |
+| `GET` | `/api/ems/{id}` | Detail EMS |
+| `POST` | `/api/ems` | Tambah EMS (+ upload file) |
+| `PUT` | `/api/ems/{id}` | Update EMS (+ ganti file opsional) |
+| `DELETE` | `/api/ems/{id}` | Hapus EMS |
+| `GET` | `/api/ems/tag_number/{id}` | EMS berdasarkan tag number |
+| `GET` | `/api/ems/download_file/{id}` | Download file EMS |
+
+**Query Parameters pada `GET /api/ems`:**
+
+| Parameter | Tipe | Deskripsi |
+|-----------|------|-----------|
+| `search` | string | Cari berdasarkan `no_ems` atau `tag_number` (opsional) |
+| `tag_number_id` | integer | Filter berdasarkan tag number (opsional) |
+| `tanggal_start` | date | Filter tanggal mulai (opsional) |
+| `tanggal_end` | date | Filter tanggal akhir (opsional) |
+| `sort_by` | string | Kolom sorting, default `created_at` (opsional) |
+| `sort_order` | string | `asc`/`desc`, default `desc` (opsional) |
+| `per_page` | integer | Aktifkan pagination. Kosongkan untuk menampilkan semua data |
+
 ---
 
 ## 14. User Management Endpoints

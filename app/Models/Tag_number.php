@@ -25,4 +25,9 @@ class Tag_number extends BaseModel
     {
         return $this->belongsTo(Unit::class);
     }
+
+    public function ems()
+    {
+        return $this->hasMany(Ems::class, 'tag_number_id');
+    }
 }

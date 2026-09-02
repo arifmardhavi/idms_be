@@ -41,6 +41,7 @@ class GlobalActivityObserver
         'IzinOperasi'           => 'no_izin',
         'IzinDisnaker'          => 'no_izin',
         'Nib'                   => 'no_nib',
+        'Ems'                   => 'no_ems',
         'Contract'              => 'no_contract',
         'ContractNew'           => 'no_contract',
         'ContractJasa'          => 'no_contract',

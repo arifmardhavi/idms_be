@@ -62,6 +62,7 @@ IDMS adalah platform digital untuk mengelola data inspeksi teknis, kepatuhan reg
 | **BAPK** | Berita Acara Pemeriksaan Keandalan |
 | **PIR** | Plant Inspection Report |
 | **MOC** | Management of Change |
+| **EMS** | Equipment Management System (dokumen terkait peralatan) |
 
 ## Cara Membaca Dokumentasi
 

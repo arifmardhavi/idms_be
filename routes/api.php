@@ -36,6 +36,7 @@ use App\Http\Controllers\{
     DeliveryMaterialRtnrtController,
     GaDrawingController,
     EngineeringDataController,
+    EmsController,
     EventReadinessController,
     EventReadinessOhController,
     EventReadinessRtnrtController,
@@ -299,6 +300,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('spk_progress_new', SpkProgressNewController::class);
     Route::apiResource('amandemen_new', AmandemenNewController::class);
     Route::apiResource('nib', NibController::class);
+    Route::apiResource('ems', EmsController::class);
+    Route::get('/ems/tag_number/{id}', [EmsController::class, 'showByTagNumber']);
+    Route::get('/ems/download_file/{id}', [EmsController::class, 'downloadEmsFile']); // Download EMS File
     Route::apiResource('bapk_coi', BapkCoiController::class);
     Route::apiResource('bapk_plo', BapkPloController::class);
     Route::apiResource('features', FeatureController::class);

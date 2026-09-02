@@ -646,6 +646,17 @@
 | created_at | timestamp | | |
 | updated_at | timestamp | | |
 
+#### `ems`
+| Field | Type | Constraint | Keterangan |
+|-------|------|------------|------------|
+| id | bigint | PK, auto-increment | |
+| tag_number_id | bigint | FK → tag_numbers.id, CASCADE | Relasi ke tag_numbers (satu tag number bisa punya banyak EMS) |
+| no_ems | varchar | NOT NULL | Nomor EMS |
+| tanggal | date | NULLABLE | Tanggal EMS |
+| file | text | NULLABLE | Nama file EMS (tersimpan di public/ems) |
+| created_at | timestamp | | |
+| updated_at | timestamp | | |
+
 ---
 
 ### 2.7 Inspection
