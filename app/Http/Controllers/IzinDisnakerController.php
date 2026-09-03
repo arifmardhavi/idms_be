@@ -56,81 +56,17 @@ class IzinDisnakerController extends Controller
         try {
             // Handle izin_disnaker_certificate upload
             if ($request->hasFile('izin_disnaker_certificate')) {
-                $file = $request->file('izin_disnaker_certificate');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam tanggal ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_disnaker/certificates/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/izin_disnaker/certificates
-                $path = $file->move(public_path('izin_disnaker/certificates'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Izin Disnaker Certificate failed upload.',
-                    ], 422);
-                }  
-                $validatedData['izin_disnaker_certificate'] = $filename;
+                $validatedData['izin_disnaker_certificate'] = FileHelper::uploadWithVersion($request->file('izin_disnaker_certificate'), 'izin_disnaker/certificates');
             }
 
-            // Handle file_rla upload (if exists)
+            // Handle rla_certificate upload (if exists)
             if ($request->hasFile('rla_certificate')) {
-                $file = $request->file('rla_certificate');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_disnaker/rla/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/izin_disnaker/rla
-                $path = $file->move(public_path('izin_disnaker/rla'), $filename);  
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'RLA Certificate failed upload.',
-                    ], 422);
-                } 
-                $validatedData['rla_certificate'] = $filename; 
+                $validatedData['rla_certificate'] = FileHelper::uploadWithVersion($request->file('rla_certificate'), 'izin_disnaker/rla');
             }
 
-            // Handle file_re_engineer upload (if exists)
+            // Handle re_engineer_certificate upload (if exists)
             if ($request->hasFile('re_engineer_certificate')) {
-                $file = $request->file('re_engineer_certificate');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_disnaker/re_engineer/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/izin_disnaker/re_engineer
-                $path = $file->move(public_path('izin_disnaker/re_engineer'), $filename);  
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Re-Engineering Certificate failed upload.',
-                    ], 422);
-                } 
-                $validatedData['re_engineer_certificate'] = $filename;
-                // dd($validatedData); 
+                $validatedData['re_engineer_certificate'] = FileHelper::uploadWithVersion($request->file('re_engineer_certificate'), 'izin_disnaker/re_engineer');
             }
 
             $izinDisnaker = IzinDisnaker::create($validatedData);
@@ -243,34 +179,12 @@ class IzinDisnakerController extends Controller
                         $validatedData['izin_disnaker_old_certificate'] = $izinDisnaker->izin_disnaker_certificate;
                         // izin_disnaker old certificate sebelumnya ada 
                         if ($izinDisnaker->izin_disnaker_old_certificate) {
-                            $path = public_path('izin_disnaker/certificates/' . $izinDisnaker->izin_disnaker_old_certificate);
-                            // file ada 
-                            if (file_exists($path)) {
-                                unlink($path); // Hapus file
-                            }
+                            FileHelper::deleteFile($izinDisnaker->izin_disnaker_old_certificate, 'izin_disnaker/certificates');
                         }
                     } 
                 }
                 // proses simpan file izin_disnaker certificate baru
-                $file = $request->file('izin_disnaker_certificate');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_disnaker/certificates/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                // Pindahkan file ke folder tujuan dengan nama unik
-                $path = $file->move(public_path('izin_disnaker/certificates'), $filename);
-
-                // Simpan nama file ke data yang divalidasi
-                $validatedData['izin_disnaker_certificate'] = $filename;
+                $validatedData['izin_disnaker_certificate'] = FileHelper::uploadWithVersion($request->file('izin_disnaker_certificate'), 'izin_disnaker/certificates');
             }
             
             // input rla certificate ada 
@@ -279,78 +193,26 @@ class IzinDisnakerController extends Controller
                 if ($izinDisnaker->rla_certificate) {
                     // input rla old certificate tidak ada 
                     if (!$request->hasFile('rla_old_certificate')) {
-                        // replace rla old certificate menjadi izin_disnaker certificate sebelumnya
+                        // replace rla old certificate menjadi rla certificate sebelumnya
                         $validatedData['rla_old_certificate'] = $izinDisnaker->rla_certificate;
-                        // izin_disnaker old certificate sebelumnya ada 
+                        // rla old certificate sebelumnya ada 
                         if ($izinDisnaker->rla_old_certificate) {
-                            dd($izinDisnaker->rla_old_certificate);
-                            $path = public_path('izin_disnaker/rla/' . $izinDisnaker->rla_old_certificate);
-                            // file ada 
-                            if (file_exists($path)) {
-                                unlink($path); // Hapus file
-                            }
+                            FileHelper::deleteFile($izinDisnaker->rla_old_certificate, 'izin_disnaker/rla');
                         }
                     } 
                 }
-                // proses simpan file izin_disnaker certificate baru
-                $file = $request->file('rla_certificate');
-                // dd($file);
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_disnaker/rla/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                // Pindahkan file ke folder tujuan dengan nama unik
-                $path = $file->move(public_path('izin_disnaker/rla'), $filename);
-
-                // Simpan nama file ke data yang divalidasi
-                $validatedData['rla_certificate'] = $filename;
+                // proses simpan file rla certificate baru
+                $validatedData['rla_certificate'] = FileHelper::uploadWithVersion($request->file('rla_certificate'), 'izin_disnaker/rla');
             }
 
-            // input rla certificate ada 
+            // input re_engineer certificate ada 
             if ($request->hasFile('re_engineer_certificate')) {
-                // rla certificate sebelumnya ada 
+                // re_engineer certificate sebelumnya ada 
                 if ($izinDisnaker->re_engineer_certificate) {
-                    $path = public_path('izin_disnaker/re_engineer/' . $izinDisnaker->re_engineer_certificate);
-                    // file ada 
-                    if (file_exists($path)) {
-                        unlink($path); // Hapus file
-                    }
+                    FileHelper::deleteFile($izinDisnaker->re_engineer_certificate, 'izin_disnaker/re_engineer');
                 }
-
-                $file = $request->file('re_engineer_certificate');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_disnaker/re_engineer/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                // Pindahkan file ke folder tujuan dengan nama unik
-                $path = $file->move(public_path('izin_disnaker/re_engineer'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Re-Engineering Certificate failed upload.',
-                    ], 422);
-                }
-
-                // Simpan nama file ke data yang divalidasi
-                $validatedData['re_engineer_certificate'] = $filename;
+                // proses simpan file re_engineer certificate baru
+                $validatedData['re_engineer_certificate'] = FileHelper::uploadWithVersion($request->file('re_engineer_certificate'), 'izin_disnaker/re_engineer');
             }
 
             $izinDisnaker->update($validatedData);
@@ -385,28 +247,19 @@ class IzinDisnakerController extends Controller
 
         try {
             if ($izinDisnaker->izin_disnaker_certificate) {
-                $path = public_path('izin_disnaker/certificates/' . $izinDisnaker->izin_disnaker_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinDisnaker->izin_disnaker_certificate, 'izin_disnaker/certificates');
+            }
+            if ($izinDisnaker->izin_disnaker_old_certificate) {
+                FileHelper::deleteFile($izinDisnaker->izin_disnaker_old_certificate, 'izin_disnaker/certificates');
             }
             if ($izinDisnaker->rla_certificate) {
-                $path = public_path('izin_disnaker/rla/' . $izinDisnaker->rla_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinDisnaker->rla_certificate, 'izin_disnaker/rla');
             }
             if ($izinDisnaker->rla_old_certificate) {
-                $path = public_path('izin_disnaker/rla/' . $izinDisnaker->rla_old_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinDisnaker->rla_old_certificate, 'izin_disnaker/rla');
             }
             if ($izinDisnaker->re_engineer_certificate) {
-                $path = public_path('izin_disnaker/re_engineer/' . $izinDisnaker->re_engineer_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinDisnaker->re_engineer_certificate, 'izin_disnaker/re_engineer');
             }
             $izinDisnaker->delete();
 
@@ -436,10 +289,7 @@ class IzinDisnakerController extends Controller
         try {
             // izin_disnaker certificate 
             if ($request->izin_disnaker_certificate) {
-                $path = public_path('izin_disnaker/certificates/' . $izinDisnaker->izin_disnaker_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinDisnaker->izin_disnaker_certificate, 'izin_disnaker/certificates');
                 $data = ['izin_disnaker_certificate' => null];
                 $izinDisnaker->update($data);
                 return response()->json([
@@ -448,10 +298,7 @@ class IzinDisnakerController extends Controller
                 ], 200);
             // izin_disnaker old certificate
             }elseif ($request->izin_disnaker_old_certificate) {
-                $path = public_path('izin_disnaker/certificates/' . $izinDisnaker->izin_disnaker_old_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinDisnaker->izin_disnaker_old_certificate, 'izin_disnaker/certificates');
                 $data = ['izin_disnaker_old_certificate' => null];
                 $izinDisnaker->update($data);
                 return response()->json([
@@ -460,10 +307,7 @@ class IzinDisnakerController extends Controller
                 ], 200);
             // rla certificate
             }elseif ($request->rla_certificate) {
-                $path = public_path('izin_disnaker/rla/' . $izinDisnaker->rla_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinDisnaker->rla_certificate, 'izin_disnaker/rla');
                 $data = ['rla_certificate' => null];
                 $izinDisnaker->update($data);
                 return response()->json([
@@ -472,10 +316,7 @@ class IzinDisnakerController extends Controller
                 ], 200);
             // rla old certificate
             }elseif ($request->rla_old_certificate) {
-                $path = public_path('izin_disnaker/rla/' . $izinDisnaker->rla_old_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinDisnaker->rla_old_certificate, 'izin_disnaker/rla');
                 $data = ['rla_old_certificate' => null];
                 $izinDisnaker->update($data);
                 return response()->json([
@@ -484,10 +325,7 @@ class IzinDisnakerController extends Controller
                 ], 200);
                 // re engineering certificate 
             }elseif ($request->re_engineer_certificate) {
-                $path = public_path('izin_disnaker/re_engineer/' . $izinDisnaker->re_engineer_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinDisnaker->re_engineer_certificate, 'izin_disnaker/re_engineer');
                 $data = ['re_engineer_certificate' => null];
                 $izinDisnaker->update($data);
                 return response()->json([

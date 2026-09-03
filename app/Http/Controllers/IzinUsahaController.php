@@ -45,29 +45,7 @@ class IzinUsahaController extends Controller
 
         try {
             if ($request->hasFile('izin_usaha_file')) {
-                $file = $request->file('izin_usaha_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_usaha/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/izin_usaha/
-                $path = $file->move(public_path('izin_usaha'), $filename);  
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'File failed upload.',
-                    ], 422);
-                }
-                
-                $validatedData['izin_usaha_file'] = $filename;                
+                $validatedData['izin_usaha_file'] = FileHelper::uploadWithVersion($request->file('izin_usaha_file'), 'izin_usaha');
             }
 
             $izin_usaha = IzinUsaha::create($validatedData);
@@ -137,38 +115,10 @@ class IzinUsahaController extends Controller
 
         try {
             if ($request->hasFile('izin_usaha_file')) {
-                $file = $request->file('izin_usaha_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_usaha/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/izin_usaha/
-                $path = $file->move(public_path('izin_usaha'), $filename);
-                
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'File failed upload.',
-                    ], 422);
-                }
-
-                // hapus file lama jika ada
                 if ($izin_usaha->izin_usaha_file) {
-                    $izinUsahaBefore = public_path('izin_usaha/' . $izin_usaha->izin_usaha_file);
-                    if (file_exists($izinUsahaBefore)) {
-                        unlink($izinUsahaBefore);
-                    }
+                    FileHelper::deleteFile($izin_usaha->izin_usaha_file, 'izin_usaha');
                 }
-                
-                $validatedData['izin_usaha_file'] = $filename;                
+                $validatedData['izin_usaha_file'] = FileHelper::uploadWithVersion($request->file('izin_usaha_file'), 'izin_usaha');
             }
 
             $izin_usaha->update($validatedData);
@@ -204,10 +154,7 @@ class IzinUsahaController extends Controller
 
         try {
             if ($izin_usaha->izin_usaha_file) {
-                $filePath = public_path('izin_usaha/' . $izin_usaha->izin_usaha_file);
-                if (file_exists($filePath)) {
-                    unlink($filePath);
-                }
+                FileHelper::deleteFile($izin_usaha->izin_usaha_file, 'izin_usaha');
             }
             $izin_usaha->delete();
             return response()->json([

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\JobPlanMaterial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -45,44 +46,10 @@ class JobPlanMaterialController extends Controller
 
         try {
             if($request->hasFile('kak_file')){
-                $file = $request->file('kak_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/material/job_plan/kak/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('readiness_ta/material/job_plan/kak'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload KAK file.',
-                    ], 500);
-                }
-                $validatedData['kak_file'] = $filename;
+                $validatedData['kak_file'] = FileHelper::uploadWithVersion($request->file('kak_file'), 'readiness_ta/material/job_plan/kak');
             }
             if($request->hasFile('boq_file')){
-                $file = $request->file('boq_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/material/job_plan/boq/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('readiness_ta/material/job_plan/boq'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload BOQ file.',
-                    ], 500);
-                }
-                $validatedData['boq_file'] = $filename;
+                $validatedData['boq_file'] = FileHelper::uploadWithVersion($request->file('boq_file'), 'readiness_ta/material/job_plan/boq');
             }
             $job_plan_material = JobPlanMaterial::create($validatedData);
 
@@ -172,50 +139,16 @@ class JobPlanMaterialController extends Controller
 
         try {
             if($request->hasFile('kak_file')){
-                $file = $request->file('kak_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/material/job_plan/kak/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                if ($job_plan_material->kak_file) {
+                    FileHelper::deleteFile($job_plan_material->kak_file, 'readiness_ta/material/job_plan/kak');
                 }
-                $path = $file->move(public_path('readiness_ta/material/job_plan/kak'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload KAK file.',
-                    ], 500);
-                }
-                if ($job_plan_material->kak_file && file_exists(public_path("readiness_ta/material/job_plan/kak/" . $job_plan_material->kak_file))) {
-                    unlink(public_path("readiness_ta/material/job_plan/kak/" . $job_plan_material->kak_file));
-                }
-                $validatedData['kak_file'] = $filename;
+                $validatedData['kak_file'] = FileHelper::uploadWithVersion($request->file('kak_file'), 'readiness_ta/material/job_plan/kak');
             }
             if($request->hasFile('boq_file')){
-                $file = $request->file('boq_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/material/job_plan/boq/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                if ($job_plan_material->boq_file) {
+                    FileHelper::deleteFile($job_plan_material->boq_file, 'readiness_ta/material/job_plan/boq');
                 }
-                $path = $file->move(public_path('readiness_ta/material/job_plan/boq'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload BOQ file.',
-                    ], 500);
-                }
-                if ($job_plan_material->boq_file && file_exists(public_path("readiness_ta/material/job_plan/boq/" . $job_plan_material->boq_file))) {
-                    unlink(public_path("readiness_ta/material/job_plan/boq/" . $job_plan_material->boq_file));
-                }
-                $validatedData['boq_file'] = $filename;
+                $validatedData['boq_file'] = FileHelper::uploadWithVersion($request->file('boq_file'), 'readiness_ta/material/job_plan/boq');
             }
             $job_plan_material->update($validatedData);
 
@@ -248,11 +181,11 @@ class JobPlanMaterialController extends Controller
         }
 
         try {
-            if ($job_plan_material->kak_file && file_exists(public_path("readiness_ta/material/job_plan/kak/" . $job_plan_material->kak_file))) {
-                unlink(public_path("readiness_ta/material/job_plan/kak/" . $job_plan_material->kak_file));
+            if ($job_plan_material->kak_file) {
+                FileHelper::deleteFile($job_plan_material->kak_file, 'readiness_ta/material/job_plan/kak');
             }
-            if ($job_plan_material->boq_file && file_exists(public_path("readiness_ta/material/job_plan/boq/" . $job_plan_material->boq_file))) {
-                unlink(public_path("readiness_ta/material/job_plan/boq/" . $job_plan_material->boq_file));
+            if ($job_plan_material->boq_file) {
+                FileHelper::deleteFile($job_plan_material->boq_file, 'readiness_ta/material/job_plan/boq');
             }
 
             $job_plan_material->delete();

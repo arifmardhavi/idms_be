@@ -59,29 +59,7 @@ class ReportIzinDisnakerController extends Controller
 
         try {
             if ($request->hasFile('report_izin_disnaker')) {
-                $file = $request->file('report_izin_disnaker');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                while (file_exists(public_path('izin_disnaker/reports/' . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                $path = $file->move(public_path('izin_disnaker/reports'), $filename);
-
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Report Izin Disnaker failed upload.',
-                    ], 422);
-                }
-
-                $validatedData['report_izin_disnaker'] = $filename;
+                $validatedData['report_izin_disnaker'] = FileHelper::uploadWithVersion($request->file('report_izin_disnaker'), 'izin_disnaker/reports');
             }
 
             $report = ReportIzinDisnaker::create($validatedData);
@@ -154,36 +132,10 @@ class ReportIzinDisnakerController extends Controller
 
         try {
             if ($request->hasFile('report_izin_disnaker')) {
-                $file = $request->file('report_izin_disnaker');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                while (file_exists(public_path('izin_disnaker/reports/' . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                $path = $file->move(public_path('izin_disnaker/reports'), $filename);
-
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Report Izin Disnaker failed upload.',
-                    ], 422);
-                }
-
                 if ($report->report_izin_disnaker) {
-                    $oldPath = public_path('izin_disnaker/reports/' . $report->report_izin_disnaker);
-                    if (file_exists($oldPath)) {
-                        unlink($oldPath);
-                    }
+                    FileHelper::deleteFile($report->report_izin_disnaker, 'izin_disnaker/reports');
                 }
-
-                $validatedData['report_izin_disnaker'] = $filename;
+                $validatedData['report_izin_disnaker'] = FileHelper::uploadWithVersion($request->file('report_izin_disnaker'), 'izin_disnaker/reports');
             }
 
             if ($report->update($validatedData)) {
@@ -221,10 +173,7 @@ class ReportIzinDisnakerController extends Controller
 
         try {
             if ($report->report_izin_disnaker) {
-                $path = public_path('izin_disnaker/reports/' . $report->report_izin_disnaker);
-                if (file_exists($path)) {
-                    unlink($path);
-                }
+                FileHelper::deleteFile($report->report_izin_disnaker, 'izin_disnaker/reports');
             }
 
             if ($report->delete()) {

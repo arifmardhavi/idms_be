@@ -70,52 +70,22 @@ class LampiranMemoController extends Controller
 
         try {
             $result = [];
-            $failedFiles = [];
 
             foreach ($request->file('lampiran_memo') as $file) {
-                $originalName = $file->getClientOriginalName();
+                $filename = FileHelper::uploadWithVersion($file, 'historical_memorandum/lampiran');
 
-                try {
-                    $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
-                    $extension = $file->getClientOriginalExtension();
-                    $dateNow = date('dmY');
-                    $version = 0;
+                $lampiran = LampiranMemo::create([
+                    'historical_memorandum_id' => $request->historical_memorandum_id,
+                    'lampiran_memo' => $filename,
+                ]);
 
-                    $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                    while (file_exists(public_path("historical_memorandum/lampiran/" . $filename))) {
-                        $version++;
-                        $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                    }
-
-                    $path = $file->move(public_path('historical_memorandum/lampiran'), $filename);
-                    if (!$path) {
-                        $failedFiles[] = [
-                            'name' => $originalName,
-                            'error' => 'Gagal memindahkan file ke direktori tujuan.'
-                        ];
-                        continue;
-                    }
-
-                    $lampiran = LampiranMemo::create([
-                        'historical_memorandum_id' => $request->historical_memorandum_id,
-                        'lampiran_memo' => $filename,
-                    ]);
-
-                    $result[] = $lampiran;
-
-                } catch (\Throwable $fileError) {
-                    $failedFiles[] = [
-                        'name' => $originalName,
-                        'error' => $fileError->getMessage()
-                    ];
-                }
+                $result[] = $lampiran;
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Upload selesai.',
                 'data' => $result,
-                'failed_files' => $failedFiles,
             ], 201);
 
         } catch (\Throwable $e) {
@@ -165,10 +135,7 @@ class LampiranMemoController extends Controller
 
         try {
             if ($lampiranMemo->lampiran_memo) {
-                $path = public_path('historical_memorandum/lampiran/' . $lampiranMemo->lampiran_memo);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($lampiranMemo->lampiran_memo, 'historical_memorandum/lampiran');
             }
             if($lampiranMemo->delete()){
                 return response()->json([

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\MdrItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -53,26 +54,7 @@ class MdrItemController extends Controller
                 $originalName = $file->getClientOriginalName();
 
                 try {
-                    $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
-                    $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                    $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                    $version = 0; // Awal versi
-                    // Format nama file
-                    $filename = $nameOnly . '_' . 'MDR_' . $dateNow . '_' . $version . '.' . $extension;
-
-                    while (file_exists(public_path("engineering_data/mdr/" . $filename))) {
-                        $version++;
-                        $filename = $nameOnly . '_' . 'MDR_' . $dateNow . '_' . $version . '.' . $extension;
-                    }
-
-                    $path = $file->move(public_path('engineering_data/mdr'), $filename);
-                    if (!$path) {
-                        $failedFiles[] = [
-                            'name' => $originalName,
-                            'error' => 'Gagal memindahkan file ke direktori tujuan.'
-                        ];
-                        continue;
-                    }
+                    $filename = FileHelper::uploadWithCustomPrefix($file, 'engineering_data/mdr', 'MDR');
 
                     $mdrItem = MdrItem::create([
                         'mdr_folder_id' => $request->mdr_folder_id,
@@ -153,14 +135,8 @@ class MdrItemController extends Controller
             ], 404);
         }
         try {
+            FileHelper::deleteFile($mdrItem->file_name, 'engineering_data/mdr');
 
-            // Hapus file dari direktori
-            $filePath = public_path('engineering_data/mdr/' . $mdrItem->file_name);
-            if (file_exists($filePath)) {
-                unlink($filePath);
-            }
-
-            // Hapus record dari database
             $mdrItem->delete();
 
             return response()->json([

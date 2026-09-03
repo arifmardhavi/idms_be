@@ -6,6 +6,7 @@ use App\Models\Datasheet;
 use App\Models\EngineeringData;
 use App\Models\GaDrawing;
 use Illuminate\Http\Request;
+use App\Helpers\FileHelper;
 use Illuminate\Support\Facades\Validator;
 
 class EngineeringDataController extends Controller
@@ -49,27 +50,9 @@ class EngineeringDataController extends Controller
                 'tag_number_id' => $validatedData['tag_number_id']
             ]);
 
-            // Jika berhasil, simpan drawing
             if ($engineeringData && isset($validatedData['drawing_file'])) {
-                $file = $request->file('drawing_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
-                while (file_exists(public_path("engineering_data/ga_drawing/".$filename))) {
-                    $version++; // Increment versi
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru
-                }
-                $path = $file->move(public_path('engineering_data/ga_drawing'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'GA Drawing failed upload.',
-                    ], 422);
-                }  
-                $validatedData['drawing_file'] = $filename;
-                $validatedData['engineering_data_id'] = $engineeringData->id; // Set engineering_data_id
+                $validatedData['drawing_file'] = FileHelper::uploadWithVersion($request->file('drawing_file'), 'engineering_data/ga_drawing');
+                $validatedData['engineering_data_id'] = $engineeringData->id;
                 
                 $gaDrawing = GaDrawing::create($validatedData);
             }

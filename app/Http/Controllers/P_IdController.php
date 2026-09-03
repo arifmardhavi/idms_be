@@ -53,25 +53,7 @@ class P_IdController extends Controller
                 $originalName = $file->getClientOriginalName();
 
                 try {
-                    $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
-                    $extension = $file->getClientOriginalExtension();
-                    $dateNow = date('dmY');
-                    $version = 0;
-
-                    $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                    while (file_exists(public_path("p_id/" . $filename))) {
-                        $version++;
-                        $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                    }
-
-                    $path = $file->move(public_path('p_id'), $filename);
-                    if (!$path) {
-                        $failedFiles[] = [
-                            'name' => $originalName,
-                            'error' => 'Gagal memindahkan file ke direktori tujuan.'
-                        ];
-                        continue;
-                    }
+                    $filename = FileHelper::uploadWithVersion($file, 'p_id');
 
                     $file_name = $request->input('file_name') ?? $filename;
 
@@ -151,26 +133,10 @@ class P_IdController extends Controller
         $validatedData = $validator->validated();
         try {
             if($request->hasFile('p_id_file')){
-                $file = $request->file('p_id_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("p_id/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('p_id'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload P&ID file.',
-                    ], 500);
-                }
-                if (file_exists(public_path("p_id/" . $p_id->p_id_file))) {
-                    unlink(public_path("p_id/" . $p_id->p_id_file));
-                }
+                FileHelper::deleteFile($p_id->p_id_file, 'p_id');
+
+                $filename = FileHelper::uploadWithVersion($request->file('p_id_file'), 'p_id');
+
                 $validatedData['p_id_file'] = $filename;
             }
             $p_id = P_id::find($id);
@@ -208,9 +174,8 @@ class P_IdController extends Controller
             ], 404);
         }
         try {
-            if (file_exists(public_path("p_id/" . $p_id->p_id_file))) {
-                unlink(public_path("p_id/" . $p_id->p_id_file));
-            }
+            FileHelper::deleteFile($p_id->p_id_file, 'p_id');
+
             $p_id->delete();
             return response()->json([
                 'success' => true,

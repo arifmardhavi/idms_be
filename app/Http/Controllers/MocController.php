@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use App\Helpers\FileHelper;
 use App\Models\Moc;
 use App\Models\Tag_number;
 use Illuminate\Http\Request;
@@ -67,21 +68,7 @@ class MocController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('moc_file')) {
-                $file = $request->file('moc_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("moc/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('moc'), $filename);
-                $validatedData['moc_file'] = $filename;
+                $validatedData['moc_file'] = FileHelper::uploadWithVersion($request->file('moc_file'), 'moc');
             }
             $moc = Moc::create($validatedData);
             return response()->json([
@@ -164,25 +151,10 @@ class MocController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('moc_file')) {
-                $file = $request->file('moc_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("moc/" .$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                if ($moc->moc_file) {
+                    FileHelper::deleteFile($moc->moc_file, 'moc');
                 }
-                // Hapus file lama jika ada
-                if (file_exists(public_path("moc/" .$moc->moc_file))) {
-                    unlink(public_path("moc/" .$moc->moc_file));
-                }
-                $path = $file->move(public_path('moc'), $filename);
-                $validatedData['moc_file'] = $filename;
+                $validatedData['moc_file'] = FileHelper::uploadWithVersion($request->file('moc_file'), 'moc');
             }
             $moc->update($validatedData);
             return response()->json([
@@ -213,7 +185,9 @@ class MocController extends Controller
         }
 
         try {
-            
+            if ($moc->moc_file) {
+                FileHelper::deleteFile($moc->moc_file, 'moc');
+            }
             $moc->delete();
             return response()->json([
                 'success' => true,

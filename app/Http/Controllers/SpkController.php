@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\Spk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -54,51 +55,10 @@ class SpkController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            $file = $request->file('spk_file');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-            $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-            $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-            $version = 0; // Awal versi
-            // Format nama file
-            $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+            $validatedData['spk_file'] = FileHelper::uploadWithVersion($request->file('spk_file'), 'contract/spk');
 
-            // Cek apakah file dengan nama ini sudah ada di folder tujuan
-            while (file_exists(public_path("contract/spk/".$filename))) {
-                $version++;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-            }
-            // Store file in public/contract/spk
-            $path = $file->move(public_path('contract/spk'), $filename);
-            if(!$path){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Spk Document failed add.',
-                ], 422);
-            }  
-            $validatedData['spk_file'] = $filename;
             if ($request->hasFile('invoice_file')) {
-                $file = $request->file('invoice_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/spk/invoice/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract/spk/invoice
-                $path = $file->move(public_path('contract/spk/invoice'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Invoice Document failed add.',
-                    ], 422);
-                }  
-                $validatedData['invoice_file'] = $filename;
+                $validatedData['invoice_file'] = FileHelper::uploadWithVersion($request->file('invoice_file'), 'contract/spk/invoice');
             }
             $spk = Spk::create($validatedData);
 
@@ -193,64 +153,16 @@ class SpkController extends Controller
 
         try {
             if($request->hasFile('spk_file')){
-                $file = $request->file('spk_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-    
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/spk/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract/spk
-                $path = $file->move(public_path('contract/spk'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Spk Document failed add.',
-                    ], 422);
-                }  
                 if($spk->spk_file){
-                    $spkBefore = public_path('contract/spk/' . $spk->spk_file);
-                    if (file_exists($spkBefore)) {
-                        unlink($spkBefore); // Hapus file
-                    }
+                    FileHelper::deleteFile($spk->spk_file, 'contract/spk');
                 }
-                $validatedData['spk_file'] = $filename;
+                $validatedData['spk_file'] = FileHelper::uploadWithVersion($request->file('spk_file'), 'contract/spk');
             }
             if ($request->hasFile('invoice_file')) {
-                $file = $request->file('invoice_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/spk/invoice/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract/spk/invoice
-                $path = $file->move(public_path('contract/spk/invoice'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Invoice Document failed add.',
-                    ], 422);
-                }  
                 if($spk->invoice_file){
-                    $spkBefore = public_path('contract/spk/invoice/' . $spk->invoice_file);
-                    if (file_exists($spkBefore)) {
-                        unlink($spkBefore); // Hapus file
-                    }
+                    FileHelper::deleteFile($spk->invoice_file, 'contract/spk/invoice');
                 }
-                $validatedData['invoice_file'] = $filename;
+                $validatedData['invoice_file'] = FileHelper::uploadWithVersion($request->file('invoice_file'), 'contract/spk/invoice');
             }
             $spk->update($validatedData);
 
@@ -284,16 +196,10 @@ class SpkController extends Controller
 
         try {
             if($spk->spk_file){
-                $spkBefore = public_path('contract/spk/' . $spk->spk_file);
-                if (file_exists($spkBefore)) {
-                    unlink($spkBefore); // Hapus file
-                }
+                FileHelper::deleteFile($spk->spk_file, 'contract/spk');
             }
             if($spk->invoice_file){
-                $invoiceBefore = public_path('contract/spk/invoice/' . $spk->invoice_file);
-                if (file_exists($invoiceBefore)) {
-                    unlink($invoiceBefore); // Hapus file
-                }
+                FileHelper::deleteFile($spk->invoice_file, 'contract/spk/invoice');
             }
             $spk->delete();
 

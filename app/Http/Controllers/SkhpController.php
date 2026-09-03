@@ -49,22 +49,10 @@ class SkhpController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('file_skhp')) {
-                $file = $request->file('file_skhp');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("skhp/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/skhp/
-                $path = $file->move(public_path('skhp'), $filename);  
-                $validatedData['file_skhp'] = $filename;
+                $validatedData['file_skhp'] = FileHelper::uploadWithVersion(
+                    $request->file('file_skhp'),
+                    'skhp'
+                );
             }
 
             $skhp = Skhp::create($validatedData);
@@ -138,42 +126,17 @@ class SkhpController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            // input skhp certificate ada 
             if ($request->hasFile('file_skhp')) {
-                // skhp certificate sebelumnya ada 
                 if ($skhp->file_skhp) {
-                    // replace file old skhp menjadi skhp certificate sebelumnya
                     $validatedData['file_old_skhp'] = $skhp->file_skhp;
-                    // file old skhp sebelumnya ada 
                     if ($skhp->file_old_skhp) {
-                        $path = public_path('skhp/' . $skhp->file_old_skhp);
-                        // file ada 
-                        if (file_exists($path)) {
-                            unlink($path); // Hapus file
-                        }
+                        FileHelper::deleteFile($skhp->file_old_skhp, 'skhp');
                     }
                 }
-                // proses simpan file skhp certificate baru
-                $file = $request->file('file_skhp');
-                // dd($file);
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("skhp/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                // Pindahkan file ke folder tujuan dengan nama unik
-                $path = $file->move(public_path('skhp'), $filename);
-
-                // Simpan nama file ke data yang divalidasi
-                $validatedData['file_skhp'] = $filename;
+                $validatedData['file_skhp'] = FileHelper::uploadWithVersion(
+                    $request->file('file_skhp'),
+                    'skhp'
+                );
             }
             
             $skhp->update($validatedData);
@@ -208,17 +171,11 @@ class SkhpController extends Controller
 
         try {
             if ($skhp->file_skhp) {
-                $path = public_path('skhp/' . $skhp->file_skhp);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($skhp->file_skhp, 'skhp');
             }
 
             if ($skhp->file_old_skhp) {
-                $path = public_path('skhp/' . $skhp->file_old_skhp);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($skhp->file_old_skhp, 'skhp');
             }
             $skhp->delete();
 
@@ -246,24 +203,16 @@ class SkhpController extends Controller
         }
 
         try {
-            // skhp certificate 
             if ($request->file_skhp) {
-                $path = public_path('skhp/' . $skhp->file_skhp);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($skhp->file_skhp, 'skhp');
                 $data = ['file_skhp' => null];
                 $skhp->update($data);
                 return response()->json([
                     'success' => true,
                     'message' => 'file skhp deleted successfully.',
                 ], 200);
-            // file old skhp
             }elseif ($request->file_old_skhp) {
-                $path = public_path('skhp/' . $skhp->file_old_skhp);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($skhp->file_old_skhp, 'skhp');
                 $data = ['file_old_skhp' => null];
                 $skhp->update($data);
                 return response()->json([

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\Datasheet;
 use App\Models\EngineeringData;
 use Dflydev\DotAccessData\Data;
@@ -74,31 +75,12 @@ class DatasheetController extends Controller
             $result = [];
             $failedFiles = [];
 
+            $tag_number = EngineeringData::find($request->engineering_data_id)->tagNumber->tag_number;
+            $cleanTagNumber = str_replace('/00', '', $tag_number);
+
             foreach ($request->file('datasheet_file') as $file) {
-                $originalName = $file->getClientOriginalName();
-
                 try {
-                    $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
-                    $extension = $file->getClientOriginalExtension();
-                    $dateNow = date('dmY');
-                    $tag_number = EngineeringData::find($request->engineering_data_id)->tagNumber->tag_number; // Ambil tag number dari engineering data
-                    $cleanTagNumber = str_replace('/00', '', $tag_number); // hasil: '1-C-25'
-                    $version = 0;
-
-                    $filename = $nameOnly . '_' . 'datasheet_' . $cleanTagNumber . '_' . $dateNow . '_' . $version . '.' . $extension;
-                    while (file_exists(public_path("engineering_data/datasheet/" . $filename))) {
-                        $version++;
-                        $filename = $nameOnly . '_' . 'datasheet_' . $cleanTagNumber . '_' . $dateNow . '_' . $version . '.' . $extension;
-                    }
-
-                    $path = $file->move(public_path('engineering_data/datasheet'), $filename);
-                    if (!$path) {
-                        $failedFiles[] = [
-                            'name' => $originalName,
-                            'error' => 'Gagal memindahkan file ke direktori tujuan.'
-                        ];
-                        continue;
-                    }
+                    $filename = FileHelper::uploadWithCustomPrefix($file, 'engineering_data/datasheet', 'datasheet_' . $cleanTagNumber);
 
                     $datasheet = Datasheet::create([
                         'engineering_data_id' => $request->engineering_data_id,
@@ -112,7 +94,7 @@ class DatasheetController extends Controller
 
                 } catch (\Throwable $fileError) {
                     $failedFiles[] = [
-                        'name' => $originalName,
+                        'name' => $file->getClientOriginalName(),
                         'error' => $fileError->getMessage()
                     ];
                 }
@@ -185,34 +167,15 @@ class DatasheetController extends Controller
         try {
             if ($request->hasFile('datasheet_file')) {
                 $file = $request->file('datasheet_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                $tag_number = EngineeringData::find($validatedData['engineering_data_id'])->tagNumber->tag_number; // Ambil tag number dari engineering data
-                $cleanTagNumber = str_replace('/00', '', $tag_number); // hasil: '1-C-25'
-                $filename =  $originalName . '_' . 'datasheet_' . $cleanTagNumber . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
-                // $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
-                while (file_exists(public_path("engineering_data/datasheet/".$filename))) {
-                    $version++; // Increment versi
-                    $filename =  $originalName . '_' . 'datasheet_' . $cleanTagNumber . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru
-                }
+                $tag_number = EngineeringData::find($validatedData['engineering_data_id'])->tagNumber->tag_number;
+                $cleanTagNumber = str_replace('/00', '', $tag_number);
+
+                $filename = FileHelper::uploadWithCustomPrefix($file, 'engineering_data/datasheet', 'datasheet_' . $cleanTagNumber);
+
                 if ($datasheet->datasheet_file) {
-                    unlink(public_path("engineering_data/datasheet/".$datasheet->datasheet_file)); // Hapus file lama jika ada
+                    FileHelper::deleteFile($datasheet->datasheet_file, 'engineering_data/datasheet');
                 }
-                $path = $file->move(public_path('engineering_data/datasheet'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Datasheet failed upload.',
-                    ], 422);
-                }
-                if($datasheet->datasheet_file){
-                    $datasheetBefore = public_path('engineering_data/datasheet/' . $datasheet->datasheet_file);
-                    if (file_exists($datasheetBefore)) {
-                        unlink($datasheetBefore); // Hapus file
-                    }
-                }
+
                 $validatedData['datasheet_file'] = $filename;
             }
 
@@ -253,11 +216,7 @@ class DatasheetController extends Controller
 
         try {
             if ($datasheet->datasheet_file) {
-                // Hapus file dari direktori
-                $path = public_path('engineering_data/datasheet/' . $datasheet->datasheet_file);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($datasheet->datasheet_file, 'engineering_data/datasheet');
             }
             if($datasheet->delete()){
                 return response()->json([

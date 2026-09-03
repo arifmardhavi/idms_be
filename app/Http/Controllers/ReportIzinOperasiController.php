@@ -62,24 +62,7 @@ class ReportIzinOperasiController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('report_izin_operasi')) {
-                $file = $request->file('report_izin_operasi');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
-                while (file_exists(public_path("izin_operasi/reports/".$filename))) {
-                    $version++; // Increment versi
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru
-                }
-                $path = $file->move(public_path('izin_operasi/reports'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Report Izin Operasi failed upload.',
-                    ], 422);
-                }  
-                $validatedData['report_izin_operasi'] = $filename;
+                $validatedData['report_izin_operasi'] = FileHelper::uploadWithVersion($request->file('report_izin_operasi'), 'izin_operasi/reports');
             }
             $report = ReportIzinOperasi::create($validatedData);
             if($report){
@@ -153,31 +136,10 @@ class ReportIzinOperasiController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('report_izin_operasi')) {
-                $file = $request->file('report_izin_operasi');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
-                while (file_exists(public_path("izin_operasi/reports/".$filename))) {
-                    $version++; // Increment versi
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru
+                if ($report->report_izin_operasi) {
+                    FileHelper::deleteFile($report->report_izin_operasi, 'izin_operasi/reports');
                 }
-                $path = $file->move(public_path('izin_operasi/reports'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Report Izin Operasi failed upload.',
-                    ], 422);
-                }
-                if($report->report_izin_operasi){
-                    $reportBefore = public_path('izin_operasi/reports/' . $report->report_izin_operasi);
-                    if (file_exists($reportBefore)) {
-                        unlink($reportBefore); // Hapus file
-                    }
-                }
-
-                $validatedData['report_izin_operasi'] = $filename;
+                $validatedData['report_izin_operasi'] = FileHelper::uploadWithVersion($request->file('report_izin_operasi'), 'izin_operasi/reports');
             }
             
             if($report->update($validatedData)){
@@ -217,10 +179,7 @@ class ReportIzinOperasiController extends Controller
 
         try {
             if ($report->report_izin_operasi) {
-                $path = public_path('izin_operasi/reports/' . $report->report_izin_operasi);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($report->report_izin_operasi, 'izin_operasi/reports');
             }
             if($report->delete()){
                 return response()->json([

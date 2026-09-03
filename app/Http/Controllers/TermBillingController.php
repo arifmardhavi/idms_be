@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\TermBilling;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -43,28 +44,7 @@ class TermBillingController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            $file = $request->file('payment_document');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-            $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-            $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-            $version = 0; // Awal versi
-            // Format nama file
-            $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-            // Cek apakah file dengan nama ini sudah ada di folder tujuan
-            while (file_exists(public_path("contract/payment/".$filename))) {
-                $version++;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-            }
-            // Store file in public/contract/payment
-            $path = $file->move(public_path('contract/payment'), $filename);
-            if(!$path){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Payment Document failed add.',
-                ], 422);
-            }  
-            $validatedData['payment_document'] = $filename;
+            $validatedData['payment_document'] = FileHelper::uploadWithVersion($request->file('payment_document'), 'contract/payment');
             $termBilling = TermBilling::create($validatedData);
 
             return response()->json([
@@ -139,34 +119,10 @@ class TermBillingController extends Controller
 
         try {
             if($request->hasFile('payment_document')){
-                $file = $request->file('payment_document');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/payment/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                if ($termBilling->payment_document) {
+                    FileHelper::deleteFile($termBilling->payment_document, 'contract/payment');
                 }
-                // Store file in public/contract/payment
-                $path = $file->move(public_path('contract/payment'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Payment Document failed update.',
-                    ], 422);
-                }  
-                $validatedData['payment_document'] = $filename;
-                if($termBilling->payment_document){
-                    $termBillingBefore = public_path('contract/payment/' . $termBilling->payment_document);
-                    if (file_exists($termBillingBefore)) {
-                        unlink($termBillingBefore); // Hapus file
-                    }
-                }
+                $validatedData['payment_document'] = FileHelper::uploadWithVersion($request->file('payment_document'), 'contract/payment');
             }
             
             if($termBilling->update($validatedData)){
@@ -205,10 +161,8 @@ class TermBillingController extends Controller
         }
 
         try {
-
-            $termBillingBefore = public_path('contract/payment/' . $termBilling->payment_document);
-            if (file_exists($termBillingBefore)) {
-                unlink($termBillingBefore); // Hapus file
+            if ($termBilling->payment_document) {
+                FileHelper::deleteFile($termBilling->payment_document, 'contract/payment');
             }
             $termBilling->delete();
 

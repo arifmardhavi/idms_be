@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\RekomendasiJasa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -45,24 +46,7 @@ class RekomendasiJasaController extends Controller
         $validatedData = $validator->validated();
         try{
             if ($request->hasFile('rekomendasi_file')) {
-                $file = $request->file('rekomendasi_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/jasa/rekomendasi/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('readiness_ta/jasa/rekomendasi'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Rekomendasi failed upload.',
-                    ], 422);
-                }
-                
+                $filename = FileHelper::uploadWithVersion($request->file('rekomendasi_file'), 'readiness_ta/jasa/rekomendasi');
                 $validatedData['rekomendasi_file'] = $filename;
             }
 
@@ -154,27 +138,11 @@ class RekomendasiJasaController extends Controller
 
         try {
             if ($request->hasFile('rekomendasi_file')) {
-                $file = $request->file('rekomendasi_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/jasa/rekomendasi/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('readiness_ta/jasa/rekomendasi'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Rekomendasi failed upload.',
-                    ], 422);
-                }
+                $filename = FileHelper::uploadWithVersion($request->file('rekomendasi_file'), 'readiness_ta/jasa/rekomendasi');
                 
                 // Hapus file lama jika ada
-                if ($rekomendasi_jasa->rekomendasi_file && file_exists(public_path("readiness_ta/jasa/rekomendasi/" . $rekomendasi_jasa->rekomendasi_file))) {
-                    unlink(public_path("readiness_ta/jasa/rekomendasi/" . $rekomendasi_jasa->rekomendasi_file));
+                if ($rekomendasi_jasa->rekomendasi_file) {
+                    FileHelper::deleteFile($rekomendasi_jasa->rekomendasi_file, 'readiness_ta/jasa/rekomendasi');
                 }
 
                 $validatedData['rekomendasi_file'] = $filename;
@@ -182,8 +150,8 @@ class RekomendasiJasaController extends Controller
             }
 
             if ($request->filled('historical_memorandum_id')) {
-                if ($rekomendasi_jasa->rekomendasi_file && file_exists(public_path("readiness_ta/jasa/rekomendasi/" . $rekomendasi_jasa->rekomendasi_file))) {
-                    unlink(public_path("readiness_ta/jasa/rekomendasi/" . $rekomendasi_jasa->rekomendasi_file));
+                if ($rekomendasi_jasa->rekomendasi_file) {
+                    FileHelper::deleteFile($rekomendasi_jasa->rekomendasi_file, 'readiness_ta/jasa/rekomendasi');
                 }
 
                 // Set data: historical id aktif, file dihapus
@@ -222,8 +190,8 @@ class RekomendasiJasaController extends Controller
 
         try {
             // Hapus file jika ada
-            if ($rekomendasi_jasa->rekomendasi_file && file_exists(public_path("readiness_ta/jasa/rekomendasi/" . $rekomendasi_jasa->rekomendasi_file))) {
-                unlink(public_path("readiness_ta/jasa/rekomendasi/" . $rekomendasi_jasa->rekomendasi_file));
+            if ($rekomendasi_jasa->rekomendasi_file) {
+                FileHelper::deleteFile($rekomendasi_jasa->rekomendasi_file, 'readiness_ta/jasa/rekomendasi');
             }
 
             $rekomendasi_jasa->delete();

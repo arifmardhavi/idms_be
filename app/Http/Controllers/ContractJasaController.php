@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\ContractJasa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -140,8 +141,8 @@ class ContractJasaController extends Controller
         }
 
         try {
-            if ($contract_jasa->contract_file && file_exists(public_path("readiness_ta/jasa/contract/" . $contract_jasa->contract_file))) {
-                unlink(public_path("readiness_ta/jasa/contract/" . $contract_jasa->contract_file));
+            if ($contract_jasa->contract_file) {
+                FileHelper::deleteFile($contract_jasa->contract_file, 'readiness_ta/jasa/contract');
             }
             $contract_jasa->delete();
 

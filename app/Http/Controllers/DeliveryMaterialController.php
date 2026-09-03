@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\DeliveryMaterial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -45,24 +46,7 @@ class DeliveryMaterialController extends Controller
 
         try {
             if($request->hasFile('delivery_file')){
-                $file = $request->file('delivery_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/material/delivery/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('readiness_ta/material/delivery'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload Delivery file.',
-                    ], 500);
-                }
-                $validatedData['delivery_file'] = $filename;
+                $validatedData['delivery_file'] = FileHelper::uploadWithVersion($request->file('delivery_file'), 'readiness_ta/material/delivery');
             }
             $delivery_material = DeliveryMaterial::create($validatedData);
 
@@ -151,27 +135,10 @@ class DeliveryMaterialController extends Controller
 
         try {
             if($request->hasFile('delivery_file')){
-                $file = $request->file('delivery_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("readiness_ta/material/delivery/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                if ($delivery_material->delivery_file) {
+                    FileHelper::deleteFile($delivery_material->delivery_file, 'readiness_ta/material/delivery');
                 }
-                $path = $file->move(public_path('readiness_ta/material/delivery'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to upload Delivery file.',
-                    ], 500);
-                }
-                if ($delivery_material->delivery_file && file_exists(public_path('readiness_ta/material/delivery/' . $delivery_material->delivery_file))) {
-                    unlink(public_path('readiness_ta/material/delivery/' . $delivery_material->delivery_file));
-                }
-                $validatedData['delivery_file'] = $filename;
+                $validatedData['delivery_file'] = FileHelper::uploadWithVersion($request->file('delivery_file'), 'readiness_ta/material/delivery');
             }
             $delivery_material->update($validatedData);
 
@@ -203,8 +170,8 @@ class DeliveryMaterialController extends Controller
         }
 
         try {
-            if ($delivery_material->delivery_file && file_exists(public_path('readiness_ta/material/delivery/' . $delivery_material->delivery_file))) {
-                unlink(public_path('readiness_ta/material/delivery/' . $delivery_material->delivery_file));
+            if ($delivery_material->delivery_file) {
+                FileHelper::deleteFile($delivery_material->delivery_file, 'readiness_ta/material/delivery');
             }
             $delivery_material->delete();
 

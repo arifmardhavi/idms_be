@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\Amandemen;
 use App\Models\Contract;
 use Carbon\Carbon;
@@ -105,76 +106,13 @@ class AmandemenController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            $file = $request->file('ba_agreement_file');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-            $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-            $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-            $version = 0; // Awal versi
-            // Format nama file
-            $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-            // Cek apakah file dengan nama ini sudah ada di folder tujuan
-            while (file_exists(public_path("contract/amandemen/ba_agreement/".$filename))) {
-                $version++;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-            }
-            // Store file in public/contract/amandemen/ba_agreement
-            $path = $file->move(public_path('contract/amandemen/ba_agreement'), $filename);
-            if(!$path){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ba_agreement File failed upload.',
-                ], 422);
-            }  
-            $validatedData['ba_agreement_file'] = $filename;
+            $validatedData['ba_agreement_file'] = FileHelper::uploadWithVersion($request->file('ba_agreement_file'), 'contract/amandemen/ba_agreement');
 
             if($request->hasFile('result_amandemen_file')){
-                $file = $request->file('result_amandemen_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/amandemen/result_amandemen/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract
-                $path = $file->move(public_path('contract/amandemen/result_amandemen'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'result_amandemen File failed upload.',
-                    ], 422);
-                }  
-                $validatedData['result_amandemen_file'] = $filename;
+                $validatedData['result_amandemen_file'] = FileHelper::uploadWithVersion($request->file('result_amandemen_file'), 'contract/amandemen/result_amandemen');
             }
             if($request->hasFile('principle_permit_file')){
-                $file = $request->file('principle_permit_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/amandemen/principle_permit/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract
-                $path = $file->move(public_path('contract/amandemen/principle_permit'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'principle_permit File failed upload.',
-                    ], 422);
-                }  
-                $validatedData['principle_permit_file'] = $filename;
+                $validatedData['principle_permit_file'] = FileHelper::uploadWithVersion($request->file('principle_permit_file'), 'contract/amandemen/principle_permit');
             }
             $amandemen = Amandemen::create($validatedData);
 
@@ -350,98 +288,23 @@ class AmandemenController extends Controller
 
         try {
             if($request->hasFile('ba_agreement_file')){
-                
-                $file = $request->file('ba_agreement_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-    
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/amandemen/ba_agreement/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract/amandemen/ba_agreement
-                $path = $file->move(public_path('contract/amandemen/ba_agreement'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'ba_agreement File failed upload.',
-                    ], 422);
-                } 
-                
                 if ($amandemen->ba_agreement_file) {
-                    $remove_path = public_path('contract/amandemen/ba_agreement/' . $amandemen->ba_agreement_file);
-                    if (file_exists($remove_path)) {
-                        unlink($remove_path); // Hapus file
-                    }
+                    FileHelper::deleteFile($amandemen->ba_agreement_file, 'contract/amandemen/ba_agreement');
                 }
-    
-                $validatedData['ba_agreement_file'] = $filename;
+                $validatedData['ba_agreement_file'] = FileHelper::uploadWithVersion($request->file('ba_agreement_file'), 'contract/amandemen/ba_agreement');
             }
 
             if($request->hasFile('result_amandemen_file')){
-                $file = $request->file('result_amandemen_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/amandemen/result_amandemen/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract
-                $path = $file->move(public_path('contract/amandemen/result_amandemen'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'result_amandemen File failed upload.',
-                    ], 422);
-                }  
                 if ($amandemen->result_amandemen_file) {
-                    $remove_path = public_path('contract/amandemen/result_amandemen/' . $amandemen->result_amandemen_file);
-                    if (file_exists($remove_path)) {
-                        unlink($remove_path); // Hapus file
-                    }
+                    FileHelper::deleteFile($amandemen->result_amandemen_file, 'contract/amandemen/result_amandemen');
                 }
-                $validatedData['result_amandemen_file'] = $filename;
+                $validatedData['result_amandemen_file'] = FileHelper::uploadWithVersion($request->file('result_amandemen_file'), 'contract/amandemen/result_amandemen');
             }
             if($request->hasFile('principle_permit_file')){
-                $file = $request->file('principle_permit_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/amandemen/principle_permit/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract
-                $path = $file->move(public_path('contract/amandemen/principle_permit'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'principle_permit File failed upload.',
-                    ], 422);
-                }  
                 if ($amandemen->principle_permit_file) {
-                    $remove_path = public_path('contract/amandemen/principle_permit/' . $amandemen->principle_permit_file);
-                    if (file_exists($remove_path)) {
-                        unlink($remove_path); // Hapus file
-                    }
+                    FileHelper::deleteFile($amandemen->principle_permit_file, 'contract/amandemen/principle_permit');
                 }
-                $validatedData['principle_permit_file'] = $filename;
+                $validatedData['principle_permit_file'] = FileHelper::uploadWithVersion($request->file('principle_permit_file'), 'contract/amandemen/principle_permit');
             }
             $amandemen->update($validatedData);
 
@@ -512,22 +375,13 @@ class AmandemenController extends Controller
 
         try {
             if ($amandemen->ba_agreement_file) {
-                $path = public_path('contract/amandemen/ba_agreement/' . $amandemen->ba_agreement_file);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($amandemen->ba_agreement_file, 'contract/amandemen/ba_agreement');
             }
             if ($amandemen->result_amandemen_file) {
-                $path = public_path('contract/amandemen/result_amandemen/' . $amandemen->result_amandemen_file);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($amandemen->result_amandemen_file, 'contract/amandemen/result_amandemen');
             }
             if ($amandemen->principle_permit_file) {
-                $path = public_path('contract/amandemen/principle_permit/' . $amandemen->principle_permit_file);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($amandemen->principle_permit_file, 'contract/amandemen/principle_permit');
             }
             
             $amandemen->delete();

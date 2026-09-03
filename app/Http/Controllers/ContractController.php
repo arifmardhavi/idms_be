@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Helpers\FileHelper;
 use App\Models\Contract;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -87,52 +88,10 @@ class ContractController extends Controller
         $validatedData['contract_name'] = strtoupper($request->contract_name);
 
         try {
-            $file = $request->file('contract_file');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-            $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-            $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-            $version = 0; // Awal versi
-            // Format nama file
-            $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-            // Cek apakah file dengan nama ini sudah ada di folder tujuan
-            while (file_exists(public_path("contract/".$filename))) {
-                $version++;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-            }
-            // Store file in public/contract
-            $path = $file->move(public_path('contract'), $filename);
-            if(!$path){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Contract File failed upload.',
-                ], 422);
-            }  
-            $validatedData['contract_file'] = $filename;
+            $validatedData['contract_file'] = FileHelper::uploadWithVersion($request->file('contract_file'), 'contract');
 
             if($request->hasFile('meeting_notes')){
-                $file = $request->file('meeting_notes');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/meeting_notes/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract
-                $path = $file->move(public_path('contract/meeting_notes'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Meeting Notes File failed upload.',
-                    ], 422);
-                }  
-                $validatedData['meeting_notes'] = $filename;
+                $validatedData['meeting_notes'] = FileHelper::uploadWithVersion($request->file('meeting_notes'), 'contract/meeting_notes');
             }
             $contract = Contract::create($validatedData);
 
@@ -273,69 +232,17 @@ class ContractController extends Controller
         // dd($validatedData);
         try {
             if($request->hasFile('contract_file')){
-                $file = $request->file('contract_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-    
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract
-                $path = $file->move(public_path('contract'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Contract File failed upload.',
-                    ], 422);
-                }  
-
                 if ($contract->contract_file) {
-                    $remove_path = public_path('contract/' . $contract->contract_file);
-                    if (file_exists($remove_path)) {
-                        unlink($remove_path); // Hapus file
-                    }
+                    FileHelper::deleteFile($contract->contract_file, 'contract');
                 }
-
-                $validatedData['contract_file'] = $filename;
+                $validatedData['contract_file'] = FileHelper::uploadWithVersion($request->file('contract_file'), 'contract');
             }
 
             if($request->hasFile('meeting_notes')){
-                $file = $request->file('meeting_notes');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-    
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("contract/meeting_notes/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/contract/meeting_notes
-                $path = $file->move(public_path('contract/meeting_notes'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Meeting Notes File failed upload.',
-                    ], 422);
-                }  
-
                 if ($contract->meeting_notes) {
-                    $remove_path = public_path('contract/meeting_notes/' . $contract->meeting_notes);
-                    if (file_exists($remove_path)) {
-                        unlink($remove_path); // Hapus file
-                    }
+                    FileHelper::deleteFile($contract->meeting_notes, 'contract/meeting_notes');
                 }
-
-                $validatedData['meeting_notes'] = $filename;
+                $validatedData['meeting_notes'] = FileHelper::uploadWithVersion($request->file('meeting_notes'), 'contract/meeting_notes');
             }
             
             $contract = Contract::find($id);
@@ -384,10 +291,10 @@ class ContractController extends Controller
 
         try {
             if ($contract->contract_file) {
-                $path = public_path('contract/' . $contract->contract_file);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($contract->contract_file, 'contract');
+            }
+            if ($contract->meeting_notes) {
+                FileHelper::deleteFile($contract->meeting_notes, 'contract/meeting_notes');
             }
             
             $contract->delete();

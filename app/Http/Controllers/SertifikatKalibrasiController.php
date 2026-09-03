@@ -48,22 +48,10 @@ class SertifikatKalibrasiController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('file_sertifikat_kalibrasi')) {
-                $file = $request->file('file_sertifikat_kalibrasi');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("sertifikat_kalibrasi/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/sertifikat_kalibrasi/
-                $path = $file->move(public_path('sertifikat_kalibrasi'), $filename);  
-                $validatedData['file_sertifikat_kalibrasi'] = $filename;
+                $validatedData['file_sertifikat_kalibrasi'] = FileHelper::uploadWithVersion(
+                    $request->file('file_sertifikat_kalibrasi'),
+                    'sertifikat_kalibrasi'
+                );
             }
 
             $sertifikat_kalibrasi = SertifikatKalibrasi::create($validatedData);
@@ -137,42 +125,17 @@ class SertifikatKalibrasiController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            // input sertifikat_kalibrasi certificate ada 
             if ($request->hasFile('file_sertifikat_kalibrasi')) {
-                // sertifikat_kalibrasi certificate sebelumnya ada 
                 if ($sertifikat_kalibrasi->file_sertifikat_kalibrasi) {
-                    // replace file old sertifikat_kalibrasi menjadi sertifikat_kalibrasi certificate sebelumnya
                     $validatedData['file_old_sertifikat_kalibrasi'] = $sertifikat_kalibrasi->file_sertifikat_kalibrasi;
-                    // file old sertifikat_kalibrasi sebelumnya ada 
                     if ($sertifikat_kalibrasi->file_old_sertifikat_kalibrasi) {
-                        $path = public_path('sertifikat_kalibrasi/' . $sertifikat_kalibrasi->file_old_sertifikat_kalibrasi);
-                        // file ada 
-                        if (file_exists($path)) {
-                            unlink($path); // Hapus file
-                        }
+                        FileHelper::deleteFile($sertifikat_kalibrasi->file_old_sertifikat_kalibrasi, 'sertifikat_kalibrasi');
                     }
                 }
-                // proses simpan file sertifikat_kalibrasi certificate baru
-                $file = $request->file('file_sertifikat_kalibrasi');
-                // dd($file);
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("sertifikat_kalibrasi/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                // Pindahkan file ke folder tujuan dengan nama unik
-                $path = $file->move(public_path('sertifikat_kalibrasi'), $filename);
-
-                // Simpan nama file ke data yang divalidasi
-                $validatedData['file_sertifikat_kalibrasi'] = $filename;
+                $validatedData['file_sertifikat_kalibrasi'] = FileHelper::uploadWithVersion(
+                    $request->file('file_sertifikat_kalibrasi'),
+                    'sertifikat_kalibrasi'
+                );
             }
             
             $sertifikat_kalibrasi->update($validatedData);
@@ -207,17 +170,11 @@ class SertifikatKalibrasiController extends Controller
 
         try {
             if ($sertifikat_kalibrasi->file_sertifikat_kalibrasi) {
-                $path = public_path('sertifikat_kalibrasi/' . $sertifikat_kalibrasi->file_sertifikat_kalibrasi);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($sertifikat_kalibrasi->file_sertifikat_kalibrasi, 'sertifikat_kalibrasi');
             }
 
             if ($sertifikat_kalibrasi->file_old_sertifikat_kalibrasi) {
-                $path = public_path('sertifikat_kalibrasi/' . $sertifikat_kalibrasi->file_old_sertifikat_kalibrasi);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($sertifikat_kalibrasi->file_old_sertifikat_kalibrasi, 'sertifikat_kalibrasi');
             }
             $sertifikat_kalibrasi->delete();
 
@@ -245,24 +202,16 @@ class SertifikatKalibrasiController extends Controller
         }
 
         try {
-            // sertifikat_kalibrasi certificate 
             if ($request->file_sertifikat_kalibrasi) {
-                $path = public_path('sertifikat_kalibrasi/' . $sertifikat_kalibrasi->file_sertifikat_kalibrasi);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($sertifikat_kalibrasi->file_sertifikat_kalibrasi, 'sertifikat_kalibrasi');
                 $data = ['file_sertifikat_kalibrasi' => null];
                 $sertifikat_kalibrasi->update($data);
                 return response()->json([
                     'success' => true,
                     'message' => 'file sertifikat kalibrasi deleted successfully.',
                 ], 200);
-            // file old sertifikat_kalibrasi
             }elseif ($request->file_old_sertifikat_kalibrasi) {
-                $path = public_path('sertifikat_kalibrasi/' . $sertifikat_kalibrasi->file_old_sertifikat_kalibrasi);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($sertifikat_kalibrasi->file_old_sertifikat_kalibrasi, 'sertifikat_kalibrasi');
                 $data = ['file_old_sertifikat_kalibrasi' => null];
                 $sertifikat_kalibrasi->update($data);
                 return response()->json([

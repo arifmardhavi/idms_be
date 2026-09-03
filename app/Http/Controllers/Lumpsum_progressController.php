@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\Lumpsum_progress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -64,27 +65,7 @@ class Lumpsum_progressController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            $file = $request->file('progress_file');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $extension = $file->getClientOriginalExtension();
-            $dateNow = date('dmY');
-            $version = 0;
-            $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-            while (file_exists(public_path("contract/lumpsum/progress/" . $filename))) {
-                $version++;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-            }
-
-            $path = $file->move(public_path('contract/lumpsum/progress'), $filename);
-            if (!$path) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File Progress failed add.',
-                ], 422);
-            }
-
-            $validatedData['progress_file'] = $filename;
+            $validatedData['progress_file'] = FileHelper::uploadWithVersion($request->file('progress_file'), 'contract/lumpsum/progress');
             $progress = Lumpsum_progress::create($validatedData);
 
             return response()->json([
@@ -179,35 +160,10 @@ class Lumpsum_progressController extends Controller
 
         try {
             if ($request->hasFile('progress_file')) {
-                $file = $request->file('progress_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                while (file_exists(public_path("contract/lumpsum/progress/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                $path = $file->move(public_path('contract/lumpsum/progress'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'File Progress failed to update.',
-                    ], 422);
-                }
-
-                // 🔥 Hapus file lama jika ada
                 if ($progress->progress_file) {
-                    $progressBefore = public_path('contract/lumpsum/progress/' . $progress->progress_file);
-                    if (file_exists($progressBefore)) {
-                        unlink($progressBefore);
-                    }
+                    FileHelper::deleteFile($progress->progress_file, 'contract/lumpsum/progress');
                 }
-
-                $validatedData['progress_file'] = $filename;
+                $validatedData['progress_file'] = FileHelper::uploadWithVersion($request->file('progress_file'), 'contract/lumpsum/progress');
             }
 
             if ($progress->update($validatedData)) {
@@ -246,10 +202,8 @@ class Lumpsum_progressController extends Controller
         }
 
         try {
-
-            $progressBefore = public_path('contract/lumpsum/progress/' . $progress->progress_file);
-            if (file_exists($progressBefore)) {
-                unlink($progressBefore); // Hapus file
+            if ($progress->progress_file) {
+                FileHelper::deleteFile($progress->progress_file, 'contract/lumpsum/progress');
             }
             $progress->delete();
 

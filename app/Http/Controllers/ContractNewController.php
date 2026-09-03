@@ -426,14 +426,6 @@ class ContractNewController extends Controller
         }
 
         try {
-            $filePath = public_path('contract_new/' . $contract->contract_file);
-            if (!file_exists($filePath)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File does not exist in storage.',
-                ], 404);
-            }
-
             $fileName = $contract->contract_file;
 
             activity()->log('download', 'ContractNew', [
@@ -442,14 +434,7 @@ class ContractNewController extends Controller
                 'metadata'    => ['file' => $contract->contract_file],
             ]);
 
-            return response()->download(
-                $filePath,
-                $fileName,
-                [
-                    'Content-Type' => mime_content_type($filePath),
-                    'Content-Disposition' => "attachment; filename=\"{$fileName}\"; filename*=UTF-8''" . rawurlencode($fileName)
-                ]
-            );
+            return FileHelper::downloadFile('contract_new', $contract->contract_file);
 
         } catch (\Exception $e) {
             return response()->json([

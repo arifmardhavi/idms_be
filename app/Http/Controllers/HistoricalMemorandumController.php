@@ -73,21 +73,7 @@ class HistoricalMemorandumController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('memorandum_file')) {
-                $file = $request->file('memorandum_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("historical_memorandum/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('historical_memorandum'), $filename);
-                $validatedData['memorandum_file'] = $filename;
+                $validatedData['memorandum_file'] = FileHelper::uploadWithVersion($request->file('memorandum_file'), 'historical_memorandum');
             }
             $historicalMemorandum = HistoricalMemorandum::create($validatedData);
             return response()->json([
@@ -176,25 +162,10 @@ class HistoricalMemorandumController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('memorandum_file')) {
-                $file = $request->file('memorandum_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("historical_memorandum/" .$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                if ($historicalMemorandum->memorandum_file) {
+                    FileHelper::deleteFile($historicalMemorandum->memorandum_file, 'historical_memorandum');
                 }
-                // Hapus file lama jika ada
-                if (file_exists(public_path("historical_memorandum/" .$historicalMemorandum->memorandum_file))) {
-                    unlink(public_path("historical_memorandum/" .$historicalMemorandum->memorandum_file));
-                }
-                $path = $file->move(public_path('historical_memorandum'), $filename);
-                $validatedData['memorandum_file'] = $filename;
+                $validatedData['memorandum_file'] = FileHelper::uploadWithVersion($request->file('memorandum_file'), 'historical_memorandum');
             }
             $historicalMemorandum->update($validatedData);
             return response()->json([
@@ -225,7 +196,9 @@ class HistoricalMemorandumController extends Controller
         }
 
         try {
-            
+            if ($historicalMemorandum->memorandum_file) {
+                FileHelper::deleteFile($historicalMemorandum->memorandum_file, 'historical_memorandum');
+            }
             $historicalMemorandum->delete();
             return response()->json([
                 'success' => true,

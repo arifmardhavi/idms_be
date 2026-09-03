@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\GaDrawing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -70,55 +71,25 @@ class GaDrawingController extends Controller
 
         try {
             $result = [];
-            $failedFiles = [];
 
             foreach ($request->file('drawing_file') as $file) {
-                $originalName = $file->getClientOriginalName();
+                $filename = FileHelper::uploadWithVersion($file, 'engineering_data/ga_drawing');
 
-                try {
-                    $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
-                    $extension = $file->getClientOriginalExtension();
-                    $dateNow = date('dmY');
-                    $version = 0;
+                $drawing = GaDrawing::create([
+                    'engineering_data_id' => $request->engineering_data_id,
+                    'nama_dokumen' => $request->nama_dokumen,
+                    'no_dokumen' => $request->no_dokumen,
+                    'date_drawing' => $request->date_drawing,
+                    'drawing_file' => $filename,
+                ]);
 
-                    $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                    while (file_exists(public_path("engineering_data/ga_drawing/" . $filename))) {
-                        $version++;
-                        $filename = $nameOnly . '_' . $dateNow . '_' . $version . '.' . $extension;
-                    }
-
-                    $path = $file->move(public_path('engineering_data/ga_drawing'), $filename);
-                    if (!$path) {
-                        $failedFiles[] = [
-                            'name' => $originalName,
-                            'error' => 'Gagal memindahkan file ke direktori tujuan.'
-                        ];
-                        continue;
-                    }
-
-                    $drawing = GaDrawing::create([
-                        'engineering_data_id' => $request->engineering_data_id,
-                        'nama_dokumen' => $request->nama_dokumen,
-                        'no_dokumen' => $request->no_dokumen,
-                        'date_drawing' => $request->date_drawing,
-                        'drawing_file' => $filename,
-                    ]);
-
-                    $result[] = $drawing;
-
-                } catch (\Throwable $fileError) {
-                    $failedFiles[] = [
-                        'name' => $originalName,
-                        'error' => $fileError->getMessage()
-                    ];
-                }
+                $result[] = $drawing;
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Upload selesai.',
                 'data' => $result,
-                'failed_files' => $failedFiles,
             ], 201);
 
         } catch (\Throwable $e) {
@@ -178,28 +149,9 @@ class GaDrawingController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('drawing_file')) {
-                $file = $request->file('drawing_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("engineering_data/ga_drawing/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                $path = $file->move(public_path('engineering_data/ga_drawing'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'GA Drawing failed upload.',
-                    ], 422);
-                }
-                if($ga_drawing->drawing_file){
-                    $ga_drawingBefore = public_path('engineering_data/ga_drawing/' . $ga_drawing->drawing_file);
-                    if (file_exists($ga_drawingBefore)) {
-                        unlink($ga_drawingBefore); // Hapus file
-                    }
+                $filename = FileHelper::uploadWithVersion($request->file('drawing_file'), 'engineering_data/ga_drawing');
+                if ($ga_drawing->drawing_file) {
+                    FileHelper::deleteFile($ga_drawing->drawing_file, 'engineering_data/ga_drawing');
                 }
                 $validatedData['drawing_file'] = $filename;
             }
@@ -241,11 +193,7 @@ class GaDrawingController extends Controller
 
         try {
             if ($ga_drawing->drawing_file) {
-                // Hapus file dari direktori
-                $path = public_path('engineering_data/ga_drawing/' . $ga_drawing->drawing_file);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($ga_drawing->drawing_file, 'engineering_data/ga_drawing');
             }
             if($ga_drawing->delete()){
                 return response()->json([

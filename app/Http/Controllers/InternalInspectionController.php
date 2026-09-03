@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\InternalInspection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -45,22 +46,7 @@ class InternalInspectionController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('laporan_file')) {
-                $file = $request->file('laporan_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("laporan_inspection/internal_inspection/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/laporan_inspection/internal_inspection/
-                $path = $file->move(public_path('laporan_inspection/internal_inspection'), $filename);  
-                $validatedData['laporan_file'] = $filename;
+                $validatedData['laporan_file'] = FileHelper::uploadWithVersion($request->file('laporan_file'), 'laporan_inspection/internal_inspection');
             }
 
             $internalInspection = InternalInspection::create($validatedData);
@@ -147,42 +133,15 @@ class InternalInspectionController extends Controller
             // Jika historical_memorandum_id diisi, hapus file lama
             if ($request->filled('historical_memorandum_id')) {
                 if ($internalInspection->laporan_file) {
-                    $internalInspectionBefore = public_path('laporan_inspection/internal_inspection/' . $internalInspection->laporan_file);
-                    if (file_exists($internalInspectionBefore)) {
-                        unlink($internalInspectionBefore);
-                    }
+                    FileHelper::deleteFile($internalInspection->laporan_file, 'laporan_inspection/internal_inspection');
                 }
                 $validatedData['laporan_file'] = null; // Set null karena pakai memorandum
             }
 
             // Jika ada file baru diupload
             if ($request->hasFile('laporan_file')) {
-                $file = $request->file('laporan_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("laporan_inspection/internal_inspection/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                $path = $file->move(public_path('laporan_inspection/internal_inspection'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'File failed upload.',
-                    ], 422);
-                }
-
-                // hapus file lama jika ada
                 if ($internalInspection->laporan_file) {
-                    $internalInspectionBefore = public_path('laporan_inspection/internal_inspection/' . $internalInspection->laporan_file);
-                    if (file_exists($internalInspectionBefore)) {
-                        unlink($internalInspectionBefore);
-                    }
+                    FileHelper::deleteFile($internalInspection->laporan_file, 'laporan_inspection/internal_inspection');
                 }
 
                 // Jika ada file, maka hapus relasi historical memorandum
@@ -190,7 +149,7 @@ class InternalInspectionController extends Controller
                     $validatedData['historical_memorandum_id'] = null;
                 }
 
-                $validatedData['laporan_file'] = $filename;
+                $validatedData['laporan_file'] = FileHelper::uploadWithVersion($request->file('laporan_file'), 'laporan_inspection/internal_inspection');
             }
 
             if ($internalInspection->update($validatedData)) {
@@ -230,10 +189,7 @@ class InternalInspectionController extends Controller
         }
         try {
             if ($internalInspection->laporan_file) {
-                $filePath = public_path('laporan_inspection/internal_inspection/' . $internalInspection->laporan_file);
-                if (file_exists($filePath)) {
-                    unlink($filePath); // Hapus file
-                }
+                FileHelper::deleteFile($internalInspection->laporan_file, 'laporan_inspection/internal_inspection');
             }
             $internalInspection->delete();
             return response()->json([

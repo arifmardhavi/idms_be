@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\Spk_progress;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -65,27 +66,7 @@ class Spk_progressController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            $file = $request->file('progress_file');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $extension = $file->getClientOriginalExtension();
-            $dateNow = date('dmY');
-            $version = 0;
-            $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-            while (file_exists(public_path("contract/spk/progress/" . $filename))) {
-                $version++;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-            }
-
-            $path = $file->move(public_path('contract/spk/progress'), $filename);
-            if (!$path) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File Progress failed add.',
-                ], 422);
-            }
-
-            $validatedData['progress_file'] = $filename;
+            $validatedData['progress_file'] = FileHelper::uploadWithVersion($request->file('progress_file'), 'contract/spk/progress');
             $spk_progress = Spk_progress::create($validatedData);
 
             return response()->json([
@@ -198,37 +179,11 @@ class Spk_progressController extends Controller
         $validatedData = $validator->validated();
 
         try {
-            // 🗂️ Handle file jika ada
             if ($request->hasFile('progress_file')) {
-                $file = $request->file('progress_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                while (file_exists(public_path("contract/spk/progress/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                $path = $file->move(public_path('contract/spk/progress'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'File Progress failed update.',
-                    ], 422);
-                }
-
-                // Ganti file lama (jika ada)
                 if ($spk_progress->progress_file) {
-                    $spk_progressBefore = public_path('contract/spk/progress/' . $spk_progress->progress_file);
-                    if (file_exists($spk_progressBefore)) {
-                        unlink($spk_progressBefore);
-                    }
+                    FileHelper::deleteFile($spk_progress->progress_file, 'contract/spk/progress');
                 }
-
-                $validatedData['progress_file'] = $filename;
+                $validatedData['progress_file'] = FileHelper::uploadWithVersion($request->file('progress_file'), 'contract/spk/progress');
             }
 
             // 💾 Update progress
@@ -269,10 +224,8 @@ class Spk_progressController extends Controller
         }
 
         try {
-
-            $spk_progressBefore = public_path('contract/spk/progress/' . $spk_progress->progress_file);
-            if (file_exists($spk_progressBefore)) {
-                unlink($spk_progressBefore); // Hapus file
+            if ($spk_progress->progress_file) {
+                FileHelper::deleteFile($spk_progress->progress_file, 'contract/spk/progress');
             }
             $spk_progress->delete();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\Overhaul;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -45,22 +46,7 @@ class OverhaulController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('laporan_file')) {
-                $file = $request->file('laporan_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("laporan_inspection/overhaul/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                // Store file in public/laporan_inspection/overhaul/
-                $path = $file->move(public_path('laporan_inspection/overhaul'), $filename);  
-                $validatedData['laporan_file'] = $filename;
+                $validatedData['laporan_file'] = FileHelper::uploadWithVersion($request->file('laporan_file'), 'laporan_inspection/overhaul');
             }
 
             $overhaul = Overhaul::create($validatedData);
@@ -147,42 +133,15 @@ class OverhaulController extends Controller
             // Jika historical_memorandum_id diisi, hapus file lama
             if ($request->filled('historical_memorandum_id')) {
                 if ($overhaul->laporan_file) {
-                    $overhaulBefore = public_path('laporan_inspection/overhaul/' . $overhaul->laporan_file);
-                    if (file_exists($overhaulBefore)) {
-                        unlink($overhaulBefore);
-                    }
+                    FileHelper::deleteFile($overhaul->laporan_file, 'laporan_inspection/overhaul');
                 }
                 $validatedData['laporan_file'] = null; // Set null karena pakai memorandum
             }
 
             // Jika ada file baru diupload
             if ($request->hasFile('laporan_file')) {
-                $file = $request->file('laporan_file');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $dateNow = date('dmY');
-                $version = 0;
-
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                while (file_exists(public_path("laporan_inspection/overhaul/" . $filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                $path = $file->move(public_path('laporan_inspection/overhaul'), $filename);
-                if (!$path) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'File failed upload.',
-                    ], 422);
-                }
-
-                // hapus file lama jika ada
                 if ($overhaul->laporan_file) {
-                    $overhaulBefore = public_path('laporan_inspection/overhaul/' . $overhaul->laporan_file);
-                    if (file_exists($overhaulBefore)) {
-                        unlink($overhaulBefore);
-                    }
+                    FileHelper::deleteFile($overhaul->laporan_file, 'laporan_inspection/overhaul');
                 }
 
                 // Jika ada file, maka hapus relasi historical memorandum
@@ -190,7 +149,7 @@ class OverhaulController extends Controller
                     $validatedData['historical_memorandum_id'] = null;
                 }
 
-                $validatedData['laporan_file'] = $filename;
+                $validatedData['laporan_file'] = FileHelper::uploadWithVersion($request->file('laporan_file'), 'laporan_inspection/overhaul');
             }
 
             if ($overhaul->update($validatedData)) {
@@ -228,10 +187,7 @@ class OverhaulController extends Controller
         }
         try {
             if ($overhaul->laporan_file) {
-                $filePath = public_path('laporan_inspection/overhaul/' . $overhaul->laporan_file);
-                if (file_exists($filePath)) {
-                    unlink($filePath); // Hapus file
-                }
+                FileHelper::deleteFile($overhaul->laporan_file, 'laporan_inspection/overhaul');
             }
             $overhaul->delete();
             return response()->json([

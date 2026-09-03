@@ -54,28 +54,7 @@ class IzinOperasiController extends Controller
         try {
             // Handle izin_operasi_certificate upload
             if ($request->hasFile('izin_operasi_certificate')) {
-                $file = $request->file('izin_operasi_certificate');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_operasi/certificates/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                // Pindahkan file ke folder tujuan dengan nama unik
-                $path = $file->move(public_path('izin_operasi/certificates'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Izin Operasi Certificate failed upload.',
-                    ], 422);
-                }
+                $filename = FileHelper::uploadWithVersion($request->file('izin_operasi_certificate'), 'izin_operasi/certificates');
 
                 // Simpan nama file ke data yang divalidasi
                 $validatedData['izin_operasi_certificate'] = $filename;
@@ -84,28 +63,8 @@ class IzinOperasiController extends Controller
 
             // Handle file_rla upload (if exists)
             if ($request->hasFile('rla_certificate')) {
-                $file = $request->file('rla_certificate');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+                $filename = FileHelper::uploadWithVersion($request->file('rla_certificate'), 'izin_operasi/rla');
 
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_operasi/rla/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-                
-                // Store file in public/izin_operasi/rla
-                $path = $file->move(public_path('izin_operasi/rla'), $filename);  
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'RLA Certificate failed upload.',
-                    ], 422);
-                }
                 $validatedData['rla_certificate'] = $filename;
             }
 
@@ -194,36 +153,11 @@ class IzinOperasiController extends Controller
                     $validatedData['izin_operasi_old_certificate'] = $izinOperasi->izin_operasi_certificate;
                     // izin_operasi old certificate sebelumnya ada 
                     if ($izinOperasi->izin_operasi_old_certificate) {
-                        $path = public_path('izin_operasi/certificates/' . $izinOperasi->izin_operasi_old_certificate);
-                        // file ada 
-                        if (file_exists($path)) {
-                            unlink($path); // Hapus file
-                        }
+                        FileHelper::deleteFile($izinOperasi->izin_operasi_old_certificate, 'izin_operasi/certificates');
                     }
                 }
                 // proses simpan file izin_operasi certificate baru
-                $file = $request->file('izin_operasi_certificate');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                // Format nama file
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-
-                // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                while (file_exists(public_path("izin_operasi/certificates/".$filename))) {
-                    $version++;
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                }
-
-                // Pindahkan file ke folder tujuan dengan nama unik
-                $path = $file->move(public_path('izin_operasi/certificates'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Izin Operasi Certificate failed upload.',
-                    ], 422);
-                }
+                $filename = FileHelper::uploadWithVersion($request->file('izin_operasi_certificate'), 'izin_operasi/certificates');
 
                 // Simpan nama file ke data yang divalidasi
                 $validatedData['izin_operasi_certificate'] = $filename;
@@ -237,65 +171,14 @@ class IzinOperasiController extends Controller
                     $validatedData['rla_old_certificate'] = $izinOperasi->rla_certificate;
                     // rla old certificate ada 
                     if ($izinOperasi->rla_old_certificate) {
-                        $path = public_path('izin_operasi/rla/' . $izinOperasi->rla_old_certificate);
-                        // file ada 
-                        if (file_exists($path)) {
-                            unlink($path); // Hapus file
-                        }
+                        FileHelper::deleteFile($izinOperasi->rla_old_certificate, 'izin_operasi/rla');
                     }
-                    // proses simpan file rla certificate baru
-                    $file = $request->file('rla_certificate');
-                    $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                    $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                    $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                    $version = 0; // Awal versi
-                    // Format nama file
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-    
-                    // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                    while (file_exists(public_path("izin_operasi/rla/".$filename))) {
-                        $version++;
-                        $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                    }
-    
-                    // Pindahkan file ke folder tujuan dengan nama unik
-                    $path = $file->move(public_path('izin_operasi/rla'), $filename);
-                    if(!$path){
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'RLA Certificate failed upload.',
-                        ], 422);
-                    }
-    
-                    // Simpan nama file ke data yang divalidasi
-                    $validatedData['rla_certificate'] = $filename;
-                }else{
-                    $file = $request->file('rla_certificate');
-                    $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                    $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                    $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                    $version = 0; // Awal versi
-                    // Format nama file
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-    
-                    // Cek apakah file dengan nama ini sudah ada di folder tujuan
-                    while (file_exists(public_path("izin_operasi/rla/".$filename))) {
-                        $version++;
-                        $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
-                    }
-    
-                    // Pindahkan file ke folder tujuan dengan nama unik
-                    $path = $file->move(public_path('izin_operasi/rla'), $filename);
-                    if(!$path){
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'RLA Certificate failed upload.',
-                        ], 422);
-                    }
-    
-                    // Simpan nama file ke data yang divalidasi
-                    $validatedData['rla_certificate'] = $filename;
                 }
+                // proses simpan file rla certificate baru
+                $filename = FileHelper::uploadWithVersion($request->file('rla_certificate'), 'izin_operasi/rla');
+
+                // Simpan nama file ke data yang divalidasi
+                $validatedData['rla_certificate'] = $filename;
             }
 
             $izinOperasi->update($validatedData);
@@ -330,7 +213,19 @@ class IzinOperasiController extends Controller
         }
 
         try {
-                        
+            if ($izinOperasi->izin_operasi_certificate) {
+                FileHelper::deleteFile($izinOperasi->izin_operasi_certificate, 'izin_operasi/certificates');
+            }
+            if ($izinOperasi->izin_operasi_old_certificate) {
+                FileHelper::deleteFile($izinOperasi->izin_operasi_old_certificate, 'izin_operasi/certificates');
+            }
+            if ($izinOperasi->rla_certificate) {
+                FileHelper::deleteFile($izinOperasi->rla_certificate, 'izin_operasi/rla');
+            }
+            if ($izinOperasi->rla_old_certificate) {
+                FileHelper::deleteFile($izinOperasi->rla_old_certificate, 'izin_operasi/rla');
+            }
+
             $izinOperasi->delete();
             return response()->json([
                 'success' => true,
@@ -358,10 +253,7 @@ class IzinOperasiController extends Controller
         try {
             // izin_operasi certificate 
             if ($request->izin_operasi_certificate) {
-                $path = public_path('izin_operasi/certificates/' . $izinOperasi->izin_operasi_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinOperasi->izin_operasi_certificate, 'izin_operasi/certificates');
                 $data = ['izin_operasi_certificate' => null];
                 $izinOperasi->update($data);
                 return response()->json([
@@ -370,10 +262,7 @@ class IzinOperasiController extends Controller
                 ], 200);
             // izin_operasi old certificate
             }elseif ($request->izin_operasi_old_certificate) {
-                $path = public_path('izin_operasi/certificates/' . $izinOperasi->izin_operasi_old_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinOperasi->izin_operasi_old_certificate, 'izin_operasi/certificates');
                 $data = ['izin_operasi_old_certificate' => null];
                 $izinOperasi->update($data);
                 return response()->json([
@@ -382,10 +271,7 @@ class IzinOperasiController extends Controller
                 ], 200);
             // rla certificate
             }elseif ($request->rla_certificate) {
-                $path = public_path('izin_operasi/rla/' . $izinOperasi->rla_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinOperasi->rla_certificate, 'izin_operasi/rla');
                 $data = ['rla_certificate' => null];
                 $izinOperasi->update($data);
                 return response()->json([
@@ -394,10 +280,7 @@ class IzinOperasiController extends Controller
                 ], 200);
             // rla old certificate
             }elseif ($request->rla_old_certificate) {
-                $path = public_path('izin_operasi/rla/' . $izinOperasi->rla_old_certificate);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($izinOperasi->rla_old_certificate, 'izin_operasi/rla');
                 $data = ['rla_old_certificate' => null];
                 $izinOperasi->update($data);
                 return response()->json([

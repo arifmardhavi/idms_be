@@ -25,6 +25,31 @@ class FileHelper
         return $filename;
     }
 
+    public static function uploadWithCustomPrefix($file, $destinationFolder, $customPrefix = ''){
+        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $extension = $file->getClientOriginalExtension();
+        $dateNow = date('dmY');
+        $version = 0;
+
+        if ($customPrefix) {
+            $filename = $originalName . '_' . $customPrefix . '_' . $dateNow . '_' . $version . '.' . $extension;
+        } else {
+            $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+        }
+
+        while (file_exists(public_path($destinationFolder."/".$filename))) {
+            $version++;
+            if ($customPrefix) {
+                $filename = $originalName . '_' . $customPrefix . '_' . $dateNow . '_' . $version . '.' . $extension;
+            } else {
+                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension;
+            }
+        }
+
+        $file->move(public_path($destinationFolder), $filename);
+        return $filename;
+    }
+
     public static function deleteFile($filename, $destinationFolder){
         $remove_path = public_path($destinationFolder."/".$filename);
         if (file_exists($remove_path)) {

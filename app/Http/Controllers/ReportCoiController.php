@@ -62,24 +62,7 @@ class ReportCoiController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('report_coi')) {
-                $file = $request->file('report_coi');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
-                while (file_exists(public_path("coi/reports/".$filename))) {
-                    $version++; // Increment versi
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru
-                }
-                $path = $file->move(public_path('coi/reports'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Report COI failed upload.',
-                    ], 422);
-                }  
-                $validatedData['report_coi'] = $filename;
+                $validatedData['report_coi'] = FileHelper::uploadWithVersion($request->file('report_coi'), 'coi/reports');
             }
             $report = ReportCoi::create($validatedData);
             if($report){
@@ -153,31 +136,10 @@ class ReportCoiController extends Controller
         $validatedData = $validator->validated();
         try {
             if ($request->hasFile('report_coi')) {
-                $file = $request->file('report_coi');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME); // Ambil nama file original tanpa ekstensi
-                $extension = $file->getClientOriginalExtension(); // Ambil ekstensi file
-                $dateNow = date('dmY'); // Tanggal sekarang dalam format ddmmyyyy
-                $version = 0; // Awal versi
-                $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi
-                while (file_exists(public_path("coi/reports/".$filename))) {
-                    $version++; // Increment versi
-                    $filename = $originalName . '_' . $dateNow . '_' . $version . '.' . $extension; // Nama file baru dengan versi baru
+                if ($report->report_coi) {
+                    FileHelper::deleteFile($report->report_coi, 'coi/reports');
                 }
-                $path = $file->move(public_path('coi/reports'), $filename);
-                if(!$path){
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Report coi failed upload.',
-                    ], 422);
-                }
-                if($report->report_coi){
-                    $reportBefore = public_path('coi/reports/' . $report->report_coi);
-                    if (file_exists($reportBefore)) {
-                        unlink($reportBefore); // Hapus file
-                    }
-                }
-
-                $validatedData['report_coi'] = $filename;
+                $validatedData['report_coi'] = FileHelper::uploadWithVersion($request->file('report_coi'), 'coi/reports');
             }
             
             if($report->update($validatedData)){
@@ -217,10 +179,7 @@ class ReportCoiController extends Controller
 
         try {
             if ($report->report_coi) {
-                $path = public_path('coi/reports/' . $report->report_coi);
-                if (file_exists($path)) {
-                    unlink($path); // Hapus file
-                }
+                FileHelper::deleteFile($report->report_coi, 'coi/reports');
             }
             if($report->delete()){
                 return response()->json([
