@@ -24,22 +24,14 @@ class ActivityController extends Controller
     ];
 
     /**
-     * Daftar log aktivitas (filter + pagination).
-     * GET /activity?user_id=&action=&module=&from=&to=&per_page=
+     * Daftar log aktivitas (search + sort + date filter + pagination).
+     * GET /activity?page=&per_page=&search=&from=&to=&sort_by=&sort_order=
+     * Search & sort berlaku pada: action, action_label, module, module_label, description.
      */
     public function index(Request $request)
     {
         $query = LogActivity::with('user');
 
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->integer('user_id'));
-        }
-        if ($request->filled('action')) {
-            $query->where('action', $request->action);
-        }
-        if ($request->filled('module')) {
-            $query->where('module', $request->module);
-        }
         if ($request->filled('from')) {
             $query->whereDate('created_at', '>=', $request->from);
         }
@@ -47,8 +39,44 @@ class ActivityController extends Controller
             $query->whereDate('created_at', '<=', $request->to);
         }
 
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('action', 'like', "%{$search}%")
+                    ->orWhere('module', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+
+                $actions = collect($this->actionLabels)
+                    ->filter(fn($label) => stripos($label, $search) !== false)
+                    ->keys()
+                    ->all();
+
+                if ($actions) {
+                    $q->orWhereIn('action', $actions);
+                }
+            });
+        }
+
+        $sortBy = $request->input('sort_by');
+        $sortOrder = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sortBy === 'action_label') {
+            $case = 'CASE action';
+            foreach ($this->actionLabels as $a => $label) {
+                $case .= " WHEN '{$a}' THEN '{$label}'";
+            }
+            $case .= ' ELSE action END';
+            $query->orderByRaw("{$case} {$sortOrder}")->orderByDesc('created_at');
+        } elseif ($sortBy === 'module_label') {
+            $query->orderBy('module', $sortOrder)->orderByDesc('created_at');
+        } elseif (in_array($sortBy, ['action', 'module', 'description'], true)) {
+            $query->orderBy($sortBy, $sortOrder)->orderByDesc('created_at');
+        } else {
+            $query->orderByDesc('created_at');
+        }
+
         $perPage = $request->integer('per_page', 20);
-        $logs = $query->orderByDesc('created_at')->paginate(min(max($perPage, 1), 100));
+        $logs = $query->paginate(min(max($perPage, 1), 100));
 
         $data = $logs->map(fn($log) => $this->serialize($log))->all();
 
