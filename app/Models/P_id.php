@@ -11,5 +11,6 @@ class P_id extends BaseModel
     protected $fillable = [
         'file_name',
         'p_id_file',
+        'tanggal',
     ];
 }

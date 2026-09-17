@@ -643,6 +643,7 @@
 | id | bigint | PK, auto-increment | |
 | file_name | varchar | NULLABLE | Nama file |
 | p_id_file | text | NULLABLE | File P&ID |
+| tanggal | date | NULLABLE | Tanggal dokumen |
 | created_at | timestamp | | |
 | updated_at | timestamp | | |
 

@@ -31,6 +31,7 @@ class P_IdController extends Controller
             'file_name' => 'nullable|string',
             'p_id_file' => 'required|array',
             'p_id_file*' => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png',
+            'tanggal' => 'nullable|date',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -60,6 +61,7 @@ class P_IdController extends Controller
                     $p_id = P_id::create([
                         'p_id_file' => $filename,
                         'file_name' => $file_name,
+                        'tanggal' => $request->input('tanggal'),
                     ]);
 
                     $result[] = $p_id;
@@ -123,6 +125,7 @@ class P_IdController extends Controller
         $validator = Validator::make($request->all(), [
             'file_name' => 'sometimes|nullable|string',
             'p_id_file' => 'sometimes|nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png',
+            'tanggal' => 'sometimes|nullable|date',
         ]);
         if ($validator->fails()) {
             return response()->json([

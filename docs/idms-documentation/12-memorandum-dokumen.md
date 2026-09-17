@@ -279,6 +279,7 @@ Dokumen diagram piping dan instrumentasi.
 | `id` | bigint (PK) | Auto-increment |
 | `file_name` | varchar | Nama file (nullable) |
 | `p_id_file` | varchar | Nama file P&ID (required) |
+| `tanggal` | date | Tanggal dokumen (nullable, input user) |
 | `created_at` | timestamp | Waktu pembuatan |
 | `updated_at` | timestamp | Waktu pembaruan |
 
@@ -542,6 +543,7 @@ Content-Type: multipart/form-data
 file_name: Diagram Piping Unit A
 p_id_file[]: (file1.pdf)
 p_id_file[]: (file2.png)
+tanggal: 2026-09-17
 ```
 
 ### Buat Project Specification
