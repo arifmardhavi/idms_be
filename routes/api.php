@@ -149,6 +149,7 @@ Route::middleware(['auth:api'])->group(function () {
     // ACTIVITY LOG & RANKING
     Route::get('activity', [ActivityController::class, 'index']);
     Route::post('activity/visit', [ActivityController::class, 'visit']);
+    Route::get('activity/features', [ActivityController::class, 'features']);
     Route::get('activity/ranking/active', [ActivityController::class, 'rankingActive']);
     Route::get('activity/ranking/contributor', [ActivityController::class, 'rankingContributor']);
     Route::get('activity/stats/overview', [ActivityController::class, 'statsOverview']);

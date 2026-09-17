@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LogActivity;
 use App\Models\User;
+use App\Support\ActivityModule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -92,6 +93,26 @@ class ActivityController extends Controller
             'message' => 'Kunjungan fitur direkam.',
             'data'    => $log ? $this->serialize($log) : null,
         ], 201);
+    }
+
+    /**
+     * Daftar label fitur utama (canonical) yang boleh dipakai FE.
+     * FE mengirim label ini persis sebagai `feature` pada POST /activity/visit.
+     * GET /activity/features
+     */
+    public function features()
+    {
+        $features = config('log-activity.features', []);
+        $data = collect($features)->map(fn($label, $path) => [
+            'path'  => $path,
+            'label' => $label,
+        ])->values()->all();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar fitur utama ditemukan.',
+            'data'    => $data,
+        ]);
     }
 
     /**
@@ -231,13 +252,23 @@ class ActivityController extends Controller
         $query = $this->applyDateFilter(LogActivity::query(), $request);
         $rows = $query->select('module', DB::raw('COUNT(*) as count'))
             ->groupBy('module')
-            ->orderByDesc('count')
             ->get();
 
-        $data = $rows->map(fn($r) => [
-            'module' => $r->module,
-            'count'  => (int) $r->count,
-        ])->all();
+        $merged = [];
+        foreach ($rows as $r) {
+            $label = ActivityModule::label($r->module);
+            $merged[$label] = ($merged[$label] ?? 0) + (int) $r->count;
+        }
+
+        $data = collect($merged)
+            ->map(fn($count, $label) => [
+                'module'       => $label,
+                'module_label' => $label,
+                'count'        => $count,
+            ])
+            ->sortByDesc('count')
+            ->values()
+            ->all();
 
         return response()->json(['success' => true, 'data' => $data]);
     }
@@ -309,7 +340,7 @@ class ActivityController extends Controller
             'action'        => $log->action,
             'action_label'  => $this->actionLabels[$log->action] ?? $log->action,
             'module'        => $log->module,
-            'module_label'  => $log->module,
+            'module_label'  => ActivityModule::label($log->module),
             'record_id'     => $log->record_id,
             'record_label'  => $log->record_label,
             'description'   => $log->description,

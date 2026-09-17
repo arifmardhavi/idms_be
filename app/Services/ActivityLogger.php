@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\LogActivity;
+use App\Support\ActivityModule;
 use Illuminate\Support\Facades\Auth;
 
 class ActivityLogger
@@ -57,6 +58,7 @@ class ActivityLogger
         }
 
         $userId = $opts['userId'] ?? Auth::id();
+        $module = ActivityModule::label($module);
 
         $data = [
             'user_id'    => $userId,
@@ -78,26 +80,27 @@ class ActivityLogger
         $name = $this->userName($userId);
         $verb = $this->verbMap[$action] ?? $action;
         $object = $opts['object'] ?? null;
+        $label = ActivityModule::label($module);
 
         if (in_array($action, ['create', 'update', 'delete'], true)) {
-            $label = $opts['recordLabel'] ?? ('#' . ($opts['recordId'] ?? ''));
-            return trim("{$name} {$verb} {$label} di fitur {$module}");
+            $record = $opts['recordLabel'] ?? ('#' . ($opts['recordId'] ?? ''));
+            return trim("{$name} {$verb} {$record} di fitur {$label}");
         }
 
         if ($action === 'import') {
-            return trim("{$name} {$verb} " . ($object ? "{$object} " : '') . "di fitur {$module}");
+            return trim("{$name} {$verb} " . ($object ? "{$object} " : '') . "di fitur {$label}");
         }
 
         if ($action === 'export') {
-            return trim("{$name} {$verb} di fitur {$module}");
+            return trim("{$name} {$verb} di fitur {$label}");
         }
 
         if ($action === 'visit') {
-            return trim("{$name} {$verb} {$module}");
+            return trim("{$name} {$verb} {$label}");
         }
 
         if (in_array($action, ['view', 'download'], true)) {
-            return trim("{$name} {$verb} " . ($object ? "{$object} " : '') . "di fitur {$module}");
+            return trim("{$name} {$verb} " . ($object ? "{$object} " : '') . "di fitur {$label}");
         }
 
         return trim("{$name} {$verb}");
