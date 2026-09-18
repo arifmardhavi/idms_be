@@ -461,6 +461,7 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 | `MdrFolder.php` | MDR folder |
 | `MdrItem.php` | MDR item |
 | `ProjectSpec.php` | Project specification |
+| `IsoMetricController.php` | ISO Metric |
 
 ### Preventive & Maintenance
 | File | Deskripsi |

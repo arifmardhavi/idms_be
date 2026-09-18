@@ -43,6 +43,7 @@ class GlobalActivityObserver
         'Nib'                   => 'no_nib',
         'Ems'                   => 'no_ems',
         'Gms'                   => 'title',
+        'IsoMetric'             => 'no_drawing',
         'EcaFsca'               => 'functional_location',
         'Contract'              => 'no_contract',
         'ContractNew'           => 'no_contract',

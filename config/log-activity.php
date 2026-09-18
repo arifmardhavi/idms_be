@@ -41,6 +41,7 @@ return [
         '/historical-memorandum'     => 'Historical Memorandum',
 
         '/equipment-data'            => 'Equipment Data',
+        '/iso-metric'                => 'ISO Metric',
         '/p-id'                      => 'P Id',
         '/project-spec'              => 'Project Spec',
         '/eca-fsca'                  => 'Eca Fsca',
@@ -130,6 +131,7 @@ return [
         'Gms'                  => 'Fitur Gms',
         'Pir'                  => 'PIR',
         'P_id'                 => 'P Id',
+        'IsoMetric'            => 'ISO Metric',
 
         // Explicit (prettify-compatible, memperjelas intent)
         'EcaFsca'              => 'Eca Fsca',

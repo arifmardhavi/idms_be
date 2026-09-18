@@ -439,6 +439,20 @@ Content-Type: application/json
 
 ---
 
+### ISO Metric
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| `GET` | `/api/iso_metric` | Daftar ISO Metric |
+| `GET` | `/api/iso_metric/{id}` | Detail ISO Metric |
+| `POST` | `/api/iso_metric` | Tambah ISO Metric |
+| `PUT` | `/api/iso_metric/{id}` | Update ISO Metric |
+| `DELETE` | `/api/iso_metric/{id}` | Hapus ISO Metric |
+| `GET` | `/api/iso_metric/download_file/{id}` | Download file ISO Metric |
+| `POST` | `/api/iso_metric/download_files` | Download batch file ISO Metric |
+
+---
+
 ## 8. Certificate & Compliance Endpoints
 
 ### PLO (Persetujuan Layanan Operasi)

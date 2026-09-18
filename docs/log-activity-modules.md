@@ -39,6 +39,7 @@ Standarisasi penamaan `module` pada log activity. **BE adalah satu-satunya sumbe
 | `/contract` | `Contract` | Kontrak |
 | `/historical-memorandum` | `Historical Memorandum` | Memo |
 | `/equipment-data` | `Equipment Data` | Engineering Data |
+| `/iso-metric` | `ISO Metric` | Engineering Data |
 | `/p-id` | `P Id` | Engineering Data |
 | `/project-spec` | `Project Spec` | Engineering Data |
 | `/eca-fsca` | `Eca Fsca` | Engineering Data |
@@ -89,6 +90,7 @@ Ditangani otomatis oleh `App\Support\ActivityModule::label()` lewat `config/log-
 | Gms | `Fitur Gms` |
 | Pir | `PIR` |
 | P_id | `P Id` |
+| IsoMetric | `ISO Metric` |
 | EcaFsca | `Eca Fsca` |
 | Tag_number | `Tag Number` |
 | ProjectSpec | `Project Spec` |

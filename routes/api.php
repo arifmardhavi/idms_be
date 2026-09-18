@@ -77,6 +77,7 @@ use App\Http\Controllers\{
     NotifMaterialRtnrtController,
     OnstreamInspectionController,
     OverhaulController,
+    IsoMetricController,
     P_IdController,
     PirController,
     PoMaterialController,
@@ -315,6 +316,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/eca_fsca/download', [EcaFscaController::class, 'downloadEcaFscaFiles']); // Download banyak ECA FSCA File (ZIP)
     Route::apiResource('bapk_coi', BapkCoiController::class);
     Route::apiResource('bapk_plo', BapkPloController::class);
+    Route::apiResource('iso_metric', IsoMetricController::class);
+    Route::get('/iso_metric/download_file/{id}', [IsoMetricController::class, 'downloadIsoMetricFile']); // Download ISO Metric File
+    Route::post('/iso_metric/download', [IsoMetricController::class, 'downloadIsoMetricFiles']); // Download banyak ISO Metric File (ZIP)
     Route::apiResource('features', FeatureController::class);
     Route::apiResource('hak_akses', HakAksesController::class);
     Route::apiResource('user_hak_akses', UserHakAksesController::class);

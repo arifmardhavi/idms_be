@@ -681,6 +681,19 @@
 
 ---
 
+#### `iso_metrics`
+| Field | Type | Constraint | Keterangan |
+|-------|------|------------|------------|
+| id | bigint | PK, auto-increment | |
+| no_drawing | varchar | NOT NULL, unique | Nomor drawing |
+| judul | varchar | NOT NULL | Judul ISO Metric |
+| tanggal | date | NOT NULL | Tanggal ISO Metric |
+| iso_metric_file | text | NULLABLE | Nama file ISO Metric (tersimpan di public/iso_metric) |
+| created_at | timestamp | | |
+| updated_at | timestamp | | |
+
+---
+
 ### 2.7 Inspection
 
 #### `laporan_inspections`
