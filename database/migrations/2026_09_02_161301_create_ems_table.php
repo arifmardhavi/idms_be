@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('tag_number_id')->constrained()->onDelete('cascade');
             $table->string('no_ems');
             $table->date('tanggal')->nullable();
-            $table->text('ems_file')->nullable();
+            $table->text('file')->nullable();
             $table->timestamps();
 
             $table->index('tag_number_id');
