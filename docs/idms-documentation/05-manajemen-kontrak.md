@@ -508,6 +508,7 @@ Saat update dengan file baru:
 | `PUT` | `/api/contract_new/current_status/{id}` | `updateCurrentStatus` | Update status konten |
 | `PUT` | `/api/contract_new/tkdn/{id}` | `updateTkdn` | Update TKDN |
 | `GET` | `/api/contract_new/lumpsum_progress/{id}` | `contractLumpsumProgress` | Data durasi minggu lumpsum |
+| `POST` | `/api/contract_new/export` | `export` | Export Excel contract (body `{"ids": [1,2,3]}` = selected, kosong = semua) |
 | `GET` | `/api/contract_new_po_material_type` | `showByPoMaterialType` | Filter kontrak PO Material (type=3) |
 | `GET` | `/api/contract_new_un_po_material_type` | `showByUnPoMaterialType` | Filter kontrak selain PO Material |
 | `GET` | `/api/monitoring_contract_new` | `monitoringContract` | Dashboard monitoring |

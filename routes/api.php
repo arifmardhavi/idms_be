@@ -479,6 +479,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('contract_new/current_status/{id}', [ContractNewController::class, 'updateCurrentStatus']);
     Route::put('contract_new/tkdn/{id}', [ContractNewController::class, 'updateTkdn']);
     Route::get('contract_new/lumpsum_progress/{id}', [ContractNewController::class, 'contractLumpsumProgress']);
+    Route::post('/contract_new/export', [ContractNewController::class, 'export']);
     Route::get('contract_new_po_material_type', [ContractNewController::class, 'showByPoMaterialType']);
     Route::get('contract_new_un_po_material_type', [ContractNewController::class, 'showByUnPoMaterialType']);
     Route::get('/contract_new_user', [ContractNewController::class, 'contractsByUser']);

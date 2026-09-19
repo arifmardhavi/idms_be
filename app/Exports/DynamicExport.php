@@ -6,13 +6,14 @@ use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class DynamicExport implements FromArray, WithHeadings, WithEvents, ShouldAutoSize
+class DynamicExport implements FromArray, WithHeadings, WithEvents, ShouldAutoSize, WithStrictNullComparison
 {
     protected array $data;
     protected array $columns; // key => label
@@ -32,6 +33,11 @@ class DynamicExport implements FromArray, WithHeadings, WithEvents, ShouldAutoSi
             'headerRows' => [],
             // conditional rules: array of ['column' => key, 'condition' => fn($value) => bool, 'style' => [...]]
             'conditional' => [],
+            // header style: applyFromArray to heading row range
+            'headerStyle' => [],
+            // cell conditional rules: array of ['column' => key, 'condition' => fn($row) => bool, 'style' => [...]]
+            // (styles a single cell in the column; condition receives the full row map)
+            'cellConditional' => [],
             // rowStyles: [1 => styleArray, 2 => styleArray] (1 = first data row)
             'rowStyles' => [],
             // global styles applyFromArray to whole table
@@ -183,6 +189,13 @@ class DynamicExport implements FromArray, WithHeadings, WithEvents, ShouldAutoSi
                 }
 
                 // ---------------------------
+                // Header style (heading row)
+                // ---------------------------
+                if (!empty($this->options['headerStyle'])) {
+                    $worksheet->getStyle("A{$headingRowNum}:{$lastColLetter}{$headingRowNum}")->applyFromArray($this->options['headerStyle']);
+                }
+
+                // ---------------------------
                 // Borders
                 // ---------------------------
                 if (!empty($this->options['border'])) {
@@ -243,6 +256,28 @@ class DynamicExport implements FromArray, WithHeadings, WithEvents, ShouldAutoSi
                             }
                             if ($ok) {
                                 $worksheet->getStyle("A{$actualRow}:{$lastColLetter}{$actualRow}")->applyFromArray($rule['style']);
+                            }
+                        }
+                    }
+                }
+
+                // ---------------------------
+                // Cell conditional formatting per-cell (style a single cell in a column)
+                // ---------------------------
+                if (!empty($this->options['cellConditional'])) {
+                    foreach ($this->data as $index => $row) {
+                        $actualRow = $startDataRow + $index;
+                        foreach ($this->options['cellConditional'] as $rule) {
+                            $colIndex = $this->keyToColumnIndex($rule['column']);
+                            if (!$colIndex) continue;
+                            $colLetter = Coordinate::stringFromColumnIndex($colIndex);
+                            try {
+                                $ok = ($rule['condition'])($row);
+                            } catch (\Throwable $e) {
+                                $ok = false;
+                            }
+                            if ($ok) {
+                                $worksheet->getStyle("{$colLetter}{$actualRow}")->applyFromArray($rule['style']);
                             }
                         }
                     }

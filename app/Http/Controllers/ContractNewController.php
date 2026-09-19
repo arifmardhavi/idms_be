@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DynamicExport;
 use App\Helpers\FileHelper;
 use App\Http\Resources\ContractDateRangeResource;
 use App\Http\Resources\ContractResource;
@@ -9,6 +10,7 @@ use App\Models\ContractNew;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class ContractNewController extends Controller
@@ -583,5 +585,193 @@ class ContractNewController extends Controller
                 'monitoring_sisa_nilai_lumpsum_unit' => $sisaNilaiLumpsumUnit,
             ]
         ], 200);
+    }
+
+    /**
+     * Export contract data (ContractNew) to Excel.
+     * Body: {"ids": [1,2,3]} -> export selected only; empty/absent -> export all.
+     */
+    public function export(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'ids' => 'sometimes|nullable|array',
+            'ids.*' => 'integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $query = ContractNew::query();
+
+        $ids = $request->input('ids');
+        if (!empty($ids)) {
+            $query->whereIn('id', $ids);
+        }
+
+        $contracts = $query->get();
+
+        $data = [];
+        foreach ($contracts as $contract) {
+            $durasi = $contract->durasi_mpp;
+            $deviasi = $contract->deviation_progress;
+            $sisaNilai = $contract->sisa_nilai;
+
+            $sisaHari = $durasi['sisa'] ?? null;
+            if ($contract->contract_status == 0) {
+                $mppColor = 'blue';
+            } elseif ($sisaHari !== null && $sisaHari <= 0) {
+                $mppColor = 'red';
+            } elseif ($sisaHari !== null && $sisaHari <= 28) {
+                $mppColor = 'yellow';
+            } else {
+                $mppColor = 'green';
+            }
+
+            $data[] = [
+                'no_vendor' => $contract->no_vendor ?: '-',
+                'vendor_name' => $contract->vendor_name ?: '-',
+                'no_contract' => $contract->no_contract ?: '-',
+                'contract_name' => $contract->contract_name ?: '-',
+                'contract_type' => $this->contractTypeLabel($contract->contract_type),
+                'pengawas' => $this->pengawasLabel($contract->pengawas),
+                'contract_price' => $contract->contract_price !== null ? $contract->contract_price : '-',
+                'contract_date' => $contract->contract_date ? $contract->contract_date->format('d-m-Y') : '-',
+                'contract_start_date' => $contract->contract_start_date ? $contract->contract_start_date->format('d-m-Y') : '-',
+                'contract_end_date' => $contract->contract_end_date ? $contract->contract_end_date->format('d-m-Y') : '-',
+                'sisa_mpp' => $sisaHari !== null ? $sisaHari : '-',
+                'deviasi_progress' => ($deviasi['deviation'] ?? null) !== null ? $deviasi['deviation'] : '-',
+                'current_status' => $contract->current_status ?: '-',
+                'sisa_nilai' => ($sisaNilai['sisa'] ?? null) !== null ? $sisaNilai['sisa'] : '-',
+                'status' => $this->contractStatusLabel($contract->contract_status),
+                '_mpp_color' => $mppColor,
+                '_dev_color' => $deviasi['color'] ?? 'green',
+                '_sisa_color' => $sisaNilai['color'] ?? 'green',
+            ];
+        }
+
+        $columns = [
+            'no_vendor' => 'No Vendor',
+            'vendor_name' => 'Nama Vendor',
+            'no_contract' => 'No SP/PO',
+            'contract_name' => 'Nama Contract',
+            'contract_type' => 'Tipe',
+            'pengawas' => 'Pengawas',
+            'contract_price' => 'Price',
+            'contract_date' => 'Contract Date',
+            'contract_start_date' => 'Contract Start',
+            'contract_end_date' => 'Contract End',
+            'sisa_mpp' => 'Sisa MPP',
+            'deviasi_progress' => 'Deviasi Progress',
+            'current_status' => 'Current Status',
+            'sisa_nilai' => 'Sisa Nilai Kontrak',
+            'status' => 'Status',
+        ];
+
+        $options = [
+            'headerStyle' => [
+                'font' => ['bold' => true],
+                'fill' => ['fillType' => 'solid', 'color' => ['argb' => 'FFD9E1F2']],
+            ],
+            'border' => ['onlyHeader' => true, 'onlyData' => true],
+            'autoWidth' => true,
+            'autoWidthMax' => 50,
+            'freezeHeader' => true,
+            'filter' => true,
+            'numberFormat' => [
+                'contract_price' => '#,##0',
+                'sisa_nilai' => '#,##0',
+                'deviasi_progress' => '#,##0.00',
+            ],
+            'cellConditional' => $this->contractColorRules(),
+        ];
+
+        activity()->log('export', 'ContractNew');
+
+        return Excel::download(
+            new DynamicExport($data, $columns, $options),
+            'Contract_' . now()->format('Ymd_His') . '.xlsx'
+        );
+    }
+
+    private function contractTypeLabel($value): string
+    {
+        return match ((int) $value) {
+            1 => 'Lumpsum',
+            2 => 'Unit Price',
+            3 => 'PO Material',
+            4 => 'PO Jasa',
+            default => '-',
+        };
+    }
+
+    private function pengawasLabel($value): string
+    {
+        return match ((int) $value) {
+            0 => 'Inspection',
+            1 => 'Maintenance Execution',
+            2 => 'Procurement',
+            default => '-',
+        };
+    }
+
+    private function contractStatusLabel($value): string
+    {
+        return match ((int) $value) {
+            0 => 'Selesai',
+            1 => 'Aktif',
+            default => '-',
+        };
+    }
+
+    private function contractColorRules(): array
+    {
+        $styles = [
+            'blue' => [
+                'font' => ['color' => ['argb' => 'FFFFFFFF']],
+                'fill' => ['fillType' => 'solid', 'color' => ['argb' => 'FF1E88E5']],
+            ],
+            'red' => [
+                'font' => ['color' => ['argb' => 'FFFFFFFF']],
+                'fill' => ['fillType' => 'solid', 'color' => ['argb' => 'FFE53935']],
+            ],
+            'yellow' => [
+                'font' => ['color' => ['argb' => 'FF000000']],
+                'fill' => ['fillType' => 'solid', 'color' => ['argb' => 'FFFFEB3B']],
+            ],
+            'green' => [
+                'font' => ['color' => ['argb' => 'FFFFFFFF']],
+                'fill' => ['fillType' => 'solid', 'color' => ['argb' => 'FF43A047']],
+            ],
+            'black' => [
+                'font' => ['color' => ['argb' => 'FFFFFFFF']],
+                'fill' => ['fillType' => 'solid', 'color' => ['argb' => 'FF000000']],
+            ],
+        ];
+
+        $rules = [];
+        foreach ($styles as $color => $style) {
+            $rules[] = [
+                'column' => 'sisa_mpp',
+                'condition' => fn ($row) => ($row['_mpp_color'] ?? null) === $color,
+                'style' => $style,
+            ];
+            $rules[] = [
+                'column' => 'deviasi_progress',
+                'condition' => fn ($row) => ($row['_dev_color'] ?? null) === $color,
+                'style' => $style,
+            ];
+            $rules[] = [
+                'column' => 'sisa_nilai',
+                'condition' => fn ($row) => ($row['_sisa_color'] ?? null) === $color,
+                'style' => $style,
+            ];
+        }
+
+        return $rules;
     }
 }
