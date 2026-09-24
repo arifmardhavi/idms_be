@@ -2,23 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\MonitoringEquipmentExportWorkbook;
+use App\Exports\MonitoringEquipmentLogExportWorkbook;
+use App\Exports\MonitoringEquipmentTemplateExport;
+use App\Helpers\BusinessPeriod;
+use App\Http\Requests\ImportMonitoringEquipmentRequest;
 use App\Http\Requests\StoreMonitoringEquipmentRequest;
 use App\Http\Requests\UpdateMonitoringEquipmentRequest;
+use App\Http\Resources\ApiResource;
 use App\Http\Resources\MonitoringEquipmentResource;
 use App\Models\MonitoringEquipment;
 use App\Models\MonitoringEquipmentLog;
-use App\Helpers\BusinessPeriod;
-use App\Http\Resources\ApiResource;
+use App\Services\MonitoringEquipmentDashboardService;
+use App\Services\MonitoringEquipmentImportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Requests\ImportMonitoringEquipmentRequest;
-use App\Services\MonitoringEquipmentImportService;
-use App\Exports\MonitoringEquipmentTemplateExport;
-use App\Exports\MonitoringEquipmentExport;
-use App\Exports\MonitoringEquipmentLogExport;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Services\MonitoringEquipmentDashboardService;
-
 
 class MonitoringEquipmentController extends Controller
 {
@@ -60,7 +59,7 @@ class MonitoringEquipmentController extends Controller
                         $currentPeriod
                     )->latest('period_code');
 
-                }
+                },
 
             ]);
 
@@ -92,7 +91,7 @@ class MonitoringEquipmentController extends Controller
                         'like',
                         "%{$search}%"
                     )
-                    
+
                     ->orWhere(
                         'monitoring_equipment.kondisi_peralatan',
                         'like',
@@ -182,7 +181,6 @@ class MonitoringEquipmentController extends Controller
          * SORTING
          * =====================================================
          */
-
         $allowedSort = [
 
             'id' => 'monitoring_equipment.id',
@@ -221,7 +219,7 @@ class MonitoringEquipmentController extends Controller
 
         if ($sortBy === 'status') {
             $query->orderByRaw(
-                "FIELD(monitoring_equipment.status, 'Breakdown', 'Low', 'Medium', 'High') " . $sortOrder
+                "FIELD(monitoring_equipment.status, 'Breakdown', 'Low', 'Medium', 'High') ".$sortOrder
             );
         } else {
             $query->orderBy(
@@ -256,7 +254,7 @@ class MonitoringEquipmentController extends Controller
                 MonitoringEquipmentLog::create([
 
                     ...collect($monitoringEquipment->getAttributes())
-                        ->only((new MonitoringEquipmentLog())->getFillable())
+                        ->only((new MonitoringEquipmentLog)->getFillable())
                         ->toArray(),
 
                     'period_code' => $period['code'],
@@ -273,7 +271,7 @@ class MonitoringEquipmentController extends Controller
                 'message' => 'Monitoring Equipment created successfully.',
                 'data' => new MonitoringEquipmentResource(
                     $monitoringEquipment->load('tagNumber')
-                )
+                ),
             ], 201);
 
         } catch (\Throwable $e) {
@@ -299,7 +297,7 @@ class MonitoringEquipmentController extends Controller
             'logs' => function ($query) use ($currentPeriod) {
                 $query->where('period_code', '!=', $currentPeriod)
                     ->latest('period_code');
-            }
+            },
         ]);
 
         return new MonitoringEquipmentResource($monitoringEquipment);
@@ -308,14 +306,13 @@ class MonitoringEquipmentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateMonitoringEquipmentRequest $request,MonitoringEquipment $monitoringEquipment)
+    public function update(UpdateMonitoringEquipmentRequest $request, MonitoringEquipment $monitoringEquipment)
     {
         $validated = $request->validated();
 
         try {
 
-            DB::transaction(function () use (&$monitoringEquipment,$validated) 
-            {
+            DB::transaction(function () use (&$monitoringEquipment, $validated) {
 
                 /**
                  * Update Monitoring Equipment
@@ -338,7 +335,7 @@ class MonitoringEquipmentController extends Controller
                 $snapshot = array_merge(
 
                     collect($monitoringEquipment->getAttributes())
-                        ->only((new MonitoringEquipmentLog())->getFillable())
+                        ->only((new MonitoringEquipmentLog)->getFillable())
                         ->toArray(),
 
                     [
@@ -373,7 +370,7 @@ class MonitoringEquipmentController extends Controller
                 /**
                  * Fill missing previous periods
                  */
-                $logFillable = (new MonitoringEquipmentLog())->getFillable();
+                $logFillable = (new MonitoringEquipmentLog)->getFillable();
 
                 foreach ([BusinessPeriod::previous(2), BusinessPeriod::previous(1)] as $prev) {
                     $hasLog = MonitoringEquipmentLog::where('tag_number_id', $monitoringEquipment->tag_number_id)
@@ -388,7 +385,7 @@ class MonitoringEquipmentController extends Controller
                         ->where('period_code', '<', $prev['code'])
                         ->max('period_code');
 
-                    if (!$latestAvailable) {
+                    if (! $latestAvailable) {
                         continue;
                     }
 
@@ -435,10 +432,10 @@ class MonitoringEquipmentController extends Controller
                     $monitoringEquipment
                         ->load([
                             'tagNumber',
-                            'logs'
+                            'logs',
                         ])
 
-                )
+                ),
 
             ]);
 
@@ -452,7 +449,7 @@ class MonitoringEquipmentController extends Controller
 
                 'error' => config('app.debug')
                     ? $e->getMessage()
-                    : null
+                    : null,
 
             ], 500);
 
@@ -485,7 +482,7 @@ class MonitoringEquipmentController extends Controller
 
                 'success' => true,
 
-                'message' => 'Monitoring Equipment deleted successfully.'
+                'message' => 'Monitoring Equipment deleted successfully.',
 
             ]);
 
@@ -499,7 +496,7 @@ class MonitoringEquipmentController extends Controller
 
                 'error' => config('app.debug')
                     ? $e->getMessage()
-                    : null
+                    : null,
 
             ], 500);
 
@@ -507,14 +504,14 @@ class MonitoringEquipmentController extends Controller
     }
 
     public function import(
-    ImportMonitoringEquipmentRequest $request, MonitoringEquipmentImportService $service)
+        ImportMonitoringEquipmentRequest $request, MonitoringEquipmentImportService $service)
     {
         $count = $service->import(
             $request->file('file')
         );
 
         activity()->log('import', 'MonitoringEquipment', [
-            'object' => ($count['summary']['success'] ?? 0) . ' data',
+            'object' => ($count['summary']['success'] ?? 0).' data',
         ]);
 
         return $count;
@@ -527,13 +524,12 @@ class MonitoringEquipmentController extends Controller
     {
         return Excel::download(
 
-            new MonitoringEquipmentTemplateExport(),
+            new MonitoringEquipmentTemplateExport,
 
             'Monitoring_Equipment_Template.xlsx'
 
         );
     }
-
 
     /**
      * Export Monitoring Equipment Data
@@ -544,18 +540,18 @@ class MonitoringEquipmentController extends Controller
 
         return Excel::download(
 
-            new MonitoringEquipmentExport(
+            new MonitoringEquipmentExportWorkbook(
 
                 $request->only([
                     'search',
                     'criticality',
                     'status',
-                    'sece'
+                    'sece',
                 ])
 
             ),
 
-            'Monitoring_Equipment_' . now()->format('Ymd_His') . '.xlsx'
+            'Monitoring_Equipment_'.now()->format('Ymd_His').'.xlsx'
 
         );
     }
@@ -569,7 +565,7 @@ class MonitoringEquipmentController extends Controller
 
         return Excel::download(
 
-            new MonitoringEquipmentLogExport(
+            new MonitoringEquipmentLogExportWorkbook(
 
                 $request->only([
 
@@ -579,14 +575,14 @@ class MonitoringEquipmentController extends Controller
 
                     'criticality',
 
-                    'status'
+                    'status',
 
                 ])
 
             ),
 
-            'Monitoring_Equipment_Logs_' .
-            now()->format('Ymd_His') .
+            'Monitoring_Equipment_Logs_'.
+            now()->format('Ymd_His').
             '.xlsx'
 
         );
@@ -602,7 +598,7 @@ class MonitoringEquipmentController extends Controller
 
                 'message' => 'Dashboard Monitoring Equipment.',
 
-                'data' => $service->getDashboard()
+                'data' => $service->getDashboard(),
 
             ]);
 
@@ -616,9 +612,9 @@ class MonitoringEquipmentController extends Controller
 
                 'error' => config('app.debug')
                     ? $e->getMessage()
-                    : null
+                    : null,
 
-            ],500);
+            ], 500);
 
         }
     }

@@ -11,15 +11,12 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class MonitoringEquipmentExport implements
-    FromCollection,
-    WithHeadings,
-    WithMapping,
-    ShouldAutoSize,
-    WithEvents,
-    WithTitle
+class MonitoringEquipmentExport implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithMapping, WithTitle
 {
     protected array $filters;
 
@@ -41,14 +38,14 @@ class MonitoringEquipmentExport implements
         /**
          * Search
          */
-        if (!empty($this->filters['search'])) {
+        if (! empty($this->filters['search'])) {
 
             $query->whereHas('tagNumber', function (Builder $q) {
 
                 $q->where(
                     'tag_number',
                     'like',
-                    '%' . $this->filters['search'] . '%'
+                    '%'.$this->filters['search'].'%'
                 );
 
             });
@@ -235,20 +232,169 @@ class MonitoringEquipmentExport implements
 
                 $sheet = $event->sheet->getDelegate();
 
+                $last = $sheet->getHighestDataRow();
+
+                /**
+                 * Freeze Header
+                 */
                 $sheet->freezePane('A2');
 
-                $sheet->getStyle('A1:P1')
-                    ->getFont()
-                    ->setBold(true);
+                /**
+                 * Auto Filter
+                 */
+                $sheet->setAutoFilter('A1:P'.$last);
 
-                $sheet->getStyle('A1:P1')
-                    ->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()
-                    ->setRGB('D97706');
+                /**
+                 * Header Style
+                 */
+                $sheet->getStyle('A1:P1')->applyFromArray([
 
-            }
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                        'color' => [
+                            'rgb' => 'FFFFFF',
+                        ],
+                    ],
+
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => [
+                            'rgb' => 'D97706',
+                        ],
+                    ],
+
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                        ],
+                    ],
+
+                ]);
+
+                /**
+                 * Header Height
+                 */
+                $sheet->getRowDimension(1)->setRowHeight(25);
+
+                if ($last >= 2) {
+
+                    /**
+                     * Data Style
+                     */
+                    $sheet->getStyle('A2:P'.$last)->applyFromArray([
+
+                        'alignment' => [
+                            'vertical' => Alignment::VERTICAL_CENTER,
+                        ],
+
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                            ],
+                        ],
+
+                    ]);
+
+                    /**
+                     * Dropdown Kondisi Peralatan
+                     */
+                    $this->applyKondisiDropdown($sheet, $last);
+
+                    /**
+                     * Auto-fill Status from Kondisi Peralatan
+                     */
+                    $this->applyStatusFormula($sheet, $last);
+
+                    /**
+                     * Estimasi Number Format & Alignment
+                     */
+                    $sheet
+                        ->getStyle('O2:O'.$last)
+                        ->getNumberFormat()
+                        ->setFormatCode('#,##0');
+
+                    $sheet
+                        ->getStyle('O2:O'.$last)
+                        ->getAlignment()
+                        ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+                    /**
+                     * Target Date Format
+                     */
+                    $sheet
+                        ->getStyle('P2:P'.$last)
+                        ->getNumberFormat()
+                        ->setFormatCode('yyyy-mm-dd');
+
+                }
+
+                /**
+                 * Column Alignment
+                 */
+                $sheet
+                    ->getStyle('A:P')
+                    ->getAlignment()
+                    ->setVertical(Alignment::VERTICAL_CENTER);
+
+            },
 
         ];
+    }
+
+    private function applyKondisiDropdown($sheet, int $last): void
+    {
+        $list = MonitoringEquipmentReferenceSheet::ranges()['kondisi'];
+
+        foreach (range(2, $last) as $row) {
+
+            $validation = $sheet
+                ->getCell('G'.$row)
+                ->getDataValidation();
+
+            $validation->setType(
+                DataValidation::TYPE_LIST
+            );
+
+            $validation->setErrorStyle(
+                DataValidation::STYLE_STOP
+            );
+
+            $validation->setAllowBlank(true);
+
+            $validation->setShowDropDown(true);
+
+            $validation->setShowInputMessage(true);
+
+            $validation->setShowErrorMessage(true);
+
+            $validation->setErrorTitle('Input Tidak Valid');
+
+            $validation->setError('Silakan pilih nilai dari dropdown.');
+
+            $validation->setPromptTitle('Kondisi Peralatan');
+
+            $validation->setPrompt('Pilih kondisi peralatan.');
+
+            $validation->setFormula1($list);
+
+        }
+    }
+
+    private function applyStatusFormula($sheet, int $last): void
+    {
+        $lookup = MonitoringEquipmentReferenceSheet::ranges()['lookup'];
+
+        foreach (range(2, $last) as $row) {
+            $sheet->setCellValue(
+                'H'.$row,
+                '=IFERROR(VLOOKUP(G'.$row.','.$lookup.',2,FALSE),"")'
+            );
+        }
     }
 }

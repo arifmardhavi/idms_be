@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Helpers\BusinessPeriod;
+use App\Models\KondisiPeralatan;
 use App\Models\MonitoringEquipment;
 use App\Models\MonitoringEquipmentLog;
 use App\Models\Tag_number;
@@ -100,6 +101,11 @@ class MonitoringEquipmentImportService
 
         $logFillable = (new MonitoringEquipmentLog)->getFillable();
 
+        $kondisiStatus = KondisiPeralatan::query()
+            ->where('is_active', 1)
+            ->pluck('status', 'kondisi_peralatan')
+            ->all();
+
         $equipmentInsert = [];
         $equipmentUpdate = [];
         $logInsert = [];
@@ -125,7 +131,11 @@ class MonitoringEquipmentImportService
             $data = [
                 'tag_number_id' => $tag->id,
                 'kondisi_peralatan' => $row['kondisi_peralatan'] ?? null,
-                'status' => $row['status'] ?? null,
+                'status' => $this->resolveStatus(
+                    $row['status'] ?? null,
+                    $row['kondisi_peralatan'] ?? null,
+                    $kondisiStatus
+                ),
                 'jenis_kerusakan' => $row['jenis_kerusakan'] ?? null,
                 'penyebab' => $row['penyebab'] ?? null,
                 'penanganan_sementara' => $row['penanganan_sementara'] ?? null,
@@ -298,5 +308,22 @@ class MonitoringEquipmentImportService
         } catch (\Throwable $e) {
             return null;
         }
+    }
+
+    private function resolveStatus($rawStatus, $kondisi, array $map): ?string
+    {
+        $value = $rawStatus;
+
+        if ($value !== null && $value !== '' && ! str_starts_with((string) $value, '=')) {
+            return $value;
+        }
+
+        $key = trim((string) $kondisi);
+
+        if ($key === '') {
+            return null;
+        }
+
+        return $map[$key] ?? null;
     }
 }

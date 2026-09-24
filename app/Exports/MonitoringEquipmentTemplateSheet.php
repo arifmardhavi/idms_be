@@ -14,6 +14,8 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class MonitoringEquipmentTemplateSheet implements FromCollection, ShouldAutoSize, WithEvents, WithTitle
 {
+    private const LAST_ROW = 4000;
+
     public function title(): string
     {
         return 'Monitoring Equipment';
@@ -66,6 +68,11 @@ class MonitoringEquipmentTemplateSheet implements FromCollection, ShouldAutoSize
                  * Freeze Header
                  */
                 $sheet->freezePane('A2');
+
+                /**
+                 * Auto Filter
+                 */
+                $sheet->setAutoFilter('A1:K4000');
 
                 /**
                  * Header Style
@@ -128,7 +135,7 @@ class MonitoringEquipmentTemplateSheet implements FromCollection, ShouldAutoSize
                  * Number Format
                  */
                 $sheet
-                    ->getStyle('J2:J1000')
+                    ->getStyle('J2:J4000')
                     ->getNumberFormat()
                     ->setFormatCode('#,##0');
 
@@ -136,7 +143,7 @@ class MonitoringEquipmentTemplateSheet implements FromCollection, ShouldAutoSize
                  * Target Date Format
                  */
                 $sheet
-                    ->getStyle('K2:K1000')
+                    ->getStyle('K2:K4000')
                     ->getNumberFormat()
                     ->setFormatCode('yyyy-mm-dd');
 
@@ -165,6 +172,28 @@ class MonitoringEquipmentTemplateSheet implements FromCollection, ShouldAutoSize
                     ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
                 /**
+                 * Dropdown Kondisi Peralatan
+                 */
+                $this->applyDropdown(
+
+                    $sheet,
+
+                    'B{row}',
+
+                    MonitoringEquipmentReferenceSheet::ranges()['kondisi'],
+
+                    'Kondisi Peralatan',
+
+                    'Pilih kondisi peralatan.'
+
+                );
+
+                /**
+                 * Auto-fill Status from Kondisi Peralatan
+                 */
+                $this->applyStatusFormula($sheet);
+
+                /**
                  * Dropdown Status
                  */
                 $this->applyDropdown(
@@ -173,7 +202,7 @@ class MonitoringEquipmentTemplateSheet implements FromCollection, ShouldAutoSize
 
                     'C{row}',
 
-                    '=Reference!$B$2:$B$5',
+                    MonitoringEquipmentReferenceSheet::ranges()['status'],
 
                     'Status',
 
@@ -185,6 +214,18 @@ class MonitoringEquipmentTemplateSheet implements FromCollection, ShouldAutoSize
         ];
     }
 
+    private function applyStatusFormula($sheet): void
+    {
+        $lookup = MonitoringEquipmentReferenceSheet::ranges()['lookup'];
+
+        foreach (range(2, self::LAST_ROW) as $row) {
+            $sheet->setCellValue(
+                'C'.$row,
+                '=IFERROR(VLOOKUP(B'.$row.','.$lookup.',2,FALSE),"")'
+            );
+        }
+    }
+
     private function applyDropdown(
         $sheet,
         string $cellRange,
@@ -193,7 +234,7 @@ class MonitoringEquipmentTemplateSheet implements FromCollection, ShouldAutoSize
         string $message
     ): void {
 
-        foreach (range(2, 1000) as $row) {
+        foreach (range(2, self::LAST_ROW) as $row) {
 
             $validation = $sheet
                 ->getCell(
