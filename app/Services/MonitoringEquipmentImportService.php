@@ -8,12 +8,13 @@ use App\Models\MonitoringEquipmentLog;
 use App\Models\Tag_number;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class MonitoringEquipmentImportService
 {
-
     public function import(UploadedFile $file): array
     {
         $result = null;
@@ -32,7 +33,7 @@ class MonitoringEquipmentImportService
         if (count($sheet) <= 1) {
             return [
                 'success' => false,
-                'message' => 'File Excel kosong.'
+                'message' => 'File Excel kosong.',
             ];
         }
 
@@ -48,7 +49,7 @@ class MonitoringEquipmentImportService
             'success' => 0,
             'failed' => 0,
             'skipped' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
         $rows = [];
@@ -65,6 +66,7 @@ class MonitoringEquipmentImportService
 
             if ($tagNumber === '') {
                 $summary['skipped']++;
+
                 continue;
             }
 
@@ -96,7 +98,7 @@ class MonitoringEquipmentImportService
             ->get()
             ->keyBy('tag_number_id');
 
-        $logFillable = (new MonitoringEquipmentLog())->getFillable();
+        $logFillable = (new MonitoringEquipmentLog)->getFillable();
 
         $equipmentInsert = [];
         $equipmentUpdate = [];
@@ -107,13 +109,14 @@ class MonitoringEquipmentImportService
 
             $tag = $tags->get($item['tag_number']);
 
-            if (!$tag) {
+            if (! $tag) {
                 $summary['failed']++;
                 $summary['errors'][] = [
                     'row' => $item['row_number'],
                     'tag_number' => $item['tag_number'],
                     'message' => 'Tag Number tidak ditemukan.',
                 ];
+
                 continue;
             }
 
@@ -130,7 +133,7 @@ class MonitoringEquipmentImportService
                 'progress_perbaikan_permanen' => $row['progress_perbaikan_permanen'] ?? null,
                 'kendala_perbaikan' => $row['kendala_perbaikan'] ?? null,
                 'estimasi_perbaikan' => $row['estimasi_perbaikan'] ?? null,
-                'target' => $row['target'] ?? null,
+                'target' => $this->normalizeTargetDate($row['target'] ?? null),
             ];
 
             $existing = $existingEquipments->get($tag->id);
@@ -210,7 +213,7 @@ class MonitoringEquipmentImportService
                     $toCopy = MonitoringEquipmentLog::whereIn('tag_number_id', $currentMissingIds)
                         ->where('period_code', $latestAvailable)
                         ->get()
-                        ->map(fn($log) => array_merge(
+                        ->map(fn ($log) => array_merge(
                             collect($log->toArray())->only($logFillable)->toArray(),
                             [
                                 'period_code' => $periodCode,
@@ -241,14 +244,14 @@ class MonitoringEquipmentImportService
                     ->where('period_code', '<', $prev['code'])
                     ->max('period_code');
 
-                if (!$latestAvailable) {
+                if (! $latestAvailable) {
                     continue;
                 }
 
                 $toCopy = MonitoringEquipmentLog::whereIn('tag_number_id', $prevMissingIds)
                     ->where('period_code', $latestAvailable)
                     ->get()
-                    ->map(fn($log) => array_merge(
+                    ->map(fn ($log) => array_merge(
                         collect($log->toArray())->only($logFillable)->toArray(),
                         [
                             'period_code' => $prev['code'],
@@ -269,7 +272,31 @@ class MonitoringEquipmentImportService
         return [
             'success' => true,
             'message' => 'Import selesai.',
-            'summary' => $summary
+            'summary' => $summary,
         ];
+    }
+
+    private function normalizeTargetDate($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            $serial = (float) $value;
+
+            if ($serial >= 1 && $serial <= 2958465) {
+                return ExcelDate::excelToDateTimeObject($serial)
+                    ->format('Y-m-d');
+            }
+
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->format('Y-m-d');
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }

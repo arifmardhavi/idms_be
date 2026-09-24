@@ -7,16 +7,12 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 
-class MonitoringEquipmentTemplateSheet implements
-    FromCollection,
-    ShouldAutoSize,
-    WithEvents,
-    WithTitle
+class MonitoringEquipmentTemplateSheet implements FromCollection, ShouldAutoSize, WithEvents, WithTitle
 {
     public function title(): string
     {
@@ -29,6 +25,7 @@ class MonitoringEquipmentTemplateSheet implements
 
             [
                 'Tag Number',
+                'Kondisi Peralatan',
                 'Status',
                 'Jenis Kerusakan',
                 'Penyebab',
@@ -51,7 +48,8 @@ class MonitoringEquipmentTemplateSheet implements
                 '',
                 '',
                 '',
-            ]
+                '',
+            ],
 
         ]);
     }
@@ -72,14 +70,14 @@ class MonitoringEquipmentTemplateSheet implements
                 /**
                  * Header Style
                  */
-                $sheet->getStyle('A1:J1')->applyFromArray([
+                $sheet->getStyle('A1:K1')->applyFromArray([
 
                     'font' => [
                         'bold' => true,
                         'size' => 11,
                         'color' => [
-                            'rgb' => 'FFFFFF'
-                        ]
+                            'rgb' => 'FFFFFF',
+                        ],
                     ],
 
                     'alignment' => [
@@ -90,15 +88,15 @@ class MonitoringEquipmentTemplateSheet implements
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
                         'startColor' => [
-                            'rgb' => 'D97706'
-                        ]
+                            'rgb' => 'D97706',
+                        ],
                     ],
 
                     'borders' => [
                         'allBorders' => [
-                            'borderStyle' => Border::BORDER_THIN
-                        ]
-                    ]
+                            'borderStyle' => Border::BORDER_THIN,
+                        ],
+                    ],
 
                 ]);
 
@@ -110,35 +108,43 @@ class MonitoringEquipmentTemplateSheet implements
                 /**
                  * Background Input Area
                  */
-                $sheet->getStyle('A2:J5')->applyFromArray([
+                $sheet->getStyle('A2:K5')->applyFromArray([
 
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
                         'startColor' => [
-                            'rgb' => 'FFFDF5'
-                        ]
+                            'rgb' => 'FFFDF5',
+                        ],
                     ],
 
                     'borders' => [
                         'allBorders' => [
-                            'borderStyle' => Border::BORDER_THIN
-                        ]
-                    ]
+                            'borderStyle' => Border::BORDER_THIN,
+                        ],
+                    ],
                 ]);
 
                 /**
                  * Number Format
                  */
                 $sheet
-                    ->getStyle('I2:I1000')
+                    ->getStyle('J2:J1000')
                     ->getNumberFormat()
                     ->setFormatCode('#,##0');
+
+                /**
+                 * Target Date Format
+                 */
+                $sheet
+                    ->getStyle('K2:K1000')
+                    ->getNumberFormat()
+                    ->setFormatCode('yyyy-mm-dd');
 
                 /**
                  * Column Alignment
                  */
                 $sheet
-                    ->getStyle('A:J')
+                    ->getStyle('A:K')
                     ->getAlignment()
                     ->setVertical(Alignment::VERTICAL_CENTER);
 
@@ -154,11 +160,9 @@ class MonitoringEquipmentTemplateSheet implements
                  * Estimasi Center
                  */
                 $sheet
-                    ->getStyle('I:I')
+                    ->getStyle('J:J')
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-
 
                 /**
                  * Dropdown Status
@@ -167,7 +171,7 @@ class MonitoringEquipmentTemplateSheet implements
 
                     $sheet,
 
-                    'B{row}',
+                    'C{row}',
 
                     '=Reference!$B$2:$B$5',
 
@@ -176,7 +180,7 @@ class MonitoringEquipmentTemplateSheet implements
                     'Pilih nilai Status.'
 
                 );
-            }
+            },
 
         ];
     }
@@ -189,7 +193,7 @@ class MonitoringEquipmentTemplateSheet implements
         string $message
     ): void {
 
-        foreach (range(2,1000) as $row) {
+        foreach (range(2, 1000) as $row) {
 
             $validation = $sheet
                 ->getCell(
