@@ -128,12 +128,17 @@ class MonitoringEquipmentImportService
 
             $row = $item['row'];
 
+            $kondisi = $this->canonicalKondisi(
+                $row['kondisi_peralatan'] ?? null,
+                $kondisiStatus
+            );
+
             $data = [
                 'tag_number_id' => $tag->id,
-                'kondisi_peralatan' => $row['kondisi_peralatan'] ?? null,
+                'kondisi_peralatan' => $kondisi,
                 'status' => $this->resolveStatus(
                     $row['status'] ?? null,
-                    $row['kondisi_peralatan'] ?? null,
+                    $kondisi,
                     $kondisiStatus
                 ),
                 'jenis_kerusakan' => $row['jenis_kerusakan'] ?? null,
@@ -318,12 +323,37 @@ class MonitoringEquipmentImportService
             return $value;
         }
 
+        $key = strtolower(trim((string) $kondisi));
+
+        if ($key === '') {
+            return null;
+        }
+
+        foreach ($map as $mapKey => $status) {
+            if (strtolower(trim((string) $mapKey)) === $key) {
+                return $status;
+            }
+        }
+
+        return null;
+    }
+
+    private function canonicalKondisi($kondisi, array $map): ?string
+    {
         $key = trim((string) $kondisi);
 
         if ($key === '') {
             return null;
         }
 
-        return $map[$key] ?? null;
+        $normalized = strtolower($key);
+
+        foreach ($map as $mapKey => $status) {
+            if (strtolower(trim((string) $mapKey)) === $normalized) {
+                return (string) $mapKey;
+            }
+        }
+
+        return $key;
     }
 }

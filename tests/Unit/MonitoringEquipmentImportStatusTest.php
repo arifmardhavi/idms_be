@@ -33,6 +33,20 @@ class MonitoringEquipmentImportStatusTest extends TestCase
         );
     }
 
+    private function canonical($kondisi): ?string
+    {
+        $method = new ReflectionMethod(
+            MonitoringEquipmentImportService::class,
+            'canonicalKondisi'
+        );
+
+        return $method->invoke(
+            new MonitoringEquipmentImportService,
+            $kondisi,
+            self::KONDISI_STATUS
+        );
+    }
+
     public function test_explicit_status_is_respected(): void
     {
         $this->assertSame('Medium', $this->resolve('Medium', 'Terjadi Leak'));
@@ -61,5 +75,28 @@ class MonitoringEquipmentImportStatusTest extends TestCase
     {
         $this->assertNull($this->resolve('', null));
         $this->assertNull($this->resolve('=IFERROR(VLOOKUP(B2,Reference!$A$8:$B$14,2,FALSE),"")', ''));
+    }
+
+    public function test_lowercase_kondisi_maps_to_status(): void
+    {
+        $this->assertSame('Breakdown', $this->resolve('', 'Out of Service / Breakdown'));
+    }
+
+    public function test_mixed_case_kondisi_maps_to_status(): void
+    {
+        $this->assertSame('Breakdown', $this->resolve('', 'out OF service / breakdown'));
+        $this->assertSame('High', $this->resolve('', '  no issue  '));
+    }
+
+    public function test_canonical_kondisi_uses_db_spelling(): void
+    {
+        $this->assertSame('Out Of Service / Breakdown', $this->canonical('Out of Service / Breakdown'));
+        $this->assertSame('No Issue', $this->canonical('  No Issue  '));
+    }
+
+    public function test_canonical_kondisi_keeps_unknown_value(): void
+    {
+        $this->assertSame('Kondisi Baru / X', $this->canonical('Kondisi Baru / X'));
+        $this->assertNull($this->canonical(''));
     }
 }
