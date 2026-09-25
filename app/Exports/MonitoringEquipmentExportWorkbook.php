@@ -28,6 +28,12 @@ class MonitoringEquipmentExportWorkbook implements WithMultipleSheets
 
             /**
              * Sheet 2
+             * Perbandingan Periode
+             */
+            new MonitoringEquipmentChangeSheet($this->filters),
+
+            /**
+             * Sheet 3
              * Reference Dropdown
              */
             new MonitoringEquipmentReferenceSheet,
