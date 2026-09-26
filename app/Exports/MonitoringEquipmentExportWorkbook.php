@@ -34,6 +34,12 @@ class MonitoringEquipmentExportWorkbook implements WithMultipleSheets
 
             /**
              * Sheet 3
+             * Perbandingan Periode (Semua) - 3 periode
+             */
+            new MonitoringEquipmentChangeSheet($this->filters, true, 3),
+
+            /**
+             * Sheet 4
              * Reference Dropdown
              */
             new MonitoringEquipmentReferenceSheet,

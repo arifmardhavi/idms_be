@@ -22,6 +22,12 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
 {
     protected array $filters;
 
+    protected bool $includeUnchanged = false;
+
+    protected int $periodCount = 2;
+
+    protected int $no = 0;
+
     private const STATUS_COLORS = [
         'High' => ['fill' => 'C6EFCE', 'font' => '006100'],
         'Medium' => ['fill' => 'FFEB9C', 'font' => '9C5700'],
@@ -30,14 +36,16 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
         '-' => ['fill' => 'D9D9D9', 'font' => '3F3F3F'],
     ];
 
-    public function __construct(array $filters = [])
+    public function __construct(array $filters = [], bool $includeUnchanged = false, int $periodCount = 2)
     {
         $this->filters = $filters;
+        $this->includeUnchanged = $includeUnchanged;
+        $this->periodCount = $periodCount;
     }
 
     public function title(): string
     {
-        return 'Perbandingan Periode';
+        return $this->includeUnchanged ? 'Perbandingan Periode (Semua)' : 'Perbandingan Periode';
     }
 
     public function collection()
@@ -45,28 +53,29 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
         $current = BusinessPeriod::current();
         $previous = BusinessPeriod::previous(1);
 
+        $periods = $this->periodCount === 3
+            ? [BusinessPeriod::previous(2), $previous, $current]
+            : [$previous, $current];
+
+        $codes = array_column($periods, 'code');
+
         $logs = MonitoringEquipmentLog::query()
             ->with(['tagNumber.type.category'])
-            ->whereIn('period_code', [$previous['code'], $current['code']])
+            ->whereIn('period_code', $codes)
             ->get();
 
-        $prevLogs = $logs
-            ->where('period_code', $previous['code'])
-            ->keyBy('tag_number_id')
-            ->map(fn ($log) => [
-                'kondisi' => $log->kondisi_peralatan,
-                'status' => $log->status,
-            ])
-            ->all();
+        $logsByPeriod = [];
 
-        $currLogs = $logs
-            ->where('period_code', $current['code'])
-            ->keyBy('tag_number_id')
-            ->map(fn ($log) => [
-                'kondisi' => $log->kondisi_peralatan,
-                'status' => $log->status,
-            ])
-            ->all();
+        foreach ($periods as $period) {
+            $logsByPeriod[] = $logs
+                ->where('period_code', $period['code'])
+                ->keyBy('tag_number_id')
+                ->map(fn ($log) => [
+                    'kondisi' => $log->kondisi_peralatan,
+                    'status' => $log->status,
+                ])
+                ->all();
+        }
 
         $equipments = $this->equipmentQuery()
             ->get()
@@ -79,7 +88,11 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
             ])
             ->all();
 
-        return collect(static::buildRows($equipments, $prevLogs, $currLogs));
+        if ($this->periodCount === 3) {
+            return collect(static::buildRows3($equipments, $logsByPeriod, $this->includeUnchanged));
+        }
+
+        return collect(static::buildRows($equipments, $logsByPeriod[0], $logsByPeriod[1], $this->includeUnchanged));
     }
 
     private function equipmentQuery()
@@ -154,9 +167,10 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
 
     /**
      * Membandingkan status & kondisi antar periode.
-     * Hanya peralatan yang BERUBAH yang dikembalikan.
+     * Hanya peralatan yang BERUBAH yang dikembalikan,
+     * kecuali $includeUnchanged = true (semua peralatan).
      */
-    public static function buildRows(array $equipments, array $prevLogs, array $currLogs): array
+    public static function buildRows(array $equipments, array $prevLogs, array $currLogs, bool $includeUnchanged = false): array
     {
         $rows = [];
 
@@ -170,7 +184,7 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
             $statusPrev = static::status($prev['status'] ?? null);
             $statusCurr = static::status($curr['status'] ?? null);
 
-            if ($kondisiPrev === $kondisiCurr && $statusPrev === $statusCurr) {
+            if (! $includeUnchanged && $kondisiPrev === $kondisiCurr && $statusPrev === $statusCurr) {
                 continue;
             }
 
@@ -179,11 +193,68 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
                 'category' => $equipment['category'],
                 'criticality' => static::criticality($equipment['criticality'] ?? null),
                 'sece' => static::sece($equipment['sece'] ?? null),
-                'kondisi_prev' => $kondisiPrev ?? '-',
-                'kondisi_curr' => $kondisiCurr ?? '-',
-                'status_prev' => $statusPrev,
-                'status_curr' => $statusCurr,
+                'kondisi1' => $kondisiPrev ?? '-',
+                'kondisi2' => $kondisiCurr ?? '-',
+                'status1' => $statusPrev,
+                'status2' => $statusCurr,
             ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Membandingkan kondisi & status antar 3 periode (terlama -> terbaru).
+     * Semua peralatan dikembalikan, kecuali $includeUnchanged = false
+     * (hanya yang berubah).
+     */
+    public static function buildRows3(array $equipments, array $logsByPeriod, bool $includeUnchanged = false): array
+    {
+        $rows = [];
+
+        foreach ($equipments as $equipment) {
+
+            $cells = [];
+            $changed = false;
+            $prev = null;
+
+            foreach ($logsByPeriod as $periodLogs) {
+
+                $log = $periodLogs[$equipment['tag_number_id']] ?? [];
+
+                $kondisi = $log['kondisi'] ?? null;
+                $status = static::status($log['status'] ?? null);
+
+                if ($prev !== null && ($prev['kondisi'] !== $kondisi || $prev['status'] !== $status)) {
+                    $changed = true;
+                }
+
+                $prev = ['kondisi' => $kondisi, 'status' => $status];
+
+                $cells[] = [
+                    'kondisi' => $kondisi ?? '-',
+                    'status' => $status,
+                ];
+
+            }
+
+            if (! $includeUnchanged && ! $changed) {
+                continue;
+            }
+
+            $row = [
+                'tag_number' => $equipment['tag_number'],
+                'category' => $equipment['category'],
+                'criticality' => static::criticality($equipment['criticality'] ?? null),
+                'sece' => static::sece($equipment['sece'] ?? null),
+            ];
+
+            foreach ($cells as $index => $cell) {
+                $row['kondisi'.($index + 1)] = $cell['kondisi'];
+                $row['status'.($index + 1)] = $cell['status'];
+            }
+
+            $rows[] = $row;
         }
 
         return $rows;
@@ -199,10 +270,23 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
 
     public function headings(): array
     {
-        $previous = BusinessPeriod::previous(1)['code'];
-        $current = BusinessPeriod::current()['code'];
+        if ($this->periodCount === 3) {
+            return $this->periodHeadings([
+                BusinessPeriod::previous(2)['code'],
+                BusinessPeriod::previous(1)['code'],
+                BusinessPeriod::current()['code'],
+            ]);
+        }
 
-        return [
+        return $this->periodHeadings([
+            BusinessPeriod::previous(1)['code'],
+            BusinessPeriod::current()['code'],
+        ]);
+    }
+
+    private function periodHeadings(array $codes): array
+    {
+        $headings = [
 
             'No',
 
@@ -214,24 +298,24 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
 
             'SECE',
 
-            'Kondisi Peralatan ('.static::periodLabel($previous).')',
-
-            'Kondisi Peralatan ('.static::periodLabel($current).')',
-
-            'Status ('.static::periodLabel($previous).')',
-
-            'Status ('.static::periodLabel($current).')',
-
         ];
+
+        foreach ($codes as $code) {
+            $headings[] = 'Kondisi Peralatan ('.static::periodLabel($code).')';
+        }
+
+        foreach ($codes as $code) {
+            $headings[] = 'Status ('.static::periodLabel($code).')';
+        }
+
+        return $headings;
     }
 
     public function map($row): array
     {
-        static $no = 0;
+        $columns = [
 
-        return [
-
-            ++$no,
+            ++$this->no,
 
             $row['tag_number'],
 
@@ -241,15 +325,17 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
 
             $row['sece'],
 
-            $row['kondisi_prev'],
-
-            $row['kondisi_curr'],
-
-            $row['status_prev'],
-
-            $row['status_curr'],
-
         ];
+
+        for ($index = 1; $index <= $this->periodCount; $index++) {
+            $columns[] = $row['kondisi'.$index];
+        }
+
+        for ($index = 1; $index <= $this->periodCount; $index++) {
+            $columns[] = $row['status'.$index];
+        }
+
+        return $columns;
     }
 
     private static function criticality($value): ?string
@@ -302,6 +388,12 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
 
                 $last = $sheet->getHighestDataRow();
 
+                $lastColumn = $this->periodCount === 3 ? 'K' : 'I';
+
+                $statusColumns = $this->periodCount === 3
+                    ? ['I', 'J', 'K']
+                    : ['H', 'I'];
+
                 /**
                  * Freeze Header
                  */
@@ -310,12 +402,12 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
                 /**
                  * Auto Filter
                  */
-                $sheet->setAutoFilter('A1:I'.$last);
+                $sheet->setAutoFilter('A1:'.$lastColumn.$last);
 
                 /**
                  * Header Style
                  */
-                $sheet->getStyle('A1:I1')->applyFromArray([
+                $sheet->getStyle('A1:'.$lastColumn.'1')->applyFromArray([
 
                     'font' => [
                         'bold' => true,
@@ -355,7 +447,7 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
                     /**
                      * Data Style
                      */
-                    $sheet->getStyle('A2:I'.$last)->applyFromArray([
+                    $sheet->getStyle('A2:'.$lastColumn.$last)->applyFromArray([
 
                         'alignment' => [
                             'vertical' => Alignment::VERTICAL_CENTER,
@@ -374,7 +466,7 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
                      */
                     foreach (range(2, $last) as $row) {
 
-                        foreach (['H', 'I'] as $column) {
+                        foreach ($statusColumns as $column) {
 
                             $value = (string) $sheet->getCell($column.$row)->getValue();
 
@@ -407,7 +499,7 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
                  * Column Alignment
                  */
                 $sheet
-                    ->getStyle('A:I')
+                    ->getStyle('A:'.$lastColumn)
                     ->getAlignment()
                     ->setVertical(Alignment::VERTICAL_CENTER);
 
@@ -417,7 +509,7 @@ class MonitoringEquipmentChangeSheet implements FromCollection, ShouldAutoSize, 
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                 $sheet
-                    ->getStyle('H2:I'.$last)
+                    ->getStyle($statusColumns[0].'2:'.$lastColumn.$last)
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
