@@ -57,6 +57,7 @@ Standarisasi penamaan `module` pada log activity. **BE adalah satu-satunya sumbe
 | `/wbs-nr` | `WBS NR` | Monitoring RKAP |
 | `/wbs-ta` | `WBS TA` | Monitoring RKAP |
 | `/monitoring-equipment` | `Monitoring Equipment` | Monitoring |
+| `/monitoring-psv` | `Monitoring PSV` | Monitoring |
 
 > Catatan: `Auth` (login/logout) adalah label khusus sistem, bukan fitur dan tidak dikirim FE.
 
@@ -95,6 +96,7 @@ Ditangani otomatis oleh `App\Support\ActivityModule::label()` lewat `config/log-
 | Tag_number | `Tag Number` |
 | ProjectSpec | `Project Spec` |
 | MonitoringEquipment | `Monitoring Equipment` |
+| MonitoringPsv | `Monitoring PSV` |
 | LaporanInspection | `Laporan Inspection` |
 | SertifikatKalibrasi | `Sertifikat Kalibrasi` |
 | HistoricalMemorandum | `Historical Memorandum` |

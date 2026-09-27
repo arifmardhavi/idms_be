@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PsvTagNumber;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,6 +16,23 @@ class Coi extends BaseModel
         'count_report_coi',
         'count_bapk_coi',
     ];
+
+    /**
+     * Setiap COI baru yang tag number-nya PSV/TSV langsung mendapat baris
+     * Monitoring PSV (semua kolom manual masih kosong) supaya bisa diisi user
+     * tanpa perlu menyewa sync manual. Idempotent — aman kalau listener
+     * terpanggil ulang.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (self $coi) {
+            if (! PsvTagNumber::matches($coi->tag_number?->tag_number)) {
+                return;
+            }
+
+            app(\App\Services\MonitoringPsvSyncService::class)->syncFromCoi($coi);
+        });
+    }
 
     public function getDueDaysAttribute()
     {

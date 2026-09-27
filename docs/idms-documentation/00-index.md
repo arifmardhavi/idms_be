@@ -44,6 +44,7 @@ IDMS adalah platform digital untuk mengelola data inspeksi teknis, kepatuhan reg
 | 17 | [Flow Diagrams](17-flow-diagrams.md) | Flow Diagrams |
 | 18 | [Troubleshooting](18-troubleshooting-guide.md) | Troubleshooting Guide |
 | 19 | [Catatan Penting](19-catatan-penting.md) | Catatan Penting |
+| 20 | [Monitoring PSV](20-monitoring-psv.md) | Monitoring Masa Berlaku COI PSV/TSV |
 
 ## Daftar Istilah Teknis
 
@@ -65,6 +66,8 @@ IDMS adalah platform digital untuk mengelola data inspeksi teknis, kepatuhan reg
 | **EMS** | Equipment Management System (dokumen terkait peralatan) |
 | **GMS** | Gas Management System (dokumen terkait gas) |
 | **ECA FSCA** | Electrical/Equipment Criticality Assessment (dokumen terkait assessmen) |
+| **PSV** | Pressure Safety Valve |
+| **TSV** | Temperature Safety Valve |
 
 ## Cara Membaca Dokumentasi
 

@@ -234,6 +234,7 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 | File | Deskripsi |
 |------|-----------|
 | `MonitoringEquipmentController.php` | Monitoring equipment |
+| `MonitoringPsvController.php` | Monitoring PSV (list, show, update, sync, dashboard, export) |
 | `LaporanInspectionController.php` | Laporan inspeksi |
 | `InternalInspectionController.php` | Inspeksi internal |
 | `ExternalInspectionController.php` | Inspeksi eksternal |
@@ -448,6 +449,7 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 | `BreakdownReport.php` | Breakdown report |
 | `MonitoringEquipment.php` | Monitoring equipment |
 | `MonitoringEquipmentLog.php` | Log monitoring equipment |
+| `MonitoringPsv.php` | Monitoring PSV (anchor `coi_id`, baca tag number & masa berlaku live dari COI) |
 | `KondisiPeralatan.php` | Kondisi peralatan |
 | `StatusPeralatan.php` | Status peralatan |
 
@@ -483,6 +485,8 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 | `DashboardRkapService.php` | Service untuk dashboard RKAP, menghitung agregasi data RKAP dari 4 variant |
 | `MonitoringEquipmentDashboardService.php` | Service untuk dashboard monitoring equipment |
 | `MonitoringEquipmentImportService.php` | Service untuk import data monitoring equipment dari Excel |
+| `MonitoringPsvSyncService.php` | Backfill/repair baris monitoring PSV dari COI PSV/TSV (idempotent) |
+| `MonitoringPsvDashboardService.php` | Service untuk dashboard monitoring PSV (bucket masa berlaku, PSV/TSV, kategori, redundant) |
 | `RkapNrService.php` | Service untuk RKAP Non-Routine |
 | `RkapOhService.php` | Service untuk RKAP Overhaul |
 | `RkapRtService.php` | Service untuk RKAP Routine |
@@ -499,6 +503,16 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 | `BusinessPeriod.php` | Helper untuk perhitungan business period (periode akuntansi) |
 | `DateHelper.php` | Helper untuk manipulasi dan format tanggal |
 | `FileHelper.php` | Helper untuk operasi file (upload, path, dll) |
+
+### Support (bukan Helper)
+
+**Lokasi:** `app/Support/`
+
+| File | Deskripsi |
+|------|-----------|
+| `ActivityModule.php` | Pemetaan identifier model ke label kanonikal activity log |
+| `MasaBerlakuBucket.php` | Sumber tunggal aturan bucket masa berlaku (`safe` / `warning` / `expired`) untuk query, filter, resource, export, dan dashboard |
+| `PsvTagNumber.php` | Sumber tunggal aturan penentuan PSV/TSV dari `tag_numbers.tag_number` |
 
 ---
 
@@ -526,6 +540,7 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 | `MdrFileResource.php` | Resource untuk MDR file |
 | `MonitoringEquipmentResource.php` | Resource untuk monitoring equipment |
 | `MonitoringEquipmentLogResource.php` | Resource untuk log monitoring equipment |
+| `MonitoringPsvResource.php` | Resource untuk monitoring PSV (termasuk blok detail COI) |
 | `RkapTaResource.php` | Resource untuk RKAP Tahunan |
 | `RkapTaCollection.php` | Collection untuk RKAP Tahunan |
 | `RkapOhResource.php` | Resource untuk RKAP Overhaul |
@@ -547,6 +562,7 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 | `ImportMonitoringEquipmentRequest.php` | Validasi import monitoring equipment |
 | `StoreMonitoringEquipmentRequest.php` | Validasi create monitoring equipment |
 | `UpdateMonitoringEquipmentRequest.php` | Validasi update monitoring equipment |
+| `UpdateMonitoringPsvRequest.php` | Validasi update monitoring PSV (hanya 4 kolom manual) |
 
 ---
 
@@ -571,6 +587,7 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 | `MonitoringEquipmentReferenceSheet.php` | Sheet referensi monitoring equipment |
 | `MonitoringEquipmentTemplateExport.php` | Template export monitoring equipment |
 | `MonitoringEquipmentTemplateSheet.php` | Sheet template monitoring equipment |
+| `MonitoringPsvExport.php` | Export data monitoring PSV (9 kolom, mengikuti query list) |
 
 ---
 
@@ -785,6 +802,7 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 | `2026_07_07_151752_create_monitoring_equipment_logs_table.php` | monitoring_equipment_logs |
 | `2026_07_18_145710_create_kondisi_peralatans_table.php` | kondisi_peralatans |
 | `2026_07_18_153205_create_status_peralatans_table.php` | status_peralatans |
+| `2026_09_27_080000_create_monitoring_psv_table.php` | monitoring_psv |
 
 ### Engineering & Document
 | File | Tabel |

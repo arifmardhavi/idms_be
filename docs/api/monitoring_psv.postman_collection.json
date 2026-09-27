@@ -1,0 +1,233 @@
+{
+  "info": {
+    "name": "Monitoring PSV (IDMS)",
+    "description": "Collection API untuk modul Monitoring PSV — pemantauan masa berlaku COI peralatan PSV/TSV.\n\n peculiarities modul ini:\n\n- Tidak ada endpoint POST. Baris monitoring lahir otomatis saat COI PSV/TSV dibuat, atau lewat POST /sync untuk backfill.\n- Tidak ada endpoint DELETE. Menghapus baris hanya menghapus anotasi; kirim null pada kolom yang ingin dikosongkan.\n- Tag Number, Masa Berlaku, Sisa Hari, dan Status Masa Berlaku dibaca LIVE dari COI dan tidak bisa diedit.\n- Hanya 4 kolom manual yang bisa di-update: status_redundant, pid_no, kategori, keterangan.\n- Status masa berlaku memakai batas <= 0, jadi tag yang jatuh tempo HARI INI sudah berstatus expired.\n- Query param status_masa_berlaku: safe | warning | expired. Nilai lain diabaikan (tidak error).\n- Sort default: sisa_hari asc (paling mendesak di atas). Kolom sort di luar whitelist diabaikan.\n\nSetelah login, token JWT otomatis disimpan ke variabel `token`, lalu dipakai untuk semua endpoint lainnya. Variabel `monitoring_psv_id` terisi otomatis dari request List.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8100", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "monitoring_psv_id", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1. Autentikasi",
+      "item": [
+        {
+          "name": "Login (ambil token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin1\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api", "login"] },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.token) {",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "  pm.environment.set('token', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/logout", "host": ["{{baseUrl}}"], "path": ["api", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Monitoring PSV",
+      "item": [
+        {
+          "name": "List (semua data)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const rows = json && json.data ? json.data.data || json.data : [];",
+                  "if (Array.isArray(rows) && rows.length) {",
+                  "  pm.collectionVariables.set('monitoring_psv_id', rows[0].id);",
+                  "  console.log('monitoring_psv_id =', rows[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv?per_page=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv"],
+              "query": [{ "key": "per_page", "value": "25" }]
+            }
+          }
+        },
+        {
+          "name": "List (filter expired, paling mendesak)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv?status_masa_berlaku=expired&sort_by=sisa_hari&sort_order=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv"],
+              "query": [
+                { "key": "status_masa_berlaku", "value": "expired" },
+                { "key": "sort_by", "value": "sisa_hari" },
+                { "key": "sort_order", "value": "asc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List (filter warning, kategori CSO)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv?status_masa_berlaku=warning&kategori=CSO",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv"],
+              "query": [
+                { "key": "status_masa_berlaku", "value": "warning" },
+                { "key": "kategori", "value": "CSO" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List (search tag number)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv?search=PSV-177",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv"],
+              "query": [{ "key": "search", "value": "PSV-177" }]
+            }
+          }
+        },
+        {
+          "name": "List (sort status masa berlaku: expired dulu)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv?sort_by=status_masa_berlaku&sort_order=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv"],
+              "query": [
+                { "key": "sort_by", "value": "status_masa_berlaku" },
+                { "key": "sort_order", "value": "asc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Show (detail + blok COI)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv/{{monitoring_psv_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv", "{{monitoring_psv_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update (4 kolom manual)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status_redundant\": \"Redundant\",\n  \"pid_no\": \"PID-2024-0091\",\n  \"kategori\": \"CSO\",\n  \"keterangan\": \"Sudah dijadwalkan re-test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv/{{monitoring_psv_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv", "{{monitoring_psv_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update (kosongkan anotasi)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status_redundant\": null,\n  \"pid_no\": null,\n  \"kategori\": null,\n  \"keterangan\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv/{{monitoring_psv_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv", "{{monitoring_psv_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Sync (backfill / repair, idempotent)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/monitoring_psv/sync", "host": ["{{baseUrl}}"], "path": ["api", "monitoring_psv", "sync"] }
+          }
+        },
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/monitoring_psv/dashboard", "host": ["{{baseUrl}}"], "path": ["api", "monitoring_psv", "dashboard"] }
+          }
+        },
+        {
+          "name": "Export Excel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv/export?status_masa_berlaku=expired",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv", "export"],
+              "query": [{ "key": "status_masa_berlaku", "value": "expired" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

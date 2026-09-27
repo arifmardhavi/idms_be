@@ -1331,6 +1331,69 @@ Content-Type: application/json
 | `GET` | `/api/monitoring_equipment/export/logs` | Export logs monitoring |
 | `GET` | `/api/monitoring_equipment/dashboard` | Dashboard monitoring |
 
+### Monitoring PSV
+
+Semua endpoint berada dalam `auth:api`. Route literal (`dashboard`, `export`,
+`sync`) ditulis sebelum route berparameter agar tidak tertangkap sebagai `id`.
+
+| Method | Endpoint | Role | Deskripsi |
+|--------|----------|------|-----------|
+| `GET` | `/api/monitoring_psv` | `auth:api` | Daftar monitoring PSV (filter, search, sort, paginate) |
+| `GET` | `/api/monitoring_psv/dashboard` | `auth:api` | Ringkasan dashboard (bucket masa berlaku, PSV/TSV, kategori, redundant) |
+| `GET` | `/api/monitoring_psv/export` | `auth:api` | Export Excel, mengikuti query list yang sama |
+| `POST` | `/api/monitoring_psv/sync` | `auth:api` | Backfill/repair baris dari COI PSV/TSV (idempotent) |
+| `GET` | `/api/monitoring_psv/{id}` | `auth:api` | Detail + blok COI (sertifikat, tanggal terbit, masa berlaku) |
+| `PUT` | `/api/monitoring_psv/{id}` | `auth:api` | Update 4 kolom manual saja |
+
+Tidak ada `POST` (baris lahir dari sync) dan tidak ada `DELETE` (menghapus baris
+hanya menghapus anotasi; kirim `null` untuk mengosongkan kolom).
+
+**Query parameter `GET /api/monitoring_psv`**
+
+| Param | Contoh | Keterangan |
+|-------|--------|------------|
+| `search` | `PSV-177` | `tag_number`, `pid_no`, `keterangan` |
+| `kategori` | `CSO` | exact match, nilai valid `CSO` / `CSC` |
+| `status_redundant` | `Redundant` | exact match |
+| `status_masa_berlaku` | `expired` | `safe` / `warning` / `expired`; nilai lain diabaikan |
+| `sort_by` | `sisa_hari` | whitelist; default `sisa_hari` |
+| `sort_order` | `asc` | hanya `desc` honoured; default/kosong = `asc` (paling mendesak di atas) |
+| `per_page` | `25` | default 10, dikunci 1..100 |
+
+Whitelist `sort_by`: `id`, `tag_number`, `masa_berlaku`, `sisa_hari`,
+`status_masa_berlaku`, `kategori`, `status_redundant`, `pid_no`, `created_at`,
+`updated_at`. Nilai di luar whitelist diabaikan dan fallback ke `sisa_hari`.
+`sort_by=status_masa_berlaku` diurutkan `expired → warning → safe` (urutan
+prioritas, bukan alfabetis).
+
+> **Jebakan query parameter:**
+>
+> - `status_masa_berlaku` **harus lowercase** (`expired`, bukan `EXPIRED`).
+>   Nilai lain diabaikan tanpa error sehingga responsnya kembali menjadi seluruh
+>   data — filter terlihat tidak jalan, bukan gagal.
+> - `kategori=` dan `status_redundant=` yang **kosong diabaikan**. Tidak ada cara
+>   memfilter baris yang kolomnya `NULL` / belum diisi; `?kategori=null`
+>   menghasilkan 0 baris, bukan baris kosong.
+> - `search` hanya mencakup `tag_number`, `pid_no`, dan `keterangan`. Nomor
+>   sertifikat COI (`no_certificate`) **tidak** bisa dicari lewat modul ini;
+>   nomornya tersedia di blok `coi` pada `GET /{id}`.
+> - `per_page` hanya berlaku di endpoint list, diabaikan oleh `/export`.
+
+**Body `PUT /api/monitoring_psv/{id}`** — hanya empat kolom manual:
+
+```json
+{
+  "status_redundant": "Redundant",
+  "pid_no": "PID-2024-0091",
+  "kategori": "CSO",
+  "keterangan": "Sudah dijadwalkan re-test"
+}
+```
+
+`tag_number`, `masa_berlaku`, dan `coi_id` tidak memiliki aturan validasi,
+sehingga otomatis tertuang oleh `validated()` dan tidak bisa di-overwrite.
+`kategori` selain `CSO`/`CSC` ditolak `422`.
+
 ### Status Peralatan
 
 | Method | Endpoint | Deskripsi |

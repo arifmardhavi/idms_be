@@ -63,6 +63,7 @@ return [
         '/wbs-ta'                    => 'WBS TA',
 
         '/monitoring-equipment'      => 'Monitoring Equipment',
+        '/monitoring-psv'            => 'Monitoring PSV',
     ],
 
     /*
@@ -138,6 +139,7 @@ return [
         'Tag_number'           => 'Tag Number',
         'ProjectSpec'          => 'Project Spec',
         'MonitoringEquipment'  => 'Monitoring Equipment',
+        'MonitoringPsv'        => 'Monitoring PSV',
         'LaporanInspection'    => 'Laporan Inspection',
         'SertifikatKalibrasi'  => 'Sertifikat Kalibrasi',
         'HistoricalMemorandum' => 'Historical Memorandum',

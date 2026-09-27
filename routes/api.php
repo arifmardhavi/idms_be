@@ -68,6 +68,7 @@ use App\Http\Controllers\{
     MdrItemController,
     MocController,
     MonitoringEquipmentController,
+    MonitoringPsvController,
     NibController,
     NotifJasaController,
     NotifJasaOhController,
@@ -346,6 +347,16 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/monitoring_equipment/export/logs', [MonitoringEquipmentController::class, 'exportLogs']);
     Route::get('/monitoring_equipment/dashboard', [MonitoringEquipmentController::class, 'dashboard']);
     Route::apiResource('monitoring_equipment', MonitoringEquipmentController::class);
+
+    // MONITORING PSV
+    // Catatan: route literal HARUS ditulis sebelum route berparameter {monitoring_psv}
+    // agar 'dashboard'/'export' tidak tertangkap sebagai id.
+    Route::get('/monitoring_psv/dashboard', [MonitoringPsvController::class, 'dashboard']);
+    Route::get('/monitoring_psv/export', [MonitoringPsvController::class, 'export']);
+    Route::post('/monitoring_psv/sync', [MonitoringPsvController::class, 'sync']);
+    Route::get('/monitoring_psv', [MonitoringPsvController::class, 'index']);
+    Route::get('/monitoring_psv/{monitoring_psv}', [MonitoringPsvController::class, 'show']);
+    Route::put('/monitoring_psv/{monitoring_psv}', [MonitoringPsvController::class, 'update']);
 
     /*
     |--------------------------------------------------------------------------

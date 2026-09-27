@@ -981,7 +981,38 @@
 
 ---
 
-### 2.11 Project Specification
+### 2.11 Monitoring PSV
+
+#### `monitoring_psv`
+| Field | Type | Constraint | Keterangan |
+|-------|------|------------|------------|
+| id | bigint | PK, auto-increment | |
+| coi_id | bigint | FK → cois.id, CASCADE, UNIQUE | Anchor ke COI; data PSV/TSV dibaca live dari sini |
+| status_redundant | varchar(50) | NULLABLE | Status redundansi (anotasi manual) |
+| pid_no | varchar(50) | NULLABLE | Nomor PID (anotasi manual) |
+| kategori | varchar(50) | NULLABLE | `CSO` atau `CSC` (anotasi manual) |
+| keterangan | text | NULLABLE | Keterangan (anotasi manual) |
+| created_at | timestamp | | |
+| updated_at | timestamp | | |
+
+**Indeks:** `kategori`, `status_redundant`
+**Unique:** `coi_id`
+
+Tabel ini **sengaja tidak** menyimpan `tag_number`, `masa_berlaku`, atau `sisa_hari`.
+Kolom read-only tersebut dihitung saat query dengan `JOIN cois` + `JOIN tag_numbers`,
+sehingga koreksi pada COI langsung tercermin tanpa perlu sinkronisasi. Kolom
+`sisa_hari` dan `overdue_date` di model adalah alias hasil `selectRaw`, bukan kolom
+fisik.
+
+Baris hanya dibuat untuk COI yang `tag_numbers.tag_number` mengandung `PSV` atau
+`TSV` (case-insensitive). Tag PSV/TSV yang belum punya record COI tidak muncul.
+Saat ini 175 tag PSV/TSV terdaftar, 135 di antaranya punya COI.
+
+Hapus record `cois` → baris `monitoring_psv` ikut terhapus otomatis (cascade).
+
+---
+
+### 2.12 Project Specification
 
 #### `project_specs`
 | Field | Type | Constraint | Keterangan |
@@ -996,7 +1027,7 @@
 
 ---
 
-### 2.12 Audit & Activity Log
+### 2.13 Audit & Activity Log
 
 #### `log_activities`
 | Field | Type | Constraint | Keterangan |
@@ -1039,9 +1070,10 @@
 | Readiness RTNRTS (Material + Jasa pipeline) | 18 |
 | RKAP | 8 |
 | Monitoring Equipment | 4 |
+| Monitoring PSV | 1 |
 | Project Specification | 1 |
 | Audit & Activity Log | 2 |
-| **Total** | **~116** |
+| **Total** | **~117** |
 
 ---
 
