@@ -54,7 +54,7 @@ Sengaja **tidak** memakai `type_id`, karena keduanya tidak ekuivalen di data ini
 |-------|------|------------|------------|
 | id | bigint | PK, auto-increment | |
 | coi_id | bigint | FK → cois.id, CASCADE, UNIQUE | Anchor ke COI |
-| status_redundant | varchar(50) | NULLABLE | Manual |
+| status_redundant | varchar(50) | NULLABLE | Manual, hanya `Redundant` / `No` |
 | pid_no | varchar(50) | NULLABLE | Manual |
 | kategori | varchar(50) | NULLABLE | Manual, `CSO` / `CSC` |
 | keterangan | text | NULLABLE | Manual |
@@ -111,7 +111,7 @@ Response list dan show memuat **12 kolom** yang sama persis:
 | `masa_berlaku` | date | `cois.overdue_date` |
 | `sisa_hari` | int | `DATEDIFF(overdue_date, CURDATE())` |
 | `status_masa_berlaku` | enum | `safe` / `warning` / `expired` |
-| `status_redundant` | string | manual |
+| `status_redundant` | enum | manual — `Redundant` / `No` / kosong |
 | `pid_no` | string | manual |
 | `kategori` | string | manual |
 | `keterangan` | text | manual |
@@ -203,6 +203,14 @@ tanpa COI (diabaikan).
 
 Kategori yang belum diisi selalu tampil di akhir (`ORDER BY kategori IS NULL,
 kategori`) supaya tidak mengacaukan tabel utama.
+
+Rekap Status Redundant membandingkan string **persis** terhadap `Redundant` dan
+`No`, jadi penjumlahannya `redundant + not_redundant + unfilled` selalu sama
+dengan `total`. Ini yang dijaga oleh normalisasi input di
+`UpdateMonitoringPsvRequest`: daftar nilai sah disimpan sekali di
+`MonitoringPsv::STATUS_REDUNDANT_OPTIONS` dan dipakai bersama oleh request dan
+service. Nilai baru tidak boleh ditambah di konstanta itu tanpa menambahkan
+perbandingan yang sama di `MonitoringPsvDashboardService::statusRedundant()`.
 
 ---
 

@@ -31,6 +31,30 @@ class MonitoringPsv extends BaseModel
     ];
 
     /**
+     * Nilai `status_redundant` yang sah, TULISAN PERSIS seperti yang
+     * dibandingkan dashboard (`= 'Redundant'` dan `= 'No'`).
+     *
+     * Ini sumber kebenaran tunggal untuk nilai yang boleh disimpan.
+     * `UpdateMonitoringPsvRequest` menormalisasi input case-insensitive ke
+     * salah satu nilai ini sebelum validasi, sehingga nilai yang tersimpan
+     * selalu kanonik dan rekap dashboard tidak pernah kehilangan baris.
+     *
+     * Dipakai dengan nama key (bukan indeks) supaya rekap dashboard tetap
+     * benar walaupun urutan array diubah.
+     *
+     * Jangan tambah nilai di sini tanpa menyesuaikan
+     * `MonitoringPsvDashboardService::statusRedundant()` — kalau ada nilai
+     * yang tidak terhitung di sana, `redundant + not_redundant + unfilled`
+     * akan tidak lagi sama dengan `total` tanpa error apa pun.
+     *
+     * @var array<string, string>
+     */
+    public const STATUS_REDUNDANT_OPTIONS = [
+        'redundant'     => 'Redundant',
+        'not_redundant' => 'No',
+    ];
+
+    /**
      * `sisa_hari` & `overdue_date` berasal dari scope withCoiData() (alias dari
      * query), bukan kolom fisik di tabel ini.
      */

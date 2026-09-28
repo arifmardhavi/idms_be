@@ -54,7 +54,7 @@ Konsekuensinya, koreksi pada COI langsung tercermin tanpa sinkronisasi.
 |-------|------|------------|--------|
 | `id` | bigint unsigned | PK, auto-increment | — |
 | `coi_id` | foreignId | → `cois`, cascade delete, **unique** | anchor ke COI |
-| `status_redundant` | string(50) | NULLABLE | manual |
+| `status_redundant` | string(50) | NULLABLE, validasi `in:Redundant,No` | manual |
 | `pid_no` | string(50) | NULLABLE | manual |
 | `kategori` | string(50) | NULLABLE, validasi `in:CSO,CSC` | manual |
 | `keterangan` | text | NULLABLE | manual |
@@ -234,10 +234,37 @@ Kolom (12, sama persis untuk `index` dan `show`): `id`, `coi_id`, `tag_number`,
 
 | Field | Rule |
 |-------|------|
-| `status_redundant` | `nullable|string|max:50` |
+| `status_redundant` | `nullable|string|in:Redundant,No` |
 | `pid_no` | `nullable|string|max:50` |
 | `kategori` | `nullable|string|in:CSO,CSC` |
 | `keterangan` | `nullable|string|max:1000` |
+
+#### Normalisasi `status_redundant`
+
+`status_redundant` punya `prepareForValidation()` karena dashboard membandingkan
+string persis terhadap `Redundant` / `No`. Kalau aturannya hanya `in:`, input
+`redundant` atau `"Redundant "` (ada spasi) akan lolos validasi tapi tidak
+terhitung di rekap — barisnya hilang tanpa error, dan `redundant +
+not_redundant + unfilled` tidak lagi sama dengan `total`.
+
+Perilaku yang dikehendaki:
+
+| Input | Tersimpan | Hasil |
+|-------|-----------|-------|
+| `Redundant`, `redundant`, `REDUNDANT`, `"  Redundant  "` | `Redundant` | 200 |
+| `No`, `no`, `NO`, `"  NO  "` | `No` | 200 |
+| `""` atau hanya spasi | `null` | 200 — dikosongkan |
+| `null` | `null` | 200 |
+| `not redundant`, `-`, `TIDAK`, `Redundan` | tidak berubah | 422 |
+| angka, array, boolean | tidak berubah | 422 |
+
+Nilai sah disimpan sekali di `MonitoringPsv::STATUS_REDUNDANT_OPTIONS` (keyed
+`redundant` / `not_redundant`) dan dipakai bersama oleh request ini dan
+`MonitoringPsvDashboardService::statusRedundant()`. Tidak ada migration karena
+kolom sudah bersih dan modul belum ter-deploy ke environment lain.
+
+`?status_redundant=` pada query parameter tidak ikut divalidasi; pencocokannya
+mengikuti collation `utf8mb4_unicode_ci` sehingga sudah case-insensitive.
 
 ### `app/Exports/MonitoringPsvExport.php`
 

@@ -1354,7 +1354,7 @@ hanya menghapus anotasi; kirim `null` untuk mengosongkan kolom).
 |-------|--------|------------|
 | `search` | `PSV-177` | `tag_number`, `pid_no`, `keterangan` |
 | `kategori` | `CSO` | exact match, nilai valid `CSO` / `CSC` |
-| `status_redundant` | `Redundant` | exact match |
+| `status_redundant` | `Redundant` | exact match, nilai valid `Redundant` / `No` |
 | `status_masa_berlaku` | `expired` | `safe` / `warning` / `expired`; nilai lain diabaikan |
 | `sort_by` | `sisa_hari` | whitelist; default `sisa_hari` |
 | `sort_order` | `asc` | hanya `desc` honoured; default/kosong = `asc` (paling mendesak di atas) |
@@ -1374,6 +1374,9 @@ prioritas, bukan alfabetis).
 > - `kategori=` dan `status_redundant=` yang **kosong diabaikan**. Tidak ada cara
 >   memfilter baris yang kolomnya `NULL` / belum diisi; `?kategori=null`
 >   menghasilkan 0 baris, bukan baris kosong.
+> - `?status_redundant=` tidak divalidasi dan pencocokannya mengikuti collation
+>   kolom (`utf8mb4_unicode_ci`), jadi `No`, `no`, dan `NO` hasilnya sama.
+>   Nilai di luar `Redundant` / `No` menghasilkan 0 baris, bukan error.
 > - `search` hanya mencakup `tag_number`, `pid_no`, dan `keterangan`. Nomor
 >   sertifikat COI (`no_certificate`) **tidak** bisa dicari lewat modul ini;
 >   nomornya tersedia di blok `coi` pada `GET /{id}`.
@@ -1393,6 +1396,20 @@ prioritas, bukan alfabetis).
 `tag_number`, `masa_berlaku`, dan `coi_id` tidak memiliki aturan validasi,
 sehingga otomatis tertuang oleh `validated()` dan tidak bisa di-overwrite.
 `kategori` selain `CSO`/`CSC` ditolak `422`.
+
+> - `status_redundant` hanya menerima `Redundant` atau `No`. Pencocokan
+>   **case-insensitive** dan spasi di awal/akhir diabaikan, lalu nilai
+>   dinormalisasi ke bentuk kanonik sebelum disimpan: `redundant`, `REDUNDANT`,
+>   dan `"  Redundant  "` semuanya tersimpan sebagai `Redundant`. Nilai lain
+>   (`not redundant`, `-`, `TIDAK`) ditolak `422`.
+> - Mengirimkan `""` (string kosong) sama dengan `null` — kolom dikosongkan.
+>   Jangan kirim `""` jika tidak ingin menghapus nilai yang sudah ada.
+> - Normalisasi ini bukan kosmetik. Rekap dashboard membandingkan string
+>   persis terhadap `Redundant` / `No`, jadi nilai yang tidak kanonik akan
+>   hilang dari rekap **tanpa error**. Karena itu bentuk non-kanonik
+>   ditolak, bukan sekadar diterima.
+> - Error `422` mengikuti bentuk standar: `{"success": false, "message":
+>   "Validation failed.", "errors": {"status_redundant": ["..."]}}`.
 
 ### Status Peralatan
 

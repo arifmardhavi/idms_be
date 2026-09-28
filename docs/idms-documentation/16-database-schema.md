@@ -988,7 +988,7 @@
 |-------|------|------------|------------|
 | id | bigint | PK, auto-increment | |
 | coi_id | bigint | FK → cois.id, CASCADE, UNIQUE | Anchor ke COI; data PSV/TSV dibaca live dari sini |
-| status_redundant | varchar(50) | NULLABLE | Status redundansi (anotasi manual) |
+| status_redundant | varchar(50) | NULLABLE | Status redundansi (anotasi manual), hanya `Redundant` / `No` |
 | pid_no | varchar(50) | NULLABLE | Nomor PID (anotasi manual) |
 | kategori | varchar(50) | NULLABLE | `CSO` atau `CSC` (anotasi manual) |
 | keterangan | text | NULLABLE | Keterangan (anotasi manual) |
@@ -997,6 +997,13 @@
 
 **Indeks:** `kategori`, `status_redundant`
 **Unique:** `coi_id`
+
+> Kolom `status_redundant` tidak punya constraint `CHECK` di level database —
+> nilainya dijaga oleh validasi request. Rekap dashboard membandingkannya
+> dengan string persis, sehingga `redundant + not_redundant + unfilled` harus
+> selalu berjumlah sama dengan total. Nilai yang ditulis di luar aplikasi
+> (seeder, `tinker`, impor manual) bisa melanggar itu tanpa error; bila itu
+> terjadi, tambahkan `CHECK` atau perbaiki datanya.
 
 Tabel ini **sengaja tidak** menyimpan `tag_number`, `masa_berlaku`, atau `sisa_hari`.
 Kolom read-only tersebut dihitung saat query dengan `JOIN cois` + `JOIN tag_numbers`,

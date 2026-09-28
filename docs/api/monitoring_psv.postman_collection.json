@@ -180,6 +180,81 @@
           }
         },
         {
+          "name": "Update (status_redundant huruf kecil — dinormalisasi)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('tersimpan sebagai bentuk kanonik \"Redundant\"', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.data.status_redundant).to.eql('Redundant');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status_redundant\": \"  redundant  \"\n}"
+            },
+            "description": "status_redundant hanya menerima Redundant atau No. Pencocokan case-insensitive dan spasi di awal/akhir diabaikan, lalu dinormalisasi ke bentuk kanonik sebelum disimpan. Kirim \"redundant\", \"REDUNDANT\", atau \"  Redundant  \" — semuanya tersimpan sebagai \"Redundant\".",
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv/{{monitoring_psv_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv", "{{monitoring_psv_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update (status_redundant tidak valid — 422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('success false', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.eql(false);",
+                  "    pm.expect(body.message).to.eql('Validation failed.');",
+                  "});",
+                  "pm.test('ada errors.status_redundant', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.errors).to.have.property('status_redundant');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status_redundant\": \"not redundant\"\n}"
+            },
+            "description": "Nilai di luar Redundant / No ditolak 422 dan tidak mengubah data yang sudah ada. String kosong \"\", \"  \", atau null berarti mengosongkan kolom (tersimpan NULL).",
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_psv/{{monitoring_psv_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_psv", "{{monitoring_psv_id}}"]
+            }
+          }
+        },
+        {
           "name": "Update (kosongkan anotasi)",
           "request": {
             "method": "PUT",

@@ -109,17 +109,27 @@ class MonitoringPsvDashboardService
 
     /**
      * Rekap kolom status_redundant: sudah diisi atau belum.
+     *
+     * Perbandingan di bawah WAJIB memakai tulisan persis dari
+     * `MonitoringPsv::STATUS_REDUNDANT_OPTIONS` — nilai yang sama dengan
+     * hasil normalisasi `UpdateMonitoringPsvRequest`. Input HTTP tidak lagi
+     * bisa menyelinap dengan bentuk lain (mis. `redundant` atau `Redundant `
+     * dengan spasi), jadi penjumlahan `redundant + not_redundant + unfilled`
+     * selalu sama dengan `total`.
      */
     private function statusRedundant(): array
     {
+        $redundant    = MonitoringPsv::STATUS_REDUNDANT_OPTIONS['redundant'];
+        $notRedundant = MonitoringPsv::STATUS_REDUNDANT_OPTIONS['not_redundant'];
+
         $row = MonitoringPsv::query()
             ->psvTsv()
             ->selectRaw('COUNT(*) as total')
             ->selectRaw(
-                "SUM(CASE WHEN monitoring_psv.status_redundant = 'Redundant' THEN 1 ELSE 0 END) as redundant"
+                "SUM(CASE WHEN monitoring_psv.status_redundant = '{$redundant}' THEN 1 ELSE 0 END) as redundant"
             )
             ->selectRaw(
-                "SUM(CASE WHEN monitoring_psv.status_redundant = 'No' THEN 1 ELSE 0 END) as not_redundant"
+                "SUM(CASE WHEN monitoring_psv.status_redundant = '{$notRedundant}' THEN 1 ELSE 0 END) as not_redundant"
             )
             ->selectRaw(
                 'SUM(CASE WHEN monitoring_psv.status_redundant IS NULL THEN 1 ELSE 0 END) as unfilled'
