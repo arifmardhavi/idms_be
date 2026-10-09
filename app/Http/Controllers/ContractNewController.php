@@ -20,7 +20,7 @@ class ContractNewController extends Controller
      */
     public function index()
     {
-        $contracts = ContractNew::all();
+        $contracts = ContractNew::where('contract_status', 1)->get();
         return response()->json([
             'success' => true,
             'message' => 'contract retrieved successfully.',
@@ -42,7 +42,7 @@ class ContractNewController extends Controller
         }
 
         // Ambil contract yang terkait dengan user vendor
-        $contracts = $user->contract_news()->get();
+        $contracts = $user->contract_news()->where('contract_status', 1)->get();
 
         return response()->json([
             'success' => true,
@@ -152,7 +152,7 @@ class ContractNewController extends Controller
      */
     public function showByPoMaterialType()
     {
-        $contract = ContractNew::where('contract_type', 3)->get();
+        $contract = ContractNew::where('contract_type', 3)->where('contract_status', 1)->get();
         if ($contract->isEmpty()) {
             return response()->json([
                 'success' => false,
@@ -171,7 +171,7 @@ class ContractNewController extends Controller
      */
     public function showByUnPoMaterialType()
     {
-        $contract = ContractNew::where('contract_type', '!=', 3)->get();
+        $contract = ContractNew::where('contract_type', '!=', 3)->where('contract_status', 1)->get();
         if ($contract->isEmpty()) {
             return response()->json([
                 'success' => false,
