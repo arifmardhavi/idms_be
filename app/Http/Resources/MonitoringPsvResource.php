@@ -45,6 +45,8 @@ class MonitoringPsvResource extends JsonResource
 
             'pid_no' => $this->pid_no,
 
+            'set_pressure' => $this->set_pressure,
+
             'kategori' => $this->kategori,
 
             'keterangan' => $this->keterangan,

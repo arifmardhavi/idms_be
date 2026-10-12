@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Monitoring PSV (IDMS)",
-    "description": "Collection API untuk modul Monitoring PSV — pemantauan masa berlaku COI peralatan PSV/TSV.\n\n peculiarities modul ini:\n\n- Tidak ada endpoint POST. Baris monitoring lahir otomatis saat COI PSV/TSV dibuat, atau lewat POST /sync untuk backfill.\n- Tidak ada endpoint DELETE. Menghapus baris hanya menghapus anotasi; kirim null pada kolom yang ingin dikosongkan.\n- Tag Number, Masa Berlaku, Sisa Hari, dan Status Masa Berlaku dibaca LIVE dari COI dan tidak bisa diedit.\n- Hanya 4 kolom manual yang bisa di-update: status_redundant, pid_no, kategori, keterangan.\n- Status masa berlaku memakai batas <= 0, jadi tag yang jatuh tempo HARI INI sudah berstatus expired.\n- Query param status_masa_berlaku: safe | warning | expired. Nilai lain diabaikan (tidak error).\n- Sort default: sisa_hari asc (paling mendesak di atas). Kolom sort di luar whitelist diabaikan.\n\nSetelah login, token JWT otomatis disimpan ke variabel `token`, lalu dipakai untuk semua endpoint lainnya. Variabel `monitoring_psv_id` terisi otomatis dari request List.",
+    "description": "Collection API untuk modul Monitoring PSV — pemantauan masa berlaku COI peralatan PSV/TSV.\n\n peculiarities modul ini:\n\n- Tidak ada endpoint POST. Baris monitoring lahir otomatis saat COI PSV/TSV dibuat, atau lewat POST /sync untuk backfill.\n- Tidak ada endpoint DELETE. Menghapus baris hanya menghapus anotasi; kirim null pada kolom yang ingin dikosongkan.\n- Tag Number, Masa Berlaku, Sisa Hari, dan Status Masa Berlaku dibaca LIVE dari COI dan tidak bisa diedit.\n- Hanya 5 kolom manual yang bisa di-update: status_redundant, pid_no, set_pressure, kategori, keterangan.\n- Status masa berlaku memakai batas <= 0, jadi tag yang jatuh tempo HARI INI sudah berstatus expired.\n- Query param status_masa_berlaku: safe | warning | expired. Nilai lain diabaikan (tidak error).\n- Sort default: sisa_hari asc (paling mendesak di atas). Kolom sort di luar whitelist diabaikan.\n\nSetelah login, token JWT otomatis disimpan ke variabel `token`, lalu dipakai untuk semua endpoint lainnya. Variabel `monitoring_psv_id` terisi otomatis dari request List.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -161,7 +161,7 @@
           }
         },
         {
-          "name": "Update (4 kolom manual)",
+          "name": "Update (5 kolom manual)",
           "request": {
             "method": "PUT",
             "header": [
@@ -170,7 +170,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status_redundant\": \"Redundant\",\n  \"pid_no\": \"PID-2024-0091\",\n  \"kategori\": \"CSO\",\n  \"keterangan\": \"Sudah dijadwalkan re-test\"\n}"
+              "raw": "{\n  \"status_redundant\": \"Redundant\",\n  \"pid_no\": \"PID-2024-0091\",\n  \"set_pressure\": \"10.5 MPa\",\n  \"kategori\": \"CSO\",\n  \"keterangan\": \"Sudah dijadwalkan re-test\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/monitoring_psv/{{monitoring_psv_id}}",
@@ -264,7 +264,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status_redundant\": null,\n  \"pid_no\": null,\n  \"kategori\": null,\n  \"keterangan\": null\n}"
+              "raw": "{\n  \"status_redundant\": null,\n  \"pid_no\": null,\n  \"set_pressure\": null,\n  \"kategori\": null,\n  \"keterangan\": null\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/monitoring_psv/{{monitoring_psv_id}}",
@@ -283,6 +283,22 @@
         },
         {
           "name": "Dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada status_kategori dengan cso/csc/unfilled/total', () => {",
+                  "    const k = pm.response.json().data.status_kategori;",
+                  "    pm.expect(k).to.have.all.keys('cso', 'csc', 'unfilled', 'total');",
+                  "    pm.expect(k.cso + k.csc + k.unfilled).to.eql(k.total);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [{ "key": "Accept", "value": "application/json" }],

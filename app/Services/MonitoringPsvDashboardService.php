@@ -32,6 +32,7 @@ class MonitoringPsvDashboardService
             'summary' => $this->summary(),
             'by_kategori' => $this->byKategori(),
             'status_redundant' => $this->statusRedundant(),
+            'status_kategori' => $this->statusKategori(),
         ];
     }
 
@@ -141,6 +142,45 @@ class MonitoringPsvDashboardService
             'not_redundant' => (int) ($row->not_redundant ?? 0),
             'unfilled'      => (int) ($row->unfilled ?? 0),
             'total'         => (int) ($row->total ?? 0),
+        ];
+    }
+
+    /**
+     * Rekap kolom kategori: CSO, CSC, atau belum diisi.
+     *
+     * Perbandingan di bawah WAJIB memakai tulisan persis dari
+     * `MonitoringPsv::KATEGORI_OPTIONS` — nilai yang sama dengan rule `in:`
+     * pada `UpdateMonitoringPsvRequest`. Input HTTP tidak bisa menyimpan
+     * kategori di luar CSO/CSC (string kosong pun ditolak `in:`), sehingga
+     * `cso + csc + unfilled` selalu sama dengan `total`.
+     *
+     * Basis query sama dengan summary() (psvTsv), jadi `total` di sini
+     * konsisten dengan `summary.total`.
+     */
+    private function statusKategori(): array
+    {
+        $cso = MonitoringPsv::KATEGORI_OPTIONS['cso'];
+        $csc = MonitoringPsv::KATEGORI_OPTIONS['csc'];
+
+        $row = MonitoringPsv::query()
+            ->psvTsv()
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw(
+                "SUM(CASE WHEN monitoring_psv.kategori = '{$cso}' THEN 1 ELSE 0 END) as cso"
+            )
+            ->selectRaw(
+                "SUM(CASE WHEN monitoring_psv.kategori = '{$csc}' THEN 1 ELSE 0 END) as csc"
+            )
+            ->selectRaw(
+                'SUM(CASE WHEN monitoring_psv.kategori IS NULL THEN 1 ELSE 0 END) as unfilled'
+            )
+            ->first();
+
+        return [
+            'cso'      => (int) ($row->cso ?? 0),
+            'csc'      => (int) ($row->csc ?? 0),
+            'unfilled' => (int) ($row->unfilled ?? 0),
+            'total'    => (int) ($row->total ?? 0),
         ];
     }
 }

@@ -990,6 +990,7 @@
 | coi_id | bigint | FK → cois.id, CASCADE, UNIQUE | Anchor ke COI; data PSV/TSV dibaca live dari sini |
 | status_redundant | varchar(50) | NULLABLE | Status redundansi (anotasi manual), hanya `Redundant` / `No` |
 | pid_no | varchar(50) | NULLABLE | Nomor PID (anotasi manual) |
+| set_pressure | varchar(50) | NULLABLE | Set pressure (anotasi manual) |
 | kategori | varchar(50) | NULLABLE | `CSO` atau `CSC` (anotasi manual) |
 | keterangan | text | NULLABLE | Keterangan (anotasi manual) |
 | created_at | timestamp | | |

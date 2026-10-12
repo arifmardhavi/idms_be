@@ -83,9 +83,14 @@ class UpdateMonitoringPsvRequest extends BaseRequest
             'pid_no' => 'nullable|string|max:50',
 
             /**
+             * Set Pressure — nilai tekanan set point, teks bebas.
+             */
+            'set_pressure' => 'nullable|string|max:50',
+
+            /**
              * Kategori — pilihan CSO / CSC.
              */
-            'kategori' => 'nullable|string|in:CSO,CSC',
+            'kategori' => 'nullable|string|in:' . implode(',', MonitoringPsv::KATEGORI_OPTIONS),
 
             'keterangan' => 'nullable|string|max:1000',
 

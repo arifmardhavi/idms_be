@@ -56,6 +56,7 @@ Konsekuensinya, koreksi pada COI langsung tercermin tanpa sinkronisasi.
 | `coi_id` | foreignId | → `cois`, cascade delete, **unique** | anchor ke COI |
 | `status_redundant` | string(50) | NULLABLE, validasi `in:Redundant,No` | manual |
 | `pid_no` | string(50) | NULLABLE | manual |
+| `set_pressure` | string(50) | NULLABLE | manual (ditambah lewat migration `add_set_pressure_to_monitoring_psv_table`) |
 | `kategori` | string(50) | NULLABLE, validasi `in:CSO,CSC` | manual |
 | `keterangan` | text | NULLABLE | manual |
 | `created_at` / `updated_at` | timestamp | | — |
