@@ -31,8 +31,11 @@ class MonitoringPipelineImportService
         'sch' => 'sch',
         't_nom_mm' => 't_nom',
         'operating_press_kg_cm2' => 'operating_press',
+        'operating_press_kgcm2' => 'operating_press',
         'design_press_kg_cm2' => 'design_press',
+        'design_press_kgcm2' => 'design_press',
         'design_temp_kg_cm2' => 'design_temp',
+        'design_temp_kgcm2' => 'design_temp',
         's_mpa' => 's',
         'e' => 'e',
         'w' => 'w',
@@ -44,6 +47,8 @@ class MonitoringPipelineImportService
         'tanggal_ut_terakhir' => 'tanggal_ut_terakhir',
         'corrosion_rate' => 'corrosion_rate',
         'remaining_life_asme_31_3' => 'remaining_life',
+        'remaining_life_asme_313' => 'remaining_life',
+        'remaining_life' => 'remaining_life',
         'alert_structural_thickness_api_574' => 'alert_structural_thickness',
         'next_plan_inspection_api_570' => 'next_plan_inspection_api',
         'used_plan_inspection' => 'used_plan_inspection',
@@ -92,7 +97,7 @@ class MonitoringPipelineImportService
 
         $sheet = in_array(self::SHEET_NAME, $sheetNames, true)
             ? $spreadsheet->getSheetByName(self::SHEET_NAME)
-            : $spreadsheet->getSheetIndex(0);
+            : $spreadsheet->getSheet(0);
 
         $headerRow = $this->findHeaderRow($sheet);
 
@@ -241,22 +246,32 @@ class MonitoringPipelineImportService
     }
 
     /**
-     * Cari baris header: baris (maks 15 baris pertama) yang sel kolom B-nya
-     * slug-nya 'tag_number'.
+     * Cari baris header: baris (maks 15 baris pertama) yang salah satu selnya
+     * (kolom 1..min(highest,100)) slug-nya 'tag_number'.
      */
     private function findHeaderRow(Worksheet $sheet): ?int
     {
         $limit = min(15, $sheet->getHighestRow());
 
+        $highestColumn = Coordinate::columnIndexFromString(
+            $sheet->getHighestDataColumn()
+        );
+
+        $columnLimit = min($highestColumn, 100);
+
         for ($r = 1; $r <= $limit; $r++) {
-            $value = $sheet->getCell('B'.$r)->getValue();
+            for ($c = 1; $c <= $columnLimit; $c++) {
+                $letter = Coordinate::stringFromColumnIndex($c);
 
-            if ($value === null) {
-                continue;
-            }
+                $value = $sheet->getCell($letter.$r)->getValue();
 
-            if ($this->slugHeader($value) === 'tag_number') {
-                return $r;
+                if ($value === null) {
+                    continue;
+                }
+
+                if ($this->slugHeader($value) === 'tag_number') {
+                    return $r;
+                }
             }
         }
 
