@@ -69,6 +69,7 @@ use App\Http\Controllers\{
     MocController,
     MonitoringEquipmentController,
     MonitoringPsvController,
+    MonitoringPipelineController,
     NibController,
     NotifJasaController,
     NotifJasaOhController,
@@ -357,6 +358,12 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/monitoring_psv', [MonitoringPsvController::class, 'index']);
     Route::get('/monitoring_psv/{monitoring_psv}', [MonitoringPsvController::class, 'show']);
     Route::put('/monitoring_psv/{monitoring_psv}', [MonitoringPsvController::class, 'update']);
+
+    // MONITORING PIPELINE
+    Route::get('/monitoring_pipeline/template', [MonitoringPipelineController::class, 'downloadTemplate']);
+    Route::post('/monitoring_pipeline/import', [MonitoringPipelineController::class, 'import']);
+    Route::get('/monitoring_pipeline/export', [MonitoringPipelineController::class, 'export']);
+    Route::apiResource('monitoring_pipeline', MonitoringPipelineController::class);
 
     /*
     |--------------------------------------------------------------------------
