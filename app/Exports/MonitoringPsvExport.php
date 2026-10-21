@@ -43,6 +43,7 @@ class MonitoringPsvExport implements FromQuery, ShouldAutoSize, WithHeadings, Wi
             'Status Masa Berlaku',
             'Status Redundant',
             'PID No',
+            'Set Pressure',
             'Kategori',
             'Keterangan',
         ];
@@ -67,6 +68,8 @@ class MonitoringPsvExport implements FromQuery, ShouldAutoSize, WithHeadings, Wi
             $row->status_redundant ?? '-',
 
             $row->pid_no ?? '-',
+
+            $row->set_pressure ?? '-',
 
             $row->kategori ?? '-',
 

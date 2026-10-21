@@ -26,6 +26,7 @@ class MonitoringPsv extends BaseModel
     protected $fillable = [
         'status_redundant',
         'pid_no',
+        'set_pressure',
         'kategori',
         'keterangan',
     ];
@@ -52,6 +53,25 @@ class MonitoringPsv extends BaseModel
     public const STATUS_REDUNDANT_OPTIONS = [
         'redundant'     => 'Redundant',
         'not_redundant' => 'No',
+    ];
+
+    /**
+     * Nilai `kategori` yang sah, TULISAN PERSIS seperti yang dibandingkan
+     * rekap dashboard (`= 'CSO'` dan `= 'CSC'`).
+     *
+     * Sumber kebenaran tunggal untuk nilai yang boleh disimpan. Dipakai
+     * bersama oleh `UpdateMonitoringPsvRequest` (rule `in:`) dan
+     * `MonitoringPsvDashboardService::statusKategori()`.
+     *
+     * Jangan tambah nilai di sini tanpa menyesuaikan `statusKategori()` —
+     * kalau ada nilai yang tidak terhitung di sana, `cso + csc + unfilled`
+     * akan tidak lagi sama dengan `total` tanpa error apa pun.
+     *
+     * @var array<string, string>
+     */
+    public const KATEGORI_OPTIONS = [
+        'cso' => 'CSO',
+        'csc' => 'CSC',
     ];
 
     /**

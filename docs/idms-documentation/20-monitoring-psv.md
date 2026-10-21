@@ -23,8 +23,8 @@ Empat kolom pertama berasal dari COI dan **tidak bisa diedit** lewat API:
 | Sisa Hari | `DATEDIFF(cois.overdue_date, CURDATE())` |
 | Status Masa Berlaku | Turunan dari Sisa Hari |
 
-Empat kolom terakhir adalah anotasi manual: `status_redundant`, `pid_no`,
-`kategori`, `keterangan`.
+Lima kolom terakhir adalah anotasi manual: `status_redundant`, `pid_no`,
+`set_pressure`, `kategori`, `keterangan`.
 
 Tabel `monitoring_psv` **tidak** menyimpan kolom read-only tersebut. Kuncinya
 `coi_id`, dan sisanya dibaca live saat query. Konsekuensinya:
@@ -56,6 +56,7 @@ Sengaja **tidak** memakai `type_id`, karena keduanya tidak ekuivalen di data ini
 | coi_id | bigint | FK → cois.id, CASCADE, UNIQUE | Anchor ke COI |
 | status_redundant | varchar(50) | NULLABLE | Manual, hanya `Redundant` / `No` |
 | pid_no | varchar(50) | NULLABLE | Manual |
+| set_pressure | varchar(50) | NULLABLE | Manual |
 | kategori | varchar(50) | NULLABLE | Manual, `CSO` / `CSC` |
 | keterangan | text | NULLABLE | Manual |
 | created_at | timestamp | | |
@@ -200,6 +201,7 @@ tanpa COI (diabaikan).
 | Ringkasan | total, safe / warning / expired, PSV vs TSV |
 | Cross-tab kategori | jumlah per `kategori` |
 | Status Redundant | redundant / not redundant / belum diisi |
+| Status Kategori | CSO / CSC / belum diisi / total |
 
 Kategori yang belum diisi selalu tampil di akhir (`ORDER BY kategori IS NULL,
 kategori`) supaya tidak mengacaukan tabel utama.
@@ -211,6 +213,12 @@ dengan `total`. Ini yang dijaga oleh normalisasi input di
 `MonitoringPsv::STATUS_REDUNDANT_OPTIONS` dan dipakai bersama oleh request dan
 service. Nilai baru tidak boleh ditambah di konstanta itu tanpa menambahkan
 perbandingan yang sama di `MonitoringPsvDashboardService::statusRedundant()`.
+
+Rekap Status Kategori bekerja dengan pola sama terhadap
+`MonitoringPsv::KATEGORI_OPTIONS` (`CSO` / `CSC`) di
+`MonitoringPsvDashboardService::statusKategori()`, sehingga `cso + csc + unfilled`
+selalu sama dengan `total`. Basis query-nya sama dengan ringkasan, jadi `total`
+di blok ini konsisten dengan `summary.total`.
 
 ---
 

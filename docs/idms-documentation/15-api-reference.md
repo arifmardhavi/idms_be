@@ -1339,11 +1339,11 @@ Semua endpoint berada dalam `auth:api`. Route literal (`dashboard`, `export`,
 | Method | Endpoint | Role | Deskripsi |
 |--------|----------|------|-----------|
 | `GET` | `/api/monitoring_psv` | `auth:api` | Daftar monitoring PSV (filter, search, sort, paginate) |
-| `GET` | `/api/monitoring_psv/dashboard` | `auth:api` | Ringkasan dashboard (bucket masa berlaku, PSV/TSV, kategori, redundant) |
+| `GET` | `/api/monitoring_psv/dashboard` | `auth:api` | Ringkasan dashboard (bucket masa berlaku, PSV/TSV, cross-tab & status kategori, status redundant) |
 | `GET` | `/api/monitoring_psv/export` | `auth:api` | Export Excel, mengikuti query list yang sama |
 | `POST` | `/api/monitoring_psv/sync` | `auth:api` | Backfill/repair baris dari COI PSV/TSV (idempotent) |
 | `GET` | `/api/monitoring_psv/{id}` | `auth:api` | Detail + blok COI (sertifikat, tanggal terbit, masa berlaku) |
-| `PUT` | `/api/monitoring_psv/{id}` | `auth:api` | Update 4 kolom manual saja |
+| `PUT` | `/api/monitoring_psv/{id}` | `auth:api` | Update 5 kolom manual saja |
 
 Tidak ada `POST` (baris lahir dari sync) dan tidak ada `DELETE` (menghapus baris
 hanya menghapus anotasi; kirim `null` untuk mengosongkan kolom).
@@ -1352,7 +1352,7 @@ hanya menghapus anotasi; kirim `null` untuk mengosongkan kolom).
 
 | Param | Contoh | Keterangan |
 |-------|--------|------------|
-| `search` | `PSV-177` | `tag_number`, `pid_no`, `keterangan` |
+| `search` | `PSV-177` | `tag_number`, `pid_no`, `set_pressure`, `keterangan` |
 | `kategori` | `CSO` | exact match, nilai valid `CSO` / `CSC` |
 | `status_redundant` | `Redundant` | exact match, nilai valid `Redundant` / `No` |
 | `status_masa_berlaku` | `expired` | `safe` / `warning` / `expired`; nilai lain diabaikan |
@@ -1361,8 +1361,9 @@ hanya menghapus anotasi; kirim `null` untuk mengosongkan kolom).
 | `per_page` | `25` | default 10, dikunci 1..100 |
 
 Whitelist `sort_by`: `id`, `tag_number`, `masa_berlaku`, `sisa_hari`,
-`status_masa_berlaku`, `kategori`, `status_redundant`, `pid_no`, `created_at`,
-`updated_at`. Nilai di luar whitelist diabaikan dan fallback ke `sisa_hari`.
+`status_masa_berlaku`, `kategori`, `status_redundant`, `pid_no`, `set_pressure`,
+`created_at`, `updated_at`. Nilai di luar whitelist diabaikan dan fallback ke
+`sisa_hari`.
 `sort_by=status_masa_berlaku` diurutkan `expired → warning → safe` (urutan
 prioritas, bukan alfabetis).
 
@@ -1382,12 +1383,13 @@ prioritas, bukan alfabetis).
 >   nomornya tersedia di blok `coi` pada `GET /{id}`.
 > - `per_page` hanya berlaku di endpoint list, diabaikan oleh `/export`.
 
-**Body `PUT /api/monitoring_psv/{id}`** — hanya empat kolom manual:
+**Body `PUT /api/monitoring_psv/{id}`** — hanya lima kolom manual:
 
 ```json
 {
   "status_redundant": "Redundant",
   "pid_no": "PID-2024-0091",
+  "set_pressure": "10.5 MPa",
   "kategori": "CSO",
   "keterangan": "Sudah dijadwalkan re-test"
 }

@@ -222,6 +222,7 @@ class MonitoringPsvController extends Controller
                 $query
                     ->where('tag_numbers.tag_number', 'like', "%{$search}%")
                     ->orWhere('monitoring_psv.pid_no', 'like', "%{$search}%")
+                    ->orWhere('monitoring_psv.set_pressure', 'like', "%{$search}%")
                     ->orWhere('monitoring_psv.keterangan', 'like', "%{$search}%");
 
             });
@@ -279,6 +280,8 @@ class MonitoringPsvController extends Controller
             'status_redundant' => 'monitoring_psv.status_redundant',
 
             'pid_no' => 'monitoring_psv.pid_no',
+
+            'set_pressure' => 'monitoring_psv.set_pressure',
 
             'created_at' => 'monitoring_psv.created_at',
 
