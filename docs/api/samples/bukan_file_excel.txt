@@ -1,0 +1,1 @@
+File teks biasa — dipakai untuk menguji validasi mimes import (harus gagal 422).

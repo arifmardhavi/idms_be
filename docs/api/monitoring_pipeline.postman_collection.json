@@ -1,0 +1,988 @@
+{
+  "info": {
+    "name": "Monitoring Pipeline (IDMS)",
+    "description": "Collection API untuk modul Monitoring Pipeline — data inspeksi UT piping (API 574/570): data teknis pipa, data desain, hasil UT (actual thickness, corrosion rate, remaining life), dan status perawatan.\n\n**Base URL**\nDefault `{{baseUrl}}` = `http://localhost/idms_be/public` (Laragon). Kalau memakai `php artisan serve`, ganti ke `http://127.0.0.1:8000`.\n\n**Endpoint (8)**\n- `GET    /api/monitoring_pipeline` — list + search + filter + sort + paginate\n- `POST   /api/monitoring_pipeline` — create\n- `GET    /api/monitoring_pipeline/{id}` — detail\n- `PUT    /api/monitoring_pipeline/{id}` — update\n- `DELETE /api/monitoring_pipeline/{id}` — delete\n- `GET    /api/monitoring_pipeline/template` — download template xlsx\n- `POST   /api/monitoring_pipeline/import` — import xlsx/xls (upsert)\n- `GET    /api/monitoring_pipeline/export` — export xlsx (mengikuti filter aktif)\n\n**Peculiarities modul ini**\n- Semua endpoint butuh token (`auth:api`). Tanpa token → `401 {\"message\":\"Unauthenticated.\"}` (kirim header `Accept: application/json` supaya responsnya JSON, bukan halaman error HTML).\n- `tag_number_id` adalah FK **unik** → maksimal 1 baris monitoring per tag. Karena itu import bersifat **upsert** per tag: tag yang sudah ada di-update, yang baru di-insert.\n- Update **boleh parsial**: `tag_number_id` hanya divalidasi bila dikirim (`sometimes`). Kirim hanya kolom yang mau diubah.\n- Validasi tulis: `insulation` hanya `Yes`/`No`; `pipe_condition`, `maintenance_status`, `rencana_tindak_lanjut` maksimal 255 karakter; `sch` maks 50; `tml_drawing_number`/`grade_material` maks 150; semua tanggal harus format tanggal valid (`YYYY-MM-DD`).\n- Bentuk respons: index → `{success, message, data:[...], meta:{current_page, last_page, per_page, total}}`; show → `{data:{...}}`; store/update → `{success, message, data:{...}}` (store: 201); delete → `{success, message}`; error validasi → 422 `{success:false, message:\"Validation failed.\", errors:{...}}`.\n\n**Query param `index` (dan dipakai juga oleh `export`)**\n- `search` (LIKE, 7 kolom): tag number, TML drawing number, grade material, SCH, pipe condition, maintenance status, rencana tindak lanjut.\n- Filter persamaan: `insulation`, `api_service_class`, `grade_material`, `unit_id` (lewat `tag_numbers.unit_id`), `pipe_condition`, `maintenance_status`.\n- Filter rentang tanggal (inclusive): `tanggal_pasang_line_from/_to`, `tanggal_ut_terakhir_from/_to`, `next_plan_inspection_api_from/_to`. Catatan: nilai tanggal yang tidak valid tidak memicu 422 — hasilnya hanya kosong (0 baris).\n- `sort_by` (whitelist: id, tag_number, semua kolom data, created_at, updated_at) + `sort_order` asc|desc. Default `created_at desc`. Nilai di luar whitelist **tidak error** — jatuh ke default.\n- `per_page` default 10 (nilai tak terbaca → kembali ke 10).\n\n**Import (detail teknis)**\n- Format: `.xlsx` / `.xls`, maksimal 10 MB.\n- Sheet: `Database UT Piping` bila ada di workbook, kalau tidak → sheet pertama (file template juga bisa di-import).\n- Baris header ditemukan otomatis: baris pertama yang kolom B-nya mengandung `TAG NUMBER` (file asli header di baris 2, template di baris 1).\n- Kolom dipetakan dari **judul header** (di-slug-kan), bukan posisi kolom — urutan kolom boleh berubah. Sel formula dibaca dari cached value terakhir file disimpan di Excel.\n- Pencocokan tag **persis** dengan `tag_numbers.tag_number` (tanpa normalisasi suffix). Tag yang tidak ditemukan → `failed` + `errors[]`; tag yang dobel dalam 1 file → baris kedua dihitung `failed` (Duplikat Tag Number dalam file).\n- Re-import file yang sama = update (idempoten). Respons: `{success, message, summary:{total, success, failed, skipped, errors:[{row, tag_number, message}], warnings:[{row, column, value, message}], warnings_total}}`. `total` = jumlah baris ber-tag; baris kosong dihitung `skipped`.\n- Nilai tak terbaca (`-`, `N/A`, `#N/A`, insulation di luar Yes/No, dll) disimpan NULL dan dicatat ke `warnings[]`.\n\n**File contoh import**\n`docs/api/samples/monitoring_pipeline_import_sample.xlsx` berisi: 1 baris tag valid (`1-V-04/00`), 1 baris tag duplikat, 1 baris tag tak dikenal (`ZZ-NOT-EXIST-001`), 1 baris kosong. Postman menyimpan path file di komputer masing-masing — bila pindah mesin, klik kanan request → Body → pilih ulang filenya.\n\n**Urutan Collection Runner**\nLogin → List/Filter → Detail → CRUD (create, lalu delete) → Import & Export → Bersih-bersih (hapus baris uji + Logout). Semua request punya test script, jadi bisa langsung dijalankan berurutan tanpa meninggalkan data uji.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost/idms_be/public", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "monitoring_pipeline_id", "value": "", "type": "string" },
+    { "key": "created_id", "value": "", "type": "string" },
+    { "key": "imported_id", "value": "", "type": "string" },
+    { "key": "tag_number_id", "value": "8", "type": "string" },
+    { "key": "tag_terpakai", "value": "4120", "type": "string" },
+    { "key": "tag_import", "value": "1-V-04/00", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1. Autentikasi",
+      "item": [
+        {
+          "name": "Login (ambil token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('sukses + token ada', () => {",
+                  "    pm.expect(json.success).to.eql(true);",
+                  "    pm.expect(json.data.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "if (json && json.data && json.data.token) {",
+                  "    pm.collectionVariables.set('token', json.data.token);",
+                  "    pm.environment.set('token', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login"]
+            },
+            "auth": { "type": "noauth" },
+            "description": "Simpan JWT ke variabel collection `token` (dan environment `token`) lewat test script — request berikutnya otomatis memakainya."
+          }
+        },
+        {
+          "name": "Tanpa token → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('pesan Unauthenticated', () => {",
+                  "    pm.expect(pm.response.json().message).to.eql('Unauthenticated.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline?per_page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"],
+              "query": [{ "key": "per_page", "value": "1" }]
+            },
+            "auth": { "type": "noauth" },
+            "description": "Membuktikan proteksi `auth:api`. Header `Accept: application/json` penting supaya respons 401 berupa JSON, bukan halaman error HTML."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. List & Filter",
+      "item": [
+        {
+          "name": "List (per_page 25, simpan id pertama)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('punya data[] + meta', () => {",
+                  "    pm.expect(json.success).to.eql(true);",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "    pm.expect(json.meta).to.have.property('total');",
+                  "});",
+                  "if (Array.isArray(json.data) && json.data.length) {",
+                  "    pm.collectionVariables.set('monitoring_pipeline_id', json.data[0].id);",
+                  "    pm.collectionVariables.set('tag_terpakai', json.data[0].tag_number_id);",
+                  "    console.log('monitoring_pipeline_id =', json.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline?per_page=25&sort_by=id&sort_order=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"],
+              "query": [
+                { "key": "per_page", "value": "25" },
+                { "key": "sort_by", "value": "id" },
+                { "key": "sort_order", "value": "asc" }
+              ]
+            },
+            "description": "Variabel `monitoring_pipeline_id` terisi otomatis dari baris pertama — dipakai request Show di folder berikutnya."
+          }
+        },
+        {
+          "name": "List (search tag number / material)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('hanya baris yang cocok', () => {",
+                  "    const rows = pm.response.json().data || [];",
+                  "    rows.forEach(r => {",
+                  "        const s = [r.tag_number, r.tml_drawing_number, r.grade_material, r.sch, r.pipe_condition, r.maintenance_status, r.rencana_tindak_lanjut].join(' ');",
+                  "        pm.expect(s.toLowerCase()).to.include('p434');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline?search=P434&per_page=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"],
+              "query": [
+                { "key": "search", "value": "P434" },
+                { "key": "per_page", "value": "5" }
+              ]
+            },
+            "description": "`search` melakukan LIKE ke 7 kolom: tag number, TML drawing number, grade material, SCH, pipe condition, maintenance status, rencana tindak lanjut."
+          }
+        },
+        {
+          "name": "List (filter insulation + unit_id + sort nps asc)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline?insulation=No&unit_id=1&sort_by=nps&sort_order=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"],
+              "query": [
+                { "key": "insulation", "value": "No" },
+                { "key": "unit_id", "value": "1" },
+                { "key": "sort_by", "value": "nps" },
+                { "key": "sort_order", "value": "asc" }
+              ]
+            },
+            "description": "Kombinasi filter persamaan. `unit_id` difilter lewat tabel `tag_numbers` (join)."
+          }
+        },
+        {
+          "name": "List (filter rentang tanggal UT terakhir)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline?tanggal_ut_terakhir_from=2025-01-01&tanggal_ut_terakhir_to=2025-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"],
+              "query": [
+                { "key": "tanggal_ut_terakhir_from", "value": "2025-01-01" },
+                { "key": "tanggal_ut_terakhir_to", "value": "2025-12-31" }
+              ]
+            },
+            "description": "Rentang tanggal inclusive. Berlaku juga untuk `tanggal_pasang_line_from/_to` dan `next_plan_inspection_api_from/_to`. Nilai tanggal yang tidak valid tidak error — hanya menghasilkan 0 baris."
+          }
+        },
+        {
+          "name": "List (filter pipe_condition + maintenance_status)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline?pipe_condition=GOOD%20CONDITION&maintenance_status=GOOD%20CONDITION",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"],
+              "query": [
+                { "key": "pipe_condition", "value": "GOOD CONDITION" },
+                { "key": "maintenance_status", "value": "GOOD CONDITION" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List (sort_by di luar whitelist — aman, fallback)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 (tidak error)', () => pm.response.to.have.status(200));",
+                  "pm.test('jatuh ke default created_at desc', () => {",
+                  "    const rows = pm.response.json().data || [];",
+                  "    if (rows.length > 1) {",
+                  "        const times = rows.map(r => r.created_at);",
+                  "        const sorted = [...times].sort().reverse();",
+                  "        pm.expect(times).to.eql(sorted);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline?sort_by=dropme&sort_order=asc&per_page=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"],
+              "query": [
+                { "key": "sort_by", "value": "dropme" },
+                { "key": "sort_order", "value": "asc" },
+                { "key": "per_page", "value": "5" }
+              ]
+            },
+            "description": "Kolom sort di luar whitelist tidak pernah di-interpolasi ke query — fallback ke `created_at` desc, tidak memicu error SQL."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Detail",
+      "item": [
+        {
+          "name": "Show ({{monitoring_pipeline_id}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('punya data + blok tag_number', () => {",
+                  "    pm.expect(json.data).to.have.property('id');",
+                  "    pm.expect(json.data).to.have.property('tag_number');",
+                  "    pm.expect(json.data).to.have.property('corrosion_rate');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/{{monitoring_pipeline_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "{{monitoring_pipeline_id}}"]
+            },
+            "description": "Blok `tag_number`, `description`, `unit_id`, `type_id` ikut terisi di response show (relasi tagNumber di-eager-load)."
+          }
+        },
+        {
+          "name": "Show (id tidak ada → 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('message No query results', () => {",
+                  "    pm.expect(pm.response.json().message).to.include('No query results');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "999999"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. CRUD",
+      "item": [
+        {
+          "name": "Create valid → 201 (simpan created_id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('sukses + data tersimpan', () => {",
+                  "    pm.expect(json.success).to.eql(true);",
+                  "    pm.expect(json.data.id).to.be.a('number');",
+                  "    pm.expect(json.data.tag_number_id).to.eql(Number(pm.collectionVariables.get('tag_number_id')));",
+                  "    pm.expect(json.data.insulation).to.eql('Yes');",
+                  "});",
+                  "pm.collectionVariables.set('created_id', json.data.id);",
+                  "console.log('created_id =', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tag_number_id\": {{tag_number_id}},\n  \"tml_drawing_number\": \"TML-POSTMAN-001\",\n  \"api_service_class\": 2,\n  \"insulation\": \"Yes\",\n  \"grade_material\": \"SA106 GR B\",\n  \"nps\": 2,\n  \"od\": 60.3,\n  \"sch\": \"40\",\n  \"t_nom\": 3.91,\n  \"operating_press\": 10,\n  \"design_press\": 14,\n  \"design_temp\": 250,\n  \"s\": 138,\n  \"e\": 1,\n  \"w\": 1,\n  \"y\": 0.4,\n  \"min_req_thk\": 2.1,\n  \"half_nom_thk\": 1.955,\n  \"tanggal_pasang_line\": \"2019-03-10\",\n  \"actual_thk\": 3.7,\n  \"tanggal_ut_terakhir\": \"2025-01-20\",\n  \"corrosion_rate\": 0.015,\n  \"remaining_life\": 120,\n  \"alert_structural_thickness\": 2.5,\n  \"next_plan_inspection_api\": \"2028-01-20\",\n  \"used_plan_inspection\": \"2025-01-20\",\n  \"pipe_condition\": \"GOOD CONDITION\",\n  \"estimated_end_of_life\": \"2045-01-01\",\n  \"maintenance_status\": \"MONITORING UT\",\n  \"rencana_tindak_lanjut\": \"Normal\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"]
+            },
+            "description": "Variabel `tag_number_id` default `8` (tag `1-V-06/00`) — tag ini dipakai karena belum punya baris monitoring. Kalau sudah ada (sisa uji sebelumnya), request ini akan 422 duplikat; hapus dulu barisnya lewat folder Bersih-bersih. Request Delete di folder ini otomatis membersihkan baris yang dibuat di sini."
+          }
+        },
+        {
+          "name": "Create duplikat tag_number_id → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('errors.tag_number_id = already been taken', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.eql(false);",
+                  "    pm.expect(body.message).to.eql('Validation failed.');",
+                  "    pm.expect(body.errors.tag_number_id[0]).to.include('already been taken');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tag_number_id\": {{tag_number_id}},\n  \"grade_material\": \"DUPLIKAT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"]
+            },
+            "description": "Menegakkan FK unik: 1 tag hanya boleh punya 1 baris monitoring pipeline."
+          }
+        },
+        {
+          "name": "Create insulation bukan Yes/No → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('errors.insulation ada', () => {",
+                  "    pm.expect(pm.response.json().errors).to.have.property('insulation');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tag_number_id\": 9,\n  \"insulation\": \"Maybe\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"]
+            }
+          }
+        },
+        {
+          "name": "Create pipe_condition > 255 karakter → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('errors.pipe_condition = max 255', () => {",
+                  "    pm.expect(pm.response.json().errors.pipe_condition[0]).to.include('255');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tag_number_id\": 9,\n  \"pipe_condition\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"]
+            },
+            "description": "pipe_condition dibatasi maksimal 255 karakter (batas kolom string di database). Body memuat string 300 karakter — diverifikasi langsung ke API: HTTP 422 dengan errors.pipe_condition."
+          }
+        },
+        {
+          "name": "Create tanggal tidak valid → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('errors.tanggal_ut_terakhir', () => {",
+                  "    pm.expect(pm.response.json().errors).to.have.property('tanggal_ut_terakhir');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tag_number_id\": 9,\n  \"tanggal_ut_terakhir\": \"32-13-2025\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"]
+            }
+          }
+        },
+        {
+          "name": "Create tag_number_id tidak ada → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('errors.tag_number_id = invalid', () => {",
+                  "    pm.expect(pm.response.json().errors.tag_number_id[0]).to.include('invalid');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tag_number_id\": 999999\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"]
+            }
+          }
+        },
+        {
+          "name": "Update parsial (tanpa tag_number_id) → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('hanya kolom yang dikirim yang berubah', () => {",
+                  "    pm.expect(json.success).to.eql(true);",
+                  "    pm.expect(json.data.maintenance_status).to.eql('PERLU TINDAK LANJUT');",
+                  "    pm.expect(json.data.tag_number_id).to.eql(Number(pm.collectionVariables.get('tag_number_id')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maintenance_status\": \"PERLU TINDAK LANJUT\",\n  \"rencana_tindak_lanjut\": \"Dijadwalkan ulang inspeksi UT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/{{created_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "{{created_id}}"]
+            },
+            "description": "`tag_number_id` bertipe `sometimes` — update parsial tanpa field ini valid (sebelumnya selalu wajib). Nilai lain tidak dikirim = tidak diubah (tidak di-null-kan)."
+          }
+        },
+        {
+          "name": "Update dengan tag_number_id milik baris lain → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('unique ignore id sendiri', () => {",
+                  "    pm.expect(pm.response.json().errors.tag_number_id[0]).to.include('already been taken');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tag_number_id\": {{tag_terpakai}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/{{created_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "{{created_id}}"]
+            },
+            "description": "Variabel `tag_terpakai` diisi otomatis dari List pertama (tag_number_id baris yang sudah ada, default 4120). Menggeser baris ke tag yang sudah dipakai baris lain harus ditolak 422; mengirim tag milik baris sendiri tetap diperbolehkan (unique ignore)."
+          }
+        },
+        {
+          "name": "Delete (created_id) → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('pesan deleted', () => {",
+                  "    pm.expect(pm.response.json().message).to.include('deleted');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/{{created_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "{{created_id}}"]
+            },
+            "description": "Membersihkan baris yang dibuat request Create valid. Karena `tag_number_id` FK-nya cascade delete, baris child ikut hilang bersama tag-nya bila tag dihapus dari master."
+          }
+        },
+        {
+          "name": "Show setelah delete → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/{{created_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "{{created_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Import & Export",
+      "item": [
+        {
+          "name": "Download Template (xlsx)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('berupa xlsx', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('spreadsheetml');",
+                  "});",
+                  "pm.response.saveAsFile('Template_Monitoring_Pipeline.xlsx');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/template",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "template"]
+            },
+            "description": "Template `Template_Monitoring_Pipeline.xlsx`: 30 header + 1 baris contoh. Template ini sendiri bisa langsung di-import ulang (sheet pertama dipakai karena tidak ada sheet `Database UT Piping`)."
+          }
+        },
+        {
+          "name": "Import file contoh (3 baris ber-tag)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json().summary;",
+                  "pm.test('summary: 1 sukses, 2 gagal (duplikat + tag tak dikenal), 1 skipped', () => {",
+                  "    pm.expect(s.success).to.eql(1);",
+                  "    pm.expect(s.failed).to.eql(2);",
+                  "    pm.expect(s.skipped).to.eql(1);",
+                  "    pm.expect(s.errors.map(e => e.message).join(' ')).to.include('Duplikat Tag Number');",
+                  "    pm.expect(s.errors.map(e => e.message).join(' ')).to.include('tidak ditemukan');",
+                  "});",
+                  "pm.test('normalisasi menghasilkan warning', () => {",
+                  "    pm.expect(s.warnings_total).to.be.at.least(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "C:\\laragon\\www\\idms_be\\docs\\api\\samples\\monitoring_pipeline_import_sample.xlsx",
+                  "description": "File contoh: 1 baris tag valid `1-V-04/00`, 1 duplikat, 1 tag tak dikenal, 1 baris kosong."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "import"]
+            },
+            "description": "Berkas contoh ada di `docs/api/samples/monitoring_pipeline_import_sample.xlsx`. Postman menyimpan path file lokal — bila koleksi dipindah ke mesin lain, pilih ulang filenya (Body → form-data → file).\n\nHasil yang diharapkan: `total: 3` (baris ber-tag), `success: 1` (insert `1-V-04/00`), `failed: 2` (duplikat dalam file + tag tak dikenal), `skipped: 1` (baris kosong), plus warning normalisasi (`api_service_class: '-'`, `insulation: 0`, `operating_press: 'N/A'` → NULL)."
+          }
+        },
+        {
+          "name": "Import file sama lagi (idempoten)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json().summary;",
+                  "pm.test('re-import = update, tidak dobel', () => {",
+                  "    pm.expect(s.success).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "C:\\laragon\\www\\idms_be\\docs\\api\\samples\\monitoring_pipeline_import_sample.xlsx"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "import"]
+            },
+            "description": "Import bersifat upsert per `tag_number_id` — baris yang sama di-update, jumlah data di tabel tidak bertambah."
+          }
+        },
+        {
+          "name": "Cari id baris hasil import",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const rows = pm.response.json().data || [];",
+                  "if (rows.length) {",
+                  "    pm.collectionVariables.set('imported_id', rows[0].id);",
+                  "    console.log('imported_id =', rows[0].id);",
+                  "} else {",
+                  "    pm.collectionVariables.set('imported_id', '');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline?search={{tag_import}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"],
+              "query": [{ "key": "search", "value": "{{tag_import}}" }]
+            },
+            "description": "Menangkap id baris yang lahir dari import, supaya request Bersih-bersih di folder terakhir bisa menghapusnya."
+          }
+        },
+        {
+          "name": "Import tanpa file → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('errors.file required', () => {",
+                  "    pm.expect(pm.response.json().errors.file[0]).to.include('required');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "import"]
+            }
+          }
+        },
+        {
+          "name": "Import file bukan Excel → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('errors.file mimes xlsx/xls', () => {",
+                  "    pm.expect(pm.response.json().errors.file[0]).to.include('xlsx, xls');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "C:\\laragon\\www\\idms_be\\docs\\api\\samples\\bukan_file_excel.txt"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "import"]
+            },
+            "description": "Validasi `mimes:xlsx,xls` + `max:10240` (10 MB)."
+          }
+        },
+        {
+          "name": "Export semua (xlsx)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('berupa xlsx', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('spreadsheetml');",
+                  "});",
+                  "pm.response.saveAsFile('Monitoring_Pipeline_export.xlsx');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/export",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "export"]
+            },
+            "description": "31 kolom (No + 30 field), nama file `Monitoring_Pipeline_YYYYMMDD_HHIS.xlsx`, tanggal format `Y-m-d`. Export juga mencatat activity log (`export`, `MonitoringPipeline`)."
+          }
+        },
+        {
+          "name": "Export dengan filter (mengikuti query aktif)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/export?insulation=No&sort_by=nps&sort_order=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "export"],
+              "query": [
+                { "key": "insulation", "value": "No" },
+                { "key": "sort_by", "value": "nps" },
+                { "key": "sort_order", "value": "asc" }
+              ]
+            },
+            "description": "Export memakai query yang sama dengan list (method `baseQuery` + filter + sort di controller), jadi isi Excel selalu identik dengan data di layar."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Bersih-bersih & Logout",
+      "item": [
+        {
+          "name": "Hapus baris hasil import uji",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('terhapus (200) atau memang sudah tidak ada (404)', () => {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline/{{imported_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline", "{{imported_id}}"]
+            },
+            "description": "Menghapus baris `{{tag_import}}` yang dibuat oleh request Import. Bila `imported_id` kosong (import belum dijalankan), request jatuh ke 404 dan test tetap lolos."
+          }
+        },
+        {
+          "name": "List akhir (pastikan data kembali bersih)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline?per_page=50&sort_by=id&sort_order=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"],
+              "query": [
+                { "key": "per_page", "value": "50" },
+                { "key": "sort_by", "value": "id" },
+                { "key": "sort_order", "value": "asc" }
+              ]
+            },
+            "description": "Cek manual: baris uji CRUD dan baris hasil import seharusnya sudah tidak ada."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "logout"]
+            },
+            "description": "Ditaruh paling akhir agar token masih berlaku untuk semua request sebelumnya saat dijalankan dengan Collection Runner."
+          }
+        }
+      ]
+    }
+  ]
+}
