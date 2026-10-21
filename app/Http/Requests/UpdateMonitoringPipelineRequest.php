@@ -16,6 +16,9 @@ class UpdateMonitoringPipelineRequest extends BaseRequest
         return [
 
             'tag_number_id' => [
+                // hanya divalidasi bila dikirim — update boleh parsial
+                // (sesuai desain; tag_number_id tidak boleh berpindah baris)
+                'sometimes',
                 'required',
                 'integer',
                 'exists:tag_numbers,id',
@@ -52,9 +55,9 @@ class UpdateMonitoringPipelineRequest extends BaseRequest
             'used_plan_inspection' => 'nullable|date',
             'estimated_end_of_life' => 'nullable|date',
 
-            'pipe_condition' => 'nullable|string',
-            'maintenance_status' => 'nullable|string',
-            'rencana_tindak_lanjut' => 'nullable|string',
+            'pipe_condition' => 'nullable|string|max:255',
+            'maintenance_status' => 'nullable|string|max:255',
+            'rencana_tindak_lanjut' => 'nullable|string|max:255',
 
         ];
     }

@@ -192,6 +192,7 @@ class MonitoringPipelineImportService
 
         $inserts = [];
         $updates = [];
+        $seenTagIds = [];
 
         foreach ($rows as $item) {
 
@@ -207,6 +208,19 @@ class MonitoringPipelineImportService
 
                 continue;
             }
+
+            if (isset($seenTagIds[$tag->id])) {
+                $summary['failed']++;
+                $summary['errors'][] = [
+                    'row' => $item['row_number'],
+                    'tag_number' => $item['tag_number'],
+                    'message' => 'Duplikat Tag Number dalam file, baris diabaikan.',
+                ];
+
+                continue;
+            }
+
+            $seenTagIds[$tag->id] = true;
 
             $data = $this->normalizeRow($item['row'], $item['row_number'], $summary);
 
@@ -226,12 +240,24 @@ class MonitoringPipelineImportService
         DB::transaction(function () use ($inserts, $updates) {
 
             if ($inserts) {
+
+                $now = now();
+
+                // insert() (query builder) tidak mengisi timestamps otomatis
+                $inserts = array_map(
+                    fn ($row) => array_merge($row, [
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]),
+                    $inserts
+                );
+
                 MonitoringPipeline::insert($inserts);
             }
 
             foreach ($updates as $item) {
                 MonitoringPipeline::where('id', $item['id'])
-                    ->update($item['data']);
+                    ->update(array_merge($item['data'], ['updated_at' => now()]));
             }
 
         });
@@ -336,6 +362,14 @@ class MonitoringPipelineImportService
                 continue;
             }
 
+            if ($field === 'api_service_class') {
+                $data[$field] = $this->normalizeApiServiceClass(
+                    $value, $field, $rowNumber, $summary
+                );
+
+                continue;
+            }
+
             if ($field === 'nps') {
                 $data[$field] = $this->normalizeNps(
                     $value, $field, $rowNumber, $summary
@@ -394,6 +428,25 @@ class MonitoringPipelineImportService
         $this->pushWarning(
             $summary, $rowNumber, $field, $value,
             'Nilai insulation bukan Yes/No, disimpan kosong.'
+        );
+
+        return null;
+    }
+
+    private function normalizeApiServiceClass(
+        $value, string $field, int $rowNumber, array &$summary
+    ): ?int {
+        if ($value === null || $value === '' || is_bool($value)) {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        $this->pushWarning(
+            $summary, $rowNumber, $field, $value,
+            'Nilai API 570 Service Class bukan angka, disimpan kosong.'
         );
 
         return null;
