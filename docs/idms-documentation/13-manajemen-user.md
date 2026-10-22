@@ -12,7 +12,6 @@ Feature (Fitur)
 User
  ├── hak_akses → UserHakAkses[] → HakAkses[] → Feature
  ├── contracts → Contract[] (untuk vendor)
- └── openFileActivities → OpenFileActivity[]
 ```
 
 Empat model utama bekerja bersama untuk membentuk sistem manajemen user dan hak akses:
@@ -56,11 +55,16 @@ Empat model utama bekerja bersama untuk membentuk sistem manajemen user dan hak 
 
 | Attribute | Tipe | Keterangan |
 |-----------|------|------------|
-| `total_file_open` | integer | Total jumlah file yang pernah dibuka user |
-| `file_open_per_feature` | object | Breakdown file open per fitur (key: nama fitur, value: jumlah) |
 | `total_activities` | integer | Total jumlah aktivitas/log user |
 | `activities_per_feature` | object | Breakdown aktivitas per modul (key: nama modul, value: jumlah) |
 | `akses_list` | array | Array ID `hak_akses` yang dimiliki user |
+
+> **Catatan:** atribut di `$appends` **wajib** punya accessor `get{Studly}Attribute()`
+> di model. Laravel memanggil accessor tersebut tanpa pengecekan di
+> `HasAttributes::mutateAttribute()`, sehingga append tanpa accessor akan
+> melempar `BadMethodCallException` saat model diserialisasi (`toArray`/`toJson`/
+> `response()->json($model)`). Case ini di-cover oleh
+> `tests/Unit/ModelAppendsAccessorTest.php`.
 
 ### Hidden Fields
 
@@ -69,7 +73,6 @@ Field `password` dan `hak_akses` tidak ditampilkan di response JSON.
 ### Relasi
 
 - `hak_akses()` → `hasMany(UserHakAkses)` — Hak akses user
-- `openFileActivities()` → `hasMany(OpenFileActivity)` — Aktivitas buka file
 - `logActivities()` → `hasMany(LogActivity)` — Log aktivitas user
 - `contracts()` → `belongsToMany(Contract)` — Kontrak lama
 - `contract_news()` → `belongsToMany(ContractNew)` — Kontrak baru
@@ -116,12 +119,6 @@ User mengimplementasi `JWTSubject`:
     "level_user": 1,
     "status": 1,
     "contract_news": [1, 2],
-    "total_file_open": 45,
-    "file_open_per_feature": {
-        "coi": 20,
-        "plo": 15,
-        "skhp": 10
-    },
     "total_activities": 120,
     "activities_per_feature": {
         "contract_new": 60,
@@ -228,7 +225,7 @@ Semua endpoint berada di prefix `/api` dan memerlukan autentikasi JWT.
 
 | Metode | Endpoint | Keterangan |
 |--------|----------|------------|
-| `GET` | `/api/users` | Ambil semua user (dengan contract_news, openFileActivities) |
+| `GET` | `/api/users` | Ambil semua user (dengan contract_news, hak_akses, log_activities) |
 | `GET` | `/api/users/{id}` | Ambil satu user (dengan contract_news) |
 | `POST` | `/api/users` | Buat user baru |
 | `PUT` | `/api/users/{id}` | Update user |

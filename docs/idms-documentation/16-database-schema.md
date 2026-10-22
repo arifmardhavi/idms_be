@@ -20,17 +20,21 @@
        │            └─────────────────┘              │
        │                                             │
        ▼                                             │
-┌──────────────┐    ┌──────────────┐                 │
-│ log_activities│   │ open_file_   │                 │
-├──────────────┤    │ activities   │                 │
-│ id           │    ├──────────────┤                 │
-│ user_id      │──► │ id           │                 │
-│ module       │    │ user_id      │──►users.id     │
-│ action       │    │ file_name    │                 │
-│ changes (JSON)│   │ features     │                 │
-│ ip_address   │    └──────────────┘                 │
-│ user_agent   │                                     │
-└──────────────┘                                     │
+┌────────────────────────┐                           │
+│ log_activities         │                           │
+├────────────────────────┤                           │
+│ id                     │                           │
+│ user_id (→ users.id)   │                           │
+│ action                 │                           │
+│ module                 │                           │
+│ record_id              │                           │
+│ record_label           │                           │
+│ description            │                           │
+│ metadata (JSON)        │                           │
+│ ip_address             │                           │
+│ user_agent             │                           │
+│ created_at             │                           │
+└────────────────────────┘                           │
                                                       │
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
 │    units     │    │  categories  │    │    types     │
@@ -1042,23 +1046,19 @@ Hapus record `cois` → baris `monitoring_psv` ikut terhapus otomatis (cascade).
 |-------|------|------------|------------|
 | id | bigint | PK, auto-increment | |
 | user_id | bigint | NULLABLE, FK → users.id, SET NULL | Relasi ke users |
-| module | varchar | NOT NULL | Nama modul |
-| action | varchar | NOT NULL | Aksi (create/update/delete) |
-| changes | json | NULLABLE | Data perubahan (JSON) |
-| ip_address | varchar | NULLABLE | Alamat IP |
+| action | enum | NOT NULL | Aksi (login/logout/visit/view/download/export/create/update/delete/import) |
+| module | varchar(100) | NOT NULL | Nama modul/fitur kanonikal |
+| record_id | bigint | NULLABLE | ID record yang berkaitan |
+| record_label | varchar(255) | NULLABLE | Label human-readable record |
+| description | text | NULLABLE | Kalimat ringkasan aktivitas |
+| metadata | json | NULLABLE | Detail mentah (JSON) |
+| ip_address | varchar(45) | NULLABLE | Alamat IP |
 | user_agent | text | NULLABLE | User agent browser |
 | created_at | timestamp | | |
 | updated_at | timestamp | | |
 
-#### `open_file_activities`
-| Field | Type | Constraint | Keterangan |
-|-------|------|------------|------------|
-| id | bigint | PK, auto-increment | |
-| user_id | bigint | FK → users.id, CASCADE | Relasi ke users |
-| file_name | varchar | NOT NULL | Nama file |
-| features | varchar | NOT NUL | Nama fitur |
-| created_at | timestamp | | |
-| updated_at | timestamp | | |
+> Tabel `open_file_activities` telah dihapus. Aktivitas membuka file kini
+> dicatat pada `log_activities` dengan `action = 'view'` dan `module` = nama fitur.
 
 ---
 

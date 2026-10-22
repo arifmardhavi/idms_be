@@ -271,8 +271,7 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 
 | File | Deskripsi |
 |------|-----------|
-| `OpenFileActivityController.php` | Open file activity |
-| `LogActivityController.php` | Log activity |
+| `ActivityController.php` | Log activity |
 | `StorageHistoryController.php` | Storage history (via observer) |
 
 ---
@@ -471,7 +470,6 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 | `Preventive.php` | Preventive maintenance |
 | `Overhaul.php` | Overhaul |
 | `P_id.php` | P-ID |
-| `OpenFileActivity.php` | Open file activity |
 | `StorageHistory.php` | Storage history |
 
 ---
@@ -820,8 +818,8 @@ untuk semua fitur contract hanya menggunakan yang new dengan penamaan belakang "
 |------|-------|
 | `2026_01_05_100055_create_preventives_table.php` | preventives |
 | `2026_01_05_151046_create_overhauls_table.php` | overhauls |
-| `2025_09_19_153239_create_open_file_activities_table.php` | open_file_activities |
 | `2025_08_10_155214_create_log_activities_table.php` | log_activities |
+| `2026_09_01_000000_rebuild_log_activities_table.php` | log_activities (rebuild) |
 | `2025_10_31_111307_create_p_ids_table.php` | p_ids |
 | `2026_04_13_145853_create_features_table.php` | features |
 | `2026_04_13_151817_create_hak_akses_table.php` | hak_akses |
