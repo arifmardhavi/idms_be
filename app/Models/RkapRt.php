@@ -12,7 +12,7 @@ class RkapRt extends Model
         'judul',
     ];
 
-    protected $appends = ['total'];
+    protected $appends = ['total_actual'];
 
     protected $with = ['detailRkapRt']; // auto eager load
 

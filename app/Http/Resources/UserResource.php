@@ -22,8 +22,6 @@ class UserResource extends JsonResource
             'level_user' => $this->level_user,
             'status' => $this->status,
             'contract_news' => $this->contract_news->pluck('id')->toArray(), // hanya ambil ID dari kontrak
-            'total_file_open' => $this->total_file_open,
-            'file_open_per_feature' => $this->file_open_per_feature,
             'total_activities' => $this->total_activities,
             'activities_per_feature' => $this->activities_per_feature,
             'akses_list' => $this->akses_list, // tambahkan akses_list ke response

@@ -11,7 +11,6 @@ class GlobalActivityObserver
      */
     private array $exclude = [
         LogActivity::class,
-        \App\Models\OpenFileActivity::class,
         \App\Models\UserHakAkses::class,
         \App\Models\MonitoringEquipmentLog::class,
         \App\Models\HakAkses::class,

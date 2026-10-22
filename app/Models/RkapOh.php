@@ -12,7 +12,7 @@ class RkapOh extends BaseModel
         'judul',
     ];
 
-    protected $appends = ['total'];
+    protected $appends = ['total_actual'];
 
     protected $with = ['detailRkapOh']; // auto eager load
 

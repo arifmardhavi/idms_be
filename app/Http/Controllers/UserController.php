@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\UserActivityStatsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -16,24 +17,14 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('contract_news:id')->orderBy('id', 'desc')->get();
-        $data = $users->map(function ($user) {
-            return [
-                'id' => $user->id,
-                'fullname' => $user->fullname,
-                'email' => $user->email,
-                'username' => $user->username,
-                'level_user' => $user->level_user,
-                'status' => $user->status,
-                'created_at' => $user->created_at,
-                'updated_at' => $user->updated_at,
-                'contract_news' => $user->contract_news->pluck('id')->toArray(), // hanya ambil ID dari kontrak
-                'total_file_open' => $user->total_file_open,
-                'file_open_per_feature' => $user->file_open_per_feature,
-                'total_activities' => $user->total_activities,
-                'activities_per_feature' => $user->activities_per_feature,
-            ];
-        });
+        $users = User::with(['contract_news:id', 'hak_akses'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        // Agregat aktivitas dihitung bulk (1 query untuk semua user) lalu
+        // dipasang ke model, supaya accessor tidak query per user (N+1).
+        app(UserActivityStatsService::class)->attachTo($users);
+
         return response()->json([
             'success' => true,
             'message' => 'Users retrieved successfully.',

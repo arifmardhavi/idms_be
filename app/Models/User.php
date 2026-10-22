@@ -30,13 +30,24 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     // tambahin biar field baru ikut ke JSON
+    // CATATAN: setiap item di $appends WAJIB punya accessor get{Studly}Attribute().
+    // Laravel memanggil accessor itu tanpa cek di HasAttributes::mutateAttribute(),
+    // jadi append tanpa accessor akan melempar BadMethodCallException saat model
+    // diserialisasi (toArray/toJson/response()->json($model)).
     protected $appends = [
-        'total_file_open', 
-        'file_open_per_feature', 
-        'total_activities', 
+        'total_activities',
         'activities_per_feature',
         'akses_list',
     ];
+
+    /**
+     * Agregat aktivitas (total + breakdown per modul).
+     *
+     * Diisi controller lewat setActivityStats() supaya serialisasi collection
+     * user tidak melakukan query per user (N+1). Null = belum di-set, accessor
+     * fallback ke query sendiri.
+     */
+    protected ?array $activityStats = null;
 
     public function setPasswordAttribute($value)
     {
@@ -97,11 +108,29 @@ class User extends Authenticatable implements JWTSubject
 
     public function getAksesListAttribute()
     {
+        // Pakai FK langsung (hak_akses_id), bukan relasi hak_akses -> id.
+        // pluck('hak_akses.id') memaksa load relasi HakAkses untuk tiap baris
+        // user_hak_akses (N+1) padahal yang dibutuhkan hanya nilainya.
         return $this->hak_akses
-            ->pluck('hak_akses.id')
+            ->pluck('hak_akses_id')
             ->filter()
             ->values()
             ->toArray();
+    }
+
+    /**
+     * Pasang agregat aktivitas hasil hitungan bulk (1 query untuk semua user).
+     *
+     * @param  array<string, int>  $perFeature  breakdown per modul
+     */
+    public function setActivityStats(int $total, array $perFeature): static
+    {
+        $this->activityStats = [
+            'total' => $total,
+            'per_feature' => collect($perFeature),
+        ];
+
+        return $this;
     }
 
 
@@ -118,6 +147,10 @@ class User extends Authenticatable implements JWTSubject
      * ===================== */
     public function getTotalActivitiesAttribute()
     {
+        if ($this->activityStats !== null) {
+            return $this->activityStats['total'];
+        }
+
         return $this->logActivities()->count();
     }
 
@@ -126,6 +159,10 @@ class User extends Authenticatable implements JWTSubject
      * ===================== */
     public function getActivitiesPerFeatureAttribute()
     {
+        if ($this->activityStats !== null) {
+            return $this->activityStats['per_feature'];
+        }
+
         return $this->logActivities()
             ->select('module', DB::raw('COUNT(*) as total'))
             ->groupBy('module')
