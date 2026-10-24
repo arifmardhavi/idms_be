@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Conditional;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class MonitoringEquipmentExport implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithMapping, WithTitle
@@ -332,6 +333,11 @@ class MonitoringEquipmentExport implements FromCollection, ShouldAutoSize, WithE
                         ->getNumberFormat()
                         ->setFormatCode('yyyy-mm-dd');
 
+                    /**
+                     * Conditional Formatting by Status (follow user changes in Excel)
+                     */
+                    $this->applyStatusConditionalFormatting($sheet, $last);
+
                 }
 
                 /**
@@ -396,5 +402,42 @@ class MonitoringEquipmentExport implements FromCollection, ShouldAutoSize, WithE
                 '=IFERROR(VLOOKUP(G'.$row.','.$lookup.',2,FALSE),"")'
             );
         }
+    }
+
+    private function applyStatusConditionalFormatting($sheet, int $last): void
+    {
+        if ($last < 2) {
+            return;
+        }
+
+        $range = 'A2:P'.$last;
+        $worksheet = $sheet;
+        $conditionalStyles = [];
+
+        // Breakdown -> #D9D9D9
+        $breakdown = new Conditional();
+        $breakdown->setConditionType(Conditional::CONDITION_EXPRESSION);
+        $breakdown->addCondition('=$H2="Breakdown"');
+        $breakdown->getStyle()->getFill()->setFillType(Fill::FILL_SOLID);
+        $breakdown->getStyle()->getFill()->getStartColor()->setRGB('D9D9D9');
+        $conditionalStyles[] = $breakdown;
+
+        // Low -> #E6B8B7
+        $low = new Conditional();
+        $low->setConditionType(Conditional::CONDITION_EXPRESSION);
+        $low->addCondition('=$H2="Low"');
+        $low->getStyle()->getFill()->setFillType(Fill::FILL_SOLID);
+        $low->getStyle()->getFill()->getStartColor()->setRGB('E6B8B7');
+        $conditionalStyles[] = $low;
+
+        // Medium -> #FFFF99
+        $medium = new Conditional();
+        $medium->setConditionType(Conditional::CONDITION_EXPRESSION);
+        $medium->addCondition('=$H2="Medium"');
+        $medium->getStyle()->getFill()->setFillType(Fill::FILL_SOLID);
+        $medium->getStyle()->getFill()->getStartColor()->setRGB('FFFF99');
+        $conditionalStyles[] = $medium;
+
+        $worksheet->getStyle($range)->setConditionalStyles($conditionalStyles);
     }
 }
