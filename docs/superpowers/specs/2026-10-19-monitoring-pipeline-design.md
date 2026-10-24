@@ -265,12 +265,12 @@ Query param `index`:
 | Param | Contoh | Keterangan |
 |---|---|---|
 | `search` | `P434` | LIKE: `tag_numbers.tag_number`, `tml_drawing_number`, `grade_material`, `sch`, `pipe_condition`, `maintenance_status`, `rencana_tindak_lanjut` |
-| `insulation` | `Yes` | exact |
+| `insulation` | `No` | LIKE `%value%` (case-insensitive) |
 | `api_service_class` | `3` | exact integer |
-| `grade_material` | `SA53 GR B` | exact |
+| `grade_material` | `SA10` | LIKE `%value%` — `SA10` juga menemukan `SA106 GR B` |
 | `unit_id` | `5` | exact via `tag_numbers.unit_id` |
-| `pipe_condition` | `GOOD CONDITION` | exact |
-| `maintenance_status` | `MONITORING UT` | exact |
+| `pipe_condition` | `GOOD` | LIKE `%value%` |
+| `maintenance_status` | `MONI` | LIKE `%value%` |
 | `tanggal_pasang_line_from/to` | `2020-01-01` | rentang (inclusive) |
 | `tanggal_ut_terakhir_from/to` | | rentang |
 | `next_plan_inspection_api_from/to` | | rentang |

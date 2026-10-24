@@ -290,17 +290,38 @@ class MonitoringPipelineController extends Controller
 
         /**
          * =====================================================
+         * FILTER (partial match)
+         * =====================================================
+         */
+
+        $likeFilters = [
+            'insulation' => 'monitoring_pipeline.insulation',
+            'grade_material' => 'monitoring_pipeline.grade_material',
+            'pipe_condition' => 'monitoring_pipeline.pipe_condition',
+            'maintenance_status' => 'monitoring_pipeline.maintenance_status',
+        ];
+
+        foreach ($likeFilters as $param => $column) {
+            $query->when($request->filled($param), function ($q) use ($request, $param, $column) {
+                $value = trim((string) $request->get($param));
+
+                if ($value === '') {
+                    return;
+                }
+
+                $q->where($column, 'like', '%' . $value . '%');
+            });
+        }
+
+        /**
+         * =====================================================
          * FILTER (equality)
          * =====================================================
          */
 
         $equalityFilters = [
-            'insulation' => 'monitoring_pipeline.insulation',
             'api_service_class' => 'monitoring_pipeline.api_service_class',
-            'grade_material' => 'monitoring_pipeline.grade_material',
             'unit_id' => 'tag_numbers.unit_id',
-            'pipe_condition' => 'monitoring_pipeline.pipe_condition',
-            'maintenance_status' => 'monitoring_pipeline.maintenance_status',
         ];
 
         foreach ($equalityFilters as $param => $column) {

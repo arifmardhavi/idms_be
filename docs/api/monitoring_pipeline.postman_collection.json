@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Monitoring Pipeline (IDMS)",
-    "description": "Collection API untuk modul Monitoring Pipeline — data inspeksi UT piping (API 574/570): data teknis pipa, data desain, hasil UT (actual thickness, corrosion rate, remaining life), dan status perawatan.\n\n**Base URL**\nDefault `{{baseUrl}}` = `http://localhost/idms_be/public` (Laragon). Kalau memakai `php artisan serve`, ganti ke `http://127.0.0.1:8000`.\n\n**Endpoint (8)**\n- `GET    /api/monitoring_pipeline` — list + search + filter + sort + paginate\n- `POST   /api/monitoring_pipeline` — create\n- `GET    /api/monitoring_pipeline/{id}` — detail\n- `PUT    /api/monitoring_pipeline/{id}` — update\n- `DELETE /api/monitoring_pipeline/{id}` — delete\n- `GET    /api/monitoring_pipeline/template` — download template xlsx\n- `POST   /api/monitoring_pipeline/import` — import xlsx/xls (upsert)\n- `GET    /api/monitoring_pipeline/export` — export xlsx (mengikuti filter aktif)\n\n**Peculiarities modul ini**\n- Semua endpoint butuh token (`auth:api`). Tanpa token → `401 {\"message\":\"Unauthenticated.\"}` (kirim header `Accept: application/json` supaya responsnya JSON, bukan halaman error HTML).\n- `tag_number_id` adalah FK **unik** → maksimal 1 baris monitoring per tag. Karena itu import bersifat **upsert** per tag: tag yang sudah ada di-update, yang baru di-insert.\n- Update **boleh parsial**: `tag_number_id` hanya divalidasi bila dikirim (`sometimes`). Kirim hanya kolom yang mau diubah.\n- Validasi tulis: `insulation` hanya `Yes`/`No`; `pipe_condition`, `maintenance_status`, `rencana_tindak_lanjut` maksimal 255 karakter; `sch` maks 50; `tml_drawing_number`/`grade_material` maks 150; semua tanggal harus format tanggal valid (`YYYY-MM-DD`).\n- Bentuk respons: index → `{success, message, data:[...], meta:{current_page, last_page, per_page, total}}`; show → `{data:{...}}`; store/update → `{success, message, data:{...}}` (store: 201); delete → `{success, message}`; error validasi → 422 `{success:false, message:\"Validation failed.\", errors:{...}}`.\n\n**Query param `index` (dan dipakai juga oleh `export`)**\n- `search` (LIKE, 7 kolom): tag number, TML drawing number, grade material, SCH, pipe condition, maintenance status, rencana tindak lanjut.\n- Filter persamaan: `insulation`, `api_service_class`, `grade_material`, `unit_id` (lewat `tag_numbers.unit_id`), `pipe_condition`, `maintenance_status`.\n- Filter rentang tanggal (inclusive): `tanggal_pasang_line_from/_to`, `tanggal_ut_terakhir_from/_to`, `next_plan_inspection_api_from/_to`. Catatan: nilai tanggal yang tidak valid tidak memicu 422 — hasilnya hanya kosong (0 baris).\n- `sort_by` (whitelist: id, tag_number, semua kolom data, created_at, updated_at) + `sort_order` asc|desc. Default `created_at desc`. Nilai di luar whitelist **tidak error** — jatuh ke default.\n- `per_page` default 10 (nilai tak terbaca → kembali ke 10).\n\n**Import (detail teknis)**\n- Format: `.xlsx` / `.xls`, maksimal 10 MB.\n- Sheet: `Database UT Piping` bila ada di workbook, kalau tidak → sheet pertama (file template juga bisa di-import).\n- Baris header ditemukan otomatis: baris pertama yang kolom B-nya mengandung `TAG NUMBER` (file asli header di baris 2, template di baris 1).\n- Kolom dipetakan dari **judul header** (di-slug-kan), bukan posisi kolom — urutan kolom boleh berubah. Sel formula dibaca dari cached value terakhir file disimpan di Excel.\n- Pencocokan tag **persis** dengan `tag_numbers.tag_number` (tanpa normalisasi suffix). Tag yang tidak ditemukan → `failed` + `errors[]`; tag yang dobel dalam 1 file → baris kedua dihitung `failed` (Duplikat Tag Number dalam file).\n- Re-import file yang sama = update (idempoten). Respons: `{success, message, summary:{total, success, failed, skipped, errors:[{row, tag_number, message}], warnings:[{row, column, value, message}], warnings_total}}`. `total` = jumlah baris ber-tag; baris kosong dihitung `skipped`.\n- Nilai tak terbaca (`-`, `N/A`, `#N/A`, insulation di luar Yes/No, dll) disimpan NULL dan dicatat ke `warnings[]`.\n\n**File contoh import**\n`docs/api/samples/monitoring_pipeline_import_sample.xlsx` berisi: 1 baris tag valid (`1-V-04/00`), 1 baris tag duplikat, 1 baris tag tak dikenal (`ZZ-NOT-EXIST-001`), 1 baris kosong. Postman menyimpan path file di komputer masing-masing — bila pindah mesin, klik kanan request → Body → pilih ulang filenya.\n\n**Urutan Collection Runner**\nLogin → List/Filter → Detail → CRUD (create, lalu delete) → Import & Export → Bersih-bersih (hapus baris uji + Logout). Semua request punya test script, jadi bisa langsung dijalankan berurutan tanpa meninggalkan data uji.",
+    "description": "Collection API untuk modul Monitoring Pipeline — data inspeksi UT piping (API 574/570): data teknis pipa, data desain, hasil UT (actual thickness, corrosion rate, remaining life), dan status perawatan.\n\n**Base URL**\nDefault `{{baseUrl}}` = `http://localhost/idms_be/public` (Laragon). Kalau memakai `php artisan serve`, ganti ke `http://127.0.0.1:8000`.\n\n**Endpoint (8)**\n- `GET    /api/monitoring_pipeline` — list + search + filter + sort + paginate\n- `POST   /api/monitoring_pipeline` — create\n- `GET    /api/monitoring_pipeline/{id}` — detail\n- `PUT    /api/monitoring_pipeline/{id}` — update\n- `DELETE /api/monitoring_pipeline/{id}` — delete\n- `GET    /api/monitoring_pipeline/template` — download template xlsx\n- `POST   /api/monitoring_pipeline/import` — import xlsx/xls (upsert)\n- `GET    /api/monitoring_pipeline/export` — export xlsx (mengikuti filter aktif)\n\n**Peculiarities modul ini**\n- Semua endpoint butuh token (`auth:api`). Tanpa token → `401 {\"message\":\"Unauthenticated.\"}` (kirim header `Accept: application/json` supaya responsnya JSON, bukan halaman error HTML).\n- `tag_number_id` adalah FK **unik** → maksimal 1 baris monitoring per tag. Karena itu import bersifat **upsert** per tag: tag yang sudah ada di-update, yang baru di-insert.\n- Update **boleh parsial**: `tag_number_id` hanya divalidasi bila dikirim (`sometimes`). Kirim hanya kolom yang mau diubah.\n- Validasi tulis: `insulation` hanya `Yes`/`No`; `pipe_condition`, `maintenance_status`, `rencana_tindak_lanjut` maksimal 255 karakter; `sch` maks 50; `tml_drawing_number`/`grade_material` maks 150; semua tanggal harus format tanggal valid (`YYYY-MM-DD`).\n- Bentuk respons: index → `{success, message, data:[...], meta:{current_page, last_page, per_page, total}}`; show → `{data:{...}}`; store/update → `{success, message, data:{...}}` (store: 201); delete → `{success, message}`; error validasi → 422 `{success:false, message:\"Validation failed.\", errors:{...}}`.\n\n**Query param `index` (dan dipakai juga oleh `export`)**\n- `search` (LIKE, 7 kolom): tag number, TML drawing number, grade material, SCH, pipe condition, maintenance status, rencana tindak lanjut.\n- Filter sebagian (LIKE, case-insensitive): `insulation`, `grade_material`, `pipe_condition`, `maintenance_status` — mis. `grade_material=SA10` menemukan `SA106 GR B`, `SA106 GR A`, `SA210 GR A1`.\n- Filter persamaan (exact): `api_service_class`, `unit_id` (lewat `tag_numbers.unit_id`).\n- Filter rentang tanggal (inclusive): `tanggal_pasang_line_from/_to`, `tanggal_ut_terakhir_from/_to`, `next_plan_inspection_api_from/_to`. Catatan: nilai tanggal yang tidak valid tidak memicu 422 — hasilnya hanya kosong (0 baris).\n- `sort_by` (whitelist: id, tag_number, semua kolom data, created_at, updated_at) + `sort_order` asc|desc. Default `created_at desc`. Nilai di luar whitelist **tidak error** — jatuh ke default.\n- `per_page` default 10 (nilai tak terbaca → kembali ke 10).\n\n**Import (detail teknis)**\n- Format: `.xlsx` / `.xls`, maksimal 10 MB.\n- Sheet: `Database UT Piping` bila ada di workbook, kalau tidak → sheet pertama (file template juga bisa di-import).\n- Baris header ditemukan otomatis: baris pertama yang kolom B-nya mengandung `TAG NUMBER` (file asli header di baris 2, template di baris 1).\n- Kolom dipetakan dari **judul header** (di-slug-kan), bukan posisi kolom — urutan kolom boleh berubah. Sel formula dibaca dari cached value terakhir file disimpan di Excel.\n- Pencocokan tag **persis** dengan `tag_numbers.tag_number` (tanpa normalisasi suffix). Tag yang tidak ditemukan → `failed` + `errors[]`; tag yang dobel dalam 1 file → baris kedua dihitung `failed` (Duplikat Tag Number dalam file).\n- Re-import file yang sama = update (idempoten). Respons: `{success, message, summary:{total, success, failed, skipped, errors:[{row, tag_number, message}], warnings:[{row, column, value, message}], warnings_total}}`. `total` = jumlah baris ber-tag; baris kosong dihitung `skipped`.\n- Nilai tak terbaca (`-`, `N/A`, `#N/A`, insulation di luar Yes/No, dll) disimpan NULL dan dicatat ke `warnings[]`.\n\n**File contoh import**\n`docs/api/samples/monitoring_pipeline_import_sample.xlsx` berisi: 1 baris tag valid (`1-V-04/00`), 1 baris tag duplikat, 1 baris tag tak dikenal (`ZZ-NOT-EXIST-001`), 1 baris kosong. Postman menyimpan path file di komputer masing-masing — bila pindah mesin, klik kanan request → Body → pilih ulang filenya.\n\n**Urutan Collection Runner**\nLogin → List/Filter → Detail → CRUD (create, lalu delete) → Import & Export → Bersih-bersih (hapus baris uji + Logout). Semua request punya test script, jadi bisa langsung dijalankan berurutan tanpa meninggalkan data uji.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -185,7 +185,7 @@
                 { "key": "sort_order", "value": "asc" }
               ]
             },
-            "description": "Kombinasi filter persamaan. `unit_id` difilter lewat tabel `tag_numbers` (join)."
+            "description": "Kombinasi filter: `insulation` dicocokkan sebagian (LIKE, jadi `insulation=NO` tetap menemukan `No`), `unit_id` persis (exact) lewat tabel `tag_numbers` (join)."
           }
         },
         {
@@ -219,6 +219,41 @@
                 { "key": "maintenance_status", "value": "GOOD CONDITION" }
               ]
             }
+          }
+        },
+        {
+          "name": "List (filter partial: grade_material=SA10)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const rows = pm.response.json().data || [];",
+                  "pm.test('semua grade_material mengandung SA10 (bukan harus sama persis)', () => {",
+                  "    rows.forEach(r => pm.expect(String(r.grade_material).toLowerCase()).to.include('sa10'));",
+                  "});",
+                  "pm.test('ada baris yang nilainya bukan persis SA10', () => {",
+                  "    pm.expect(rows.some(r => String(r.grade_material).toUpperCase() !== 'SA10')).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_pipeline?grade_material=SA10&per_page=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_pipeline"],
+              "query": [
+                { "key": "grade_material", "value": "SA10" },
+                { "key": "per_page", "value": "10" }
+              ]
+            },
+            "description": "Filter sebagian (LIKE, case-insensitive): `SA10` menemukan `SA106 GR B`, `SA106 GR A`, `SA210 GR A1`, dan nilai lain yang mengandung `SA10`. Berlaku juga untuk `insulation`, `pipe_condition`, dan `maintenance_status`."
           }
         },
         {
