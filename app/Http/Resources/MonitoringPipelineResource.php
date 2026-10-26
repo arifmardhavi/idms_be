@@ -39,10 +39,12 @@ class MonitoringPipelineResource extends JsonResource
             'operating_press' => $this->operating_press,
 
             'design_press' => $this->design_press,
+            'design_press_pa' => is_null($this->design_press) ? null : round((float) $this->design_press * 98066.5, 2),
 
             'design_temp' => $this->design_temp,
 
             's' => $this->s,
+            's_pa' => is_null($this->s) ? null : round((float) $this->s * 1000000, 2),
 
             'e' => $this->e,
 

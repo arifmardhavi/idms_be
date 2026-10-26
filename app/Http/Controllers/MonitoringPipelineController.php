@@ -190,11 +190,27 @@ class MonitoringPipelineController extends Controller
         $this->applySort($query, $request);
 
         $rows = $query->get()
-            ->map(fn ($item, $index) => array_merge(
-                ['no' => $index + 1],
-                $item->only(array_keys($this->exportColumns())),
-                ['tag_number' => optional($item->tagNumber)->tag_number]
-            ))
+            ->map(function ($item, $index) {
+                $row = array_merge(
+                    ['no' => $index + 1],
+                    $item->only(array_keys($this->exportColumns())),
+                    ['tag_number' => optional($item->tagNumber)->tag_number]
+                );
+
+                if (array_key_exists('design_press', $row) && $row['design_press'] !== null && $row['design_press'] !== '') {
+                    $row['design_press_pa'] = round((float) $row['design_press'] * 98066.5, 2);
+                } else {
+                    $row['design_press_pa'] = null;
+                }
+
+                if (array_key_exists('s', $row) && $row['s'] !== null && $row['s'] !== '') {
+                    $row['s_pa'] = round((float) $row['s'] * 1000000, 2);
+                } else {
+                    $row['s_pa'] = null;
+                }
+
+                return $row;
+            })
             ->map(fn ($row) => $this->formatExportRow($row))
             ->toArray();
 
@@ -478,10 +494,12 @@ class MonitoringPipelineController extends Controller
             'operating_press' => 'Operating Press (kg/cm2)',
 
             'design_press' => 'Design Press (kg/cm2)',
+            'design_press_pa' => 'Design Press (Pa/Nm2)',
 
             'design_temp' => 'Design Temp (kg/cm2)',
 
             's' => 'S (MPa)',
+            's_pa' => 'S (Pa/Nm2)',
 
             'e' => 'E',
 
@@ -554,6 +572,18 @@ class MonitoringPipelineController extends Controller
             if ($value !== null) {
                 $row[$key] = round((float) $value, 4);
             }
+        }
+
+        if (array_key_exists('design_press', $row) && $row['design_press'] !== null && $row['design_press'] !== '') {
+            $row['design_press_pa'] = round((float) $row['design_press'] * 98066.5, 2);
+        } elseif (!array_key_exists('design_press_pa', $row)) {
+            $row['design_press_pa'] = null;
+        }
+
+        if (array_key_exists('s', $row) && $row['s'] !== null && $row['s'] !== '') {
+            $row['s_pa'] = round((float) $row['s'] * 1000000, 2);
+        } elseif (!array_key_exists('s_pa', $row)) {
+            $row['s_pa'] = null;
         }
 
         return $row;
