@@ -27,11 +27,48 @@ class PsvTagNumber
     public const MARKERS = ['PSV', 'TSV'];
 
     /**
+     * Tag number yang dikecualikan dari monitoring PSV (tidak ikut disinkronisasi/ditampilkan).
+     */
+    public const EXCLUDED_TAG_NUMBERS = [
+        '4-PSV-178',
+        '4-PSV-177',
+        '4-PSV-184',
+        '4-PSV-171',
+        '4-PSV-172',
+        '4-PSV-173',
+        '4-PSV-176',
+    ];
+
+    /**
+     * Cek apakah tag number dikecualikan.
+     */
+    public static function isExcluded(?string $tagNumber): bool
+    {
+        if ($tagNumber === null || trim($tagNumber) === '') {
+            return false;
+        }
+
+        $base = strtoupper(explode('/', trim($tagNumber))[0]);
+
+        foreach (self::EXCLUDED_TAG_NUMBERS as $excluded) {
+            if (strtoupper($excluded) === $base) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Pemeriksaan sisi PHP (dipakai listener & validasi sebelum query).
      */
     public static function matches(?string $tagNumber): bool
     {
         if ($tagNumber === null || trim($tagNumber) === '') {
+            return false;
+        }
+
+        if (self::isExcluded($tagNumber)) {
             return false;
         }
 
@@ -56,12 +93,14 @@ class PsvTagNumber
         $table = $table ?: 'tag_numbers';
         $column = $table . '.tag_number';
 
-        return \App\Models\Tag_number::query()
+        $query = \App\Models\Tag_number::query()
             ->where(function (Builder $q) use ($column) {
                 foreach (self::MARKERS as $marker) {
                     $q->orWhere($column, 'like', '%' . $marker . '%');
                 }
             });
+
+        return self::applyExclusions($query, $column);
     }
 
     /**
@@ -70,11 +109,30 @@ class PsvTagNumber
      */
     public static function applyToQuery(Builder $query, string $column = 'tag_numbers.tag_number'): Builder
     {
-        return $query->where(function (Builder $q) use ($column) {
+        $query = $query->where(function (Builder $q) use ($column) {
             foreach (self::MARKERS as $marker) {
                 $q->orWhere($column, 'like', '%' . $marker . '%');
             }
         });
+
+        return self::applyExclusions($query, $column);
+    }
+
+    /**
+     * Kecualikan tag number tertentu dari query.
+     */
+    public static function applyExclusions(Builder $query, string $column = 'tag_numbers.tag_number'): Builder
+    {
+        if (empty(self::EXCLUDED_TAG_NUMBERS)) {
+            return $query;
+        }
+
+        foreach (self::EXCLUDED_TAG_NUMBERS as $excluded) {
+            $query->where($column, 'not like', $excluded . '/%')
+                ->where($column, '!=', $excluded);
+        }
+
+        return $query;
     }
 
     /**
