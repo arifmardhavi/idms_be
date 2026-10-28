@@ -52,21 +52,21 @@ class MonitoringPipelineResource extends JsonResource
 
             'y' => $this->y,
 
-            'min_req_thk' => $this->min_req_thk,
+            'min_req_thk' => is_null($this->min_req_thk) ? null : round((float) $this->min_req_thk, 2),
 
-            'half_nom_thk' => $this->half_nom_thk,
+            'half_nom_thk' => is_null($this->half_nom_thk) ? null : round((float) $this->half_nom_thk, 2),
 
             'tanggal_pasang_line' => optional($this->tanggal_pasang_line)
                 ->format('Y-m-d'),
 
-            'actual_thk' => $this->actual_thk,
+            'actual_thk' => is_null($this->actual_thk) ? null : round((float) $this->actual_thk, 2),
 
             'tanggal_ut_terakhir' => optional($this->tanggal_ut_terakhir)
                 ->format('Y-m-d'),
 
-            'corrosion_rate' => $this->corrosion_rate,
+            'corrosion_rate' => is_null($this->corrosion_rate) ? null : round((float) $this->corrosion_rate, 2),
 
-            'remaining_life' => $this->remaining_life,
+            'remaining_life' => is_null($this->remaining_life) ? null : round((float) $this->remaining_life, 2),
 
             'alert_structural_thickness' => $this->alert_structural_thickness,
 
