@@ -138,10 +138,12 @@ Satu helper `App\Support\BacklogDays`:
 - `forDate($date)` → `Carbon::parse($tanggalIssue)->diffInDays(today(), false)`
   (positif untuk tanggal lampau). Karena `tanggal_issue` divalidasi ≤ hari ini,
   nilai minimum `0`.
-- `bucket(int $days)` → index `intdiv(max($days - 1, 0), 30) + 1`.
-  `0..30 → 1`, `31..60 → 2`, `61..90 → 3`, `91.. → 4`.
-- `label(int $index, bool $isLast)` → `1–30`, `31–60`, `61–90`, dst.; untuk
-  bucket terakhir dengan index ≥ 4 ditulis `91+` (open-ended).
+- `bucket(int $days)` → `min(intdiv(max($days - 1, 0), 30) + 1, 4)`.
+  `0..30 → 1`, `31..60 → 2`, `61..90 → 3`, `>= 91 → 4`. Empat bucket tetap,
+  sesuai demo yang disetujui; tidak ada bucket dinamis yang bertumpang tindih.
+- `label(int $index)` → `1` = `1–30`, `2` = `31–60`, `3` = `61–90`,
+  `4` = `91+` (open-ended). `hari_min` berturut-turut `1/31/61/91`,
+  `hari_max` `30/60/90/null`.
 
 Accessor `getBacklogDaysAttribute()` pada model memakai `forDate()` sehingga
 nilai di resource selalu konsisten dengan alias SQL yang dipakai filter/sort/export.
@@ -194,9 +196,8 @@ resource list — bobot hanya hasil olahan dashboard.
   `AVG(scoreSql()) as rata_rata_bobot`, `COUNT(*) as total_data`,
   `GROUP BY tahun ORDER BY tahun ASC`. Hasil dibulatkan 2 desimal.
 - `backlog`: satu query mengambil `backlog_days` per baris, dikelompokkan di PHP
-  per index bucket. Bucket kosong di antara bucket terendah dan tertinggi tetap
-  ditampilkan dengan `total: 0` agar grafik kontinu. Bucket terakhir mendapat
-  label open-ended bila index ≥ 4.
+  per index bucket. Keempat bucket (`1–30`, `31–60`, `61–90`, `91+`) selalu
+  ditampilkan, termasuk yang `total: 0`, supaya grafik konsisten antar periode.
 - Dashboard **global**, tidak menerima filter/search, mengikuti konvensi
   dashboard PSV/Equipment.
 
@@ -301,7 +302,8 @@ Route::apiResource('monitoring_memorandum', MonitoringMemorandumController::clas
 
 - `php artisan migrate` → tabel `monitoring_memorandum` terbentuk dengan FK ke
   `historical_memorandum`.
-- `php artisan route:list --path=monitoring_memorandum` → 8 route.
+- `php artisan route:list --path=monitoring_memorandum` → 7 route (5 dari
+  `apiResource` + `dashboard` + `export`).
 - `TagNumberIds::normalize(' 43, 44,43 ')` → `43,44`; `parse('all')` → `[]`;
   `isAll('all')` → `true`.
 - `?tag_number_ids=43` menampilkan baris `43,44` dan `412,43,93`, tidak
