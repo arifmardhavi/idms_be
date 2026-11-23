@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Support;
+
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
+
+class BacklogDays
+{
+    public static function daysSql(string $dateColumn): string
+    {
+        return "DATEDIFF(CURDATE(), {$dateColumn})";
+    }
+
+    public static function forDate(CarbonInterface|string|null $date): int
+    {
+        if ($date === null) {
+            return 0;
+        }
+
+        // Positif untuk tanggal lampau; tanggal_issue divalidasi <= hari ini.
+        return Carbon::parse($date)->diffInDays(Carbon::today(), false);
+    }
+
+    public static function bucket(int $days): int
+    {
+        return min(intdiv(max($days - 1, 0), 30) + 1, 4);
+    }
+
+    public static function label(int $bucket): string
+    {
+        return match ($bucket) {
+            1 => '1–30',
+            2 => '31–60',
+            3 => '61–90',
+            default => '91+',
+        };
+    }
+
+    /** @return array{bucket:string, hari_min:int, hari_max:?int} */
+    public static function meta(int $bucket): array
+    {
+        return match ($bucket) {
+            1 => ['bucket' => self::label(1), 'hari_min' => 1, 'hari_max' => 30],
+            2 => ['bucket' => self::label(2), 'hari_min' => 31, 'hari_max' => 60],
+            3 => ['bucket' => self::label(3), 'hari_min' => 61, 'hari_max' => 90],
+            default => ['bucket' => self::label(4), 'hari_min' => 91, 'hari_max' => null],
+        };
+    }
+}
