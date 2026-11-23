@@ -136,9 +136,17 @@ class MonitoringMemorandum extends BaseModel
         return trim((string) $this->tag_number_ids) === self::TAG_ALL_MARKER;
     }
 
-    public function getBacklogDaysAttribute(): int
+    /**
+     * Alias SQL `backlog_days` dari baseQuery()/dashboard service harus
+     * menang atas perhitungan PHP. Tanpa ini, accessor menimpa alias saat
+     * query tidak memilih kolom tanggal_issue (mis. agregat dashboard),
+     * menghasilkan 0 untuk semua baris.
+     */
+    public function getBacklogDaysAttribute($value): int
     {
-        return BacklogDays::forDate($this->tanggal_issue);
+        return $value !== null
+            ? (int) $value
+            : BacklogDays::forDate($this->tanggal_issue);
     }
 
     public function getRecordLabelAttribute(): string
@@ -1295,4 +1303,5 @@ git commit -m "feat(monitoring-memorandum): add controller, routes and verify CR
 - **Spec coverage:** migration & model (Task 1), `tag_number_ids` aturan + sentinel + search/filter (Task 2, 4, 8), `backlog_days` (Task 1, 3, 7, 8), bobot & dashboard (Task 3, 7, 8), validasi & partial update (Task 4, 8), resource (Task 5), export (Task 6, 8), routes & activity log (Task 1, 8). Tidak ada requirement spec tanpa task.
 - **Placeholder scan:** tidak ada `TBD`, `TODO`, "implement later", "add appropriate error handling", atau "serupa dengan Task N". Semua langkah kode memuat kode lengkap.
 - **Type consistency:** `BacklogDays::bucket(int): int`, `label(int): string`, `meta(int): array`; `TagNumberIds::applyFilter(Builder,string,?string): Builder`; `MonitoringMemorandumBobot::scoreSql(string): string`; `MonitoringMemorandumDashboardService::getDashboard(): array` dengan key `bobot`/`backlog`; `baseQuery(Request): Builder` dipakai `index()` dan `export()`. Nama konsisten di semua task.
+- **Koreksi saat eksekusi Task 7:** accessor `getBacklogDaysAttribute()` awalnya selalu memanggil `forDate()`, ternyata menimpa alias SQL `backlog_days` pada query dashboard yang tidak memilih `tanggal_issue` (semua baris jadi bucket `1–30`). Sudah diperbaiki di model, spec, dan plan: accessor menerima `$value` dari alias dan hanya fallback ke `forDate()` bila alias tidak ada. Verifikasi ulang menghasilkan bucket `3/1/0/2`.
 - **Verifikasi terhadap codebase nyata (sudah dicek):** `ApiResource::pagination($paginator, $resourceClass)` sesuai pemakaian; `BaseRequest` tidak meng-override `authorize()`, jadi kedua FormRequest wajib menambahkan `authorize(): bool` (sudah ada di Task 4); `ValidationRuleParser::explodeRules()` memecah rule string pada `|`, jadi rule `regex` dengan alternasi `all|\d+` ditulis array-form (sudah ada di Task 4); tabel `tag_numbers` dan FK `historical_memorandum` sesuai migration existing; `AppServiceProvider` memakai wildcard listener `eloquent.*: *`, sehingga tidak perlu registrasi observer per model; `ActivityModule::label('MonitoringMemorandum')` otomatis menjadi "Monitoring Memorandum" tanpa ubah config.

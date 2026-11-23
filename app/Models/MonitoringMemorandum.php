@@ -48,9 +48,17 @@ class MonitoringMemorandum extends BaseModel
         return trim((string) $this->tag_number_ids) === self::TAG_ALL_MARKER;
     }
 
-    public function getBacklogDaysAttribute(): int
+    /**
+     * Alias SQL `backlog_days` dari baseQuery()/dashboard service harus
+     * menang atas perhitungan PHP. Tanpa ini, accessor menimpa alias saat
+     * query tidak memilih kolom tanggal_issue (mis. agregat dashboard),
+     * menghasilkan 0 untuk semua baris.
+     */
+    public function getBacklogDaysAttribute($value): int
     {
-        return BacklogDays::forDate($this->tanggal_issue);
+        return $value !== null
+            ? (int) $value
+            : BacklogDays::forDate($this->tanggal_issue);
     }
 
     public function getRecordLabelAttribute(): string

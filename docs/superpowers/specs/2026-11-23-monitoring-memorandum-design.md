@@ -145,8 +145,11 @@ Satu helper `App\Support\BacklogDays`:
   `4` = `91+` (open-ended). `hari_min` berturut-turut `1/31/61/91`,
   `hari_max` `30/60/90/null`.
 
-Accessor `getBacklogDaysAttribute()` pada model memakai `forDate()` sehingga
-nilai di resource selalu konsisten dengan alias SQL yang dipakai filter/sort/export.
+Accessor `getBacklogDaysAttribute()` memakai nilai alias SQL `backlog_days`
+apabila query menyertakannya, dan fallback ke `forDate()` bila tidak ada. Ini
+wajib: accessor yang selalu menghitung dari `tanggal_issue` akan menimpa alias
+SQL dan menghasilkan `0` pada query dashboard yang tidak memilih kolom
+`tanggal_issue`.
 
 ## Bobot
 
