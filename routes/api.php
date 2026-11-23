@@ -70,6 +70,7 @@ use App\Http\Controllers\{
     MonitoringEquipmentController,
     MonitoringPsvController,
     MonitoringPipelineController,
+    MonitoringMemorandumController,
     NibController,
     NotifJasaController,
     NotifJasaOhController,
@@ -364,6 +365,12 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/monitoring_pipeline/import', [MonitoringPipelineController::class, 'import']);
     Route::get('/monitoring_pipeline/export', [MonitoringPipelineController::class, 'export']);
     Route::apiResource('monitoring_pipeline', MonitoringPipelineController::class);
+
+    // MONITORING MEMORANDUM
+    // Route literal HARUS sebelum apiResource agar tidak tertangkap {monitoring_memorandum}.
+    Route::get('/monitoring_memorandum/dashboard', [MonitoringMemorandumController::class, 'dashboard']);
+    Route::get('/monitoring_memorandum/export', [MonitoringMemorandumController::class, 'export']);
+    Route::apiResource('monitoring_memorandum', MonitoringMemorandumController::class);
 
     /*
     |--------------------------------------------------------------------------
