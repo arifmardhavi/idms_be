@@ -15,6 +15,8 @@ class StoreMonitoringMemorandumRequest extends BaseRequest
 
     public function rules(): array
     {
+        // isi rules() dipecah ke MonitoringMemorandumRules agar bisa dipakai juga di UpdateMonitoringMemorandumRequest.
+        // isi rules() ini merupakan rules dari tipe data yang dikirimkan FE.
         return MonitoringMemorandumRules::rules(false);
     }
 

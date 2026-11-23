@@ -18,109 +18,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class MonitoringMemorandumController extends Controller
 {
-    public function index(Request $request)
-    {
-        $perPage = min(max($request->integer('per_page', 10), 1), 100);
-
-        return ApiResource::pagination(
-            $this->baseQuery($request)->paginate($perPage),
-            MonitoringMemorandumResource::class
-        );
-    }
-
-    public function store(StoreMonitoringMemorandumRequest $request)
-    {
-        try {
-            $row = DB::transaction(
-                fn () => MonitoringMemorandum::create($request->validated())
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Monitoring Memorandum created successfully.',
-                'data' => new MonitoringMemorandumResource(
-                    $row->load('historicalMemorandum')
-                ),
-            ], 201);
-        } catch (\Throwable $e) {
-            return $this->error('Failed to create Monitoring Memorandum.', $e);
-        }
-    }
-
-    public function show(MonitoringMemorandum $monitoringMemorandum)
-    {
-        return new MonitoringMemorandumResource(
-            $monitoringMemorandum->load('historicalMemorandum')
-        );
-    }
-
-    public function update(
-        UpdateMonitoringMemorandumRequest $request,
-        MonitoringMemorandum $monitoringMemorandum
-    ) {
-        try {
-            DB::transaction(function () use ($request, $monitoringMemorandum) {
-                $monitoringMemorandum->update($request->validated());
-                $monitoringMemorandum->refresh();
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Monitoring Memorandum updated successfully.',
-                'data' => new MonitoringMemorandumResource(
-                    $monitoringMemorandum->load('historicalMemorandum')
-                ),
-            ]);
-        } catch (\Throwable $e) {
-            return $this->error('Failed to update Monitoring Memorandum.', $e);
-        }
-    }
-
-    public function destroy(MonitoringMemorandum $monitoringMemorandum)
-    {
-        try {
-            DB::transaction(fn () => $monitoringMemorandum->delete());
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Monitoring Memorandum deleted successfully.',
-            ]);
-        } catch (\Throwable $e) {
-            return $this->error('Failed to delete Monitoring Memorandum.', $e);
-        }
-    }
-
-    public function export(Request $request)
-    {
-        activity()->log('export', 'MonitoringMemorandum');
-
-        return Excel::download(
-            new MonitoringMemorandumExport($this->baseQuery($request)),
-            'Monitoring_Memorandum_' . now()->format('Ymd_His') . '.xlsx'
-        );
-    }
-
-    public function dashboard(MonitoringMemorandumDashboardService $service)
-    {
-        try {
-            return response()->json([
-                'success' => true,
-                'message' => 'Dashboard Monitoring Memorandum.',
-                'data' => $service->getDashboard(),
-            ]);
-        } catch (\Throwable $e) {
-            return $this->error('Failed load dashboard.', $e);
-        }
-    }
-
-    private function error(string $message, \Throwable $e)
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message,
-            'error' => config('app.debug') ? $e->getMessage() : null,
-        ], 500);
-    }
 
     /**
      * Query dasar dipakai bersama index() dan export() agar isi export
@@ -233,5 +130,110 @@ class MonitoringMemorandumController extends Controller
         );
 
         return $query;
+    }
+
+    
+    public function index(Request $request)
+    {
+        $perPage = min(max($request->integer('per_page', 10), 1), 100);
+
+        return ApiResource::pagination(
+            $this->baseQuery($request)->paginate($perPage),
+            MonitoringMemorandumResource::class
+        );
+    }
+
+    public function store(StoreMonitoringMemorandumRequest $request)
+    {
+        try {
+            $row = DB::transaction(
+                fn () => MonitoringMemorandum::create($request->validated())
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Monitoring Memorandum created successfully.',
+                'data' => new MonitoringMemorandumResource(
+                    $row->load('historicalMemorandum')
+                ),
+            ], 201);
+        } catch (\Throwable $e) {
+            return $this->error('Failed to create Monitoring Memorandum.', $e);
+        }
+    }
+
+    public function show(MonitoringMemorandum $monitoringMemorandum)
+    {
+        return new MonitoringMemorandumResource(
+            $monitoringMemorandum->load('historicalMemorandum')
+        );
+    }
+
+    public function update(
+        UpdateMonitoringMemorandumRequest $request,
+        MonitoringMemorandum $monitoringMemorandum
+    ) {
+        try {
+            DB::transaction(function () use ($request, $monitoringMemorandum) {
+                $monitoringMemorandum->update($request->validated());
+                $monitoringMemorandum->refresh();
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Monitoring Memorandum updated successfully.',
+                'data' => new MonitoringMemorandumResource(
+                    $monitoringMemorandum->load('historicalMemorandum')
+                ),
+            ]);
+        } catch (\Throwable $e) {
+            return $this->error('Failed to update Monitoring Memorandum.', $e);
+        }
+    }
+
+    public function destroy(MonitoringMemorandum $monitoringMemorandum)
+    {
+        try {
+            DB::transaction(fn () => $monitoringMemorandum->delete());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Monitoring Memorandum deleted successfully.',
+            ]);
+        } catch (\Throwable $e) {
+            return $this->error('Failed to delete Monitoring Memorandum.', $e);
+        }
+    }
+
+    public function export(Request $request)
+    {
+        activity()->log('export', 'MonitoringMemorandum');
+
+        return Excel::download(
+            new MonitoringMemorandumExport($this->baseQuery($request)),
+            'Monitoring_Memorandum_' . now()->format('Ymd_His') . '.xlsx'
+        );
+    }
+
+    public function dashboard(MonitoringMemorandumDashboardService $service)
+    {
+        try {
+            return response()->json([
+                'success' => true,
+                'message' => 'Dashboard Monitoring Memorandum.',
+                'data' => $service->getDashboard(),
+            ]);
+        } catch (\Throwable $e) {
+            return $this->error('Failed load dashboard.', $e);
+        }
+    }
+
+    private function error(string $message, \Throwable $e)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'error' => config('app.debug') ? $e->getMessage() : null,
+        ], 500);
     }
 }
