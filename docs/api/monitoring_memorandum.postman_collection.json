@@ -1,0 +1,846 @@
+{
+  "info": {
+    "name": "Monitoring Memorandum (IDMS)",
+    "description": "Collection API untuk modul Dashboard Monitoring Memorandum — pencatatan issue operasional dari nota dinas, notifikasi (OSNO/NOPR), work order (50/60), purchase order, sampai status open/close.\n\n**Base URL**\nDefault `{{baseUrl}}` = `http://127.0.0.1:8000` (`php artisan serve`). Kalau memakai Laragon, ganti ke `http://localhost/idms_be/public`.\n\n**Endpoint (7)**\n- `GET    /api/monitoring_memorandum` — list + search + filter + sort + paginate\n- `POST   /api/monitoring_memorandum` — create\n- `GET    /api/monitoring_memorandum/{id}` — detail\n- `PUT    /api/monitoring_memorandum/{id}` — update (boleh parsial)\n- `DELETE /api/monitoring_memorandum/{id}` — delete\n- `GET    /api/monitoring_memorandum/export` — export xlsx (mengikuti filter aktif)\n- `GET    /api/monitoring_memorandum/dashboard` — agregat bobot per tahun + backlog per bucket\n\n**Khusus modul ini**\n- Semua endpoint butuh token (`auth:api`). Kirim header `Accept: application/json` supaya respons 401 berupa JSON.\n- Wajib diisi saat create HANYA `tanggal_issue` dan `issue_operasional`. Field lain nullable.\n- `tanggal_issue` tidak boleh di masa depan; `backlog_days` dihitung otomatis (minimal 0, tidak disimpan di DB).\n- `tag_number_ids` adalah string daftar ID dipisah koma, mis. `43,44`, ATAU literal `all` sebagai penanda All Tag Number. Tidak ada kolom boolean terpisah.\n- `search=all` TIDAK menemukan baris bertanda `all` (sentinel sengaja tidak ikut di-search). Filter `?tag_number_ids=all` menemukannya. Filter numerik `?tag_number_ids=43` TIDAK ikut menyertakan baris `all`.\n- Update parsial: kirim hanya field yang mau diubah. `{\"nota_dinas\": null}` mengosongkan nilai.\n- Bobot dashboard: nota dinas 10, no notif 10, status notif 20, no WO 10, status WO 20, no PO 10, status `close` 20 — dirata-rata per tahun.\n- Backlog dashboard: empat bucket tetap `1–30`, `31–60`, `61–90`, `91+`.\n- Bentuk respons: index → `{success, message, data:[...], meta:{...}}`; show → `{data:{...}}`; store/update → `{success, message, data:{...}}` (store: 201); delete → `{success, message}`; error validasi → 422 `{success:false, message:\"Validation failed.\", errors:{...}}`.\n\n**Urutan pakai**\nJalankan folder 1 → 2 → 3 → 4 → 5. Folder 6 membersihkan data uji yang dibuat collection ini dan melakukan logout.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "list_id", "value": "", "type": "string" },
+    { "key": "created_id", "value": "", "type": "string" },
+    { "key": "created_multi_id", "value": "", "type": "string" },
+    { "key": "created_all_id", "value": "", "type": "string" },
+    { "key": "tag_multi", "value": "43,44", "type": "string" },
+    { "key": "tag_satu", "value": "43", "type": "string" },
+    { "key": "tag_invalid", "value": "999999", "type": "string" },
+    { "key": "nota_dinas_id", "value": "18", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1. Autentikasi",
+      "item": [
+        {
+          "name": "Login (ambil token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('sukses + token ada', () => {",
+                  "    pm.expect(json.success).to.eql(true);",
+                  "    pm.expect(json.data.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "if (json && json.data && json.data.token) {",
+                  "    pm.collectionVariables.set('token', json.data.token);",
+                  "    pm.environment.set('token', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login"]
+            },
+            "auth": { "type": "noauth" },
+            "description": "Simpan JWT ke variabel collection `token` (dan environment `token`) lewat test script — request berikutnya otomatis memakainya."
+          }
+        },
+        {
+          "name": "Tanpa token → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('pesan Unauthenticated', () => {",
+                  "    pm.expect(pm.response.json().message).to.eql('Unauthenticated.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum?per_page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"],
+              "query": [{ "key": "per_page", "value": "1" }]
+            },
+            "auth": { "type": "noauth" },
+            "description": "Membuktikan proteksi `auth:api`. Header `Accept: application/json` penting supaya respons 401 berupa JSON, bukan halaman HTML."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. List & Filter",
+      "item": [
+        {
+          "name": "List (per_page 25, simpan id pertama)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('punya data[] + meta', () => {",
+                  "    pm.expect(json.success).to.eql(true);",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "    pm.expect(json.meta).to.have.property('total');",
+                  "});",
+                  "if (Array.isArray(json.data) && json.data.length) {",
+                  "    pm.collectionVariables.set('list_id', json.data[0].id);",
+                  "    console.log('list_id =', json.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum?per_page=25&sort_by=tanggal_issue&sort_order=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"],
+              "query": [
+                { "key": "per_page", "value": "25" },
+                { "key": "sort_by", "value": "tanggal_issue" },
+                { "key": "sort_order", "value": "desc" }
+              ]
+            },
+            "description": "Sort whitelist: `id`, `tanggal_issue`, `issue_operasional`, `tag_number_ids`, `nota_dinas`, `no_notif`, `status_notif`, `no_wo`, `status_wo`, `no_po`, `status`, `backlog_days`, `created_at`, `updated_at`. Default `tanggal_issue` desc."
+          }
+        },
+        {
+          "name": "Filter tag_number_ids=43 (tidak boleh termasuk baris all)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('semua baris memuat 43 dan bukan sentinel all', () => {",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "    json.data.forEach((row) => {",
+                  "        pm.expect(row.is_all_tag_number).to.eql(false);",
+                  "        pm.expect(String(row.tag_number_ids).split(',')).to.include('43');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum?tag_number_ids={{tag_satu}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"],
+              "query": [{ "key": "tag_number_ids", "value": "{{tag_satu}}" }]
+            },
+            "description": "Filter numerik memakai ANY: `43,44` mencocokkan baris yang memuat salah satu ID. Baris dengan `tag_number_ids = all` sengaja TIDAK ikut."
+          }
+        },
+        {
+          "name": "Filter tag_number_ids=all (hanya baris all)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('semua baris bertanda all', () => {",
+                  "    json.data.forEach((row) => {",
+                  "        pm.expect(row.is_all_tag_number).to.eql(true);",
+                  "        pm.expect(row.tag_number_ids).to.eql('all');",
+                  "        pm.expect(row.tag_numbers).to.be.an('array').that.is.empty;",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum?tag_number_ids=all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"],
+              "query": [{ "key": "tag_number_ids", "value": "all" }]
+            },
+            "description": "Satu-satunya cara menemukan baris All Tag Number lewat filter."
+          }
+        },
+        {
+          "name": "Search=all → sentinel TIDAK muncul",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('tidak ada baris all di hasil search', () => {",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "    json.data.forEach((row) => pm.expect(row.is_all_tag_number).to.eql(false));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum?search=all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"],
+              "query": [{ "key": "search", "value": "all" }]
+            },
+            "description": "Kolom `tag_number_ids` sengaja tidak termasuk global search, jadi kata `all` tidak boleh menemukan baris sentinel lewat field ini. Boleh ada hasil kalau teks 'all' muncul di field lain (mis. issue_operasional) — pengujian memastikan bukan baris sentinel."
+          }
+        },
+        {
+          "name": "Filter backlog_days_min=91",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('semua backlog_days >= 91', () => {",
+                  "    json.data.forEach((row) => pm.expect(row.backlog_days).to.be.at.least(91));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum?backlog_days_min=91",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"],
+              "query": [{ "key": "backlog_days_min", "value": "91" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Dashboard",
+      "item": [
+        {
+          "name": "Dashboard bobot + backlog",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('dua blok: bobot + backlog', () => {",
+                  "    pm.expect(json.data).to.have.all.keys('bobot', 'backlog');",
+                  "    pm.expect(json.data.bobot).to.be.an('array');",
+                  "    pm.expect(json.data.backlog).to.be.an('array');",
+                  "});",
+                  "pm.test('empat bucket backlog tetap', () => {",
+                  "    pm.expect(json.data.backlog.map((b) => b.bucket)).to.eql(['1–30', '31–60', '61–90', '91+']);",
+                  "    pm.expect(json.data.backlog[3].hari_max).to.eql(null);",
+                  "});",
+                  "pm.test('bobot 0..100 per tahun', () => {",
+                  "    json.data.bobot.forEach((b) => {",
+                  "        pm.expect(b.rata_rata_bobot).to.be.within(0, 100);",
+                  "        pm.expect(b.total_data).to.be.above(0);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum", "dashboard"]
+            },
+            "description": "Dashboard global — tidak dipengaruhi filter/search di halaman list. Bobot dirata-rata per `YEAR(tanggal_issue)`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. CRUD",
+      "item": [
+        {
+          "name": "Create minimal → 201 (simpan created_id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('hanya dua field wajib', () => {",
+                  "    pm.expect(json.success).to.eql(true);",
+                  "    pm.expect(json.data.id).to.be.a('number');",
+                  "    pm.expect(json.data.tanggal_issue).to.eql('2026-11-18');",
+                  "    pm.expect(json.data.tag_number_ids).to.eql(null);",
+                  "    pm.expect(json.data.status).to.eql(null);",
+                  "});",
+                  "pm.collectionVariables.set('created_id', json.data.id);",
+                  "console.log('created_id =', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tanggal_issue\": \"2026-11-18\",\n  \"issue_operasional\": \"POSTMAN minimal\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"]
+            },
+            "description": "Bukti bahwa hanya `tanggal_issue` dan `issue_operasional` yang wajib. Sesuaikan tanggal bila perlu (harus <= hari ini)."
+          }
+        },
+        {
+          "name": "Create multi tag → 201 (simpan created_multi_id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('tag_number_ids tersimpan apa adanya', () => {",
+                  "    pm.expect(json.data.tag_number_ids).to.eql(pm.collectionVariables.get('tag_multi'));",
+                  "    pm.expect(json.data.is_all_tag_number).to.eql(false);",
+                  "    pm.expect(json.data.tag_numbers).to.be.an('array').that.is.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set('created_multi_id', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tanggal_issue\": \"2026-11-18\",\n  \"issue_operasional\": \"POSTMAN multi tag\",\n  \"tag_number_ids\": \"{{tag_multi}}\",\n  \"no_notif\": 4501,\n  \"status_notif\": \"OSNO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"]
+            }
+          }
+        },
+        {
+          "name": "Create all tag → 201 (simpan created_all_id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('sentinel all terbaca sebagai all', () => {",
+                  "    pm.expect(json.data.tag_number_ids).to.eql('all');",
+                  "    pm.expect(json.data.is_all_tag_number).to.eql(true);",
+                  "    pm.expect(json.data.tag_numbers).to.be.an('array').that.is.empty;",
+                  "});",
+                  "pm.collectionVariables.set('created_all_id', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tanggal_issue\": \"2026-11-05\",\n  \"issue_operasional\": \"POSTMAN all tag\",\n  \"tag_number_ids\": \"all\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"]
+            }
+          }
+        },
+        {
+          "name": "Create tag id tidak ada → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('errors.tag_number_ids ada', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.eql(false);",
+                  "    pm.expect(body.errors).to.have.property('tag_number_ids');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tanggal_issue\": \"2026-11-18\",\n  \"issue_operasional\": \"POSTMAN tag invalid\",\n  \"tag_number_ids\": \"{{tag_invalid}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"]
+            },
+            "description": "ID yang tidak ditemukan di tabel `tag_numbers` ditolak 422, tidak dibuang diam-diam."
+          }
+        },
+        {
+          "name": "Create campuran 43,all → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('regex menolak campuran angka + all', () => {",
+                  "    pm.expect(pm.response.json().errors).to.have.property('tag_number_ids');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tanggal_issue\": \"2026-11-18\",\n  \"issue_operasional\": \"POSTMAN tag campuran\",\n  \"tag_number_ids\": \"43,all\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"]
+            }
+          }
+        },
+        {
+          "name": "Create tanggal di masa depan → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('errors.tanggal_issue ada', () => {",
+                  "    pm.expect(pm.response.json().errors.tanggal_issue[0]).to.include('before or equal to today');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tanggal_issue\": \"2099-01-01\",\n  \"issue_operasional\": \"POSTMAN tanggal depan\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum"]
+            }
+          }
+        },
+        {
+          "name": "Show created_id (simpan nilai awal untuk uji partial update)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('awal_tag_number_ids', String(json.data.tag_number_ids));",
+                  "pm.collectionVariables.set('awal_no_notif', String(json.data.no_notif));",
+                  "pm.collectionVariables.set('awal_nota_dinas', String(json.data.nota_dinas));",
+                  "console.log('awal nota_dinas =', json.data.nota_dinas);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum/{{created_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum", "{{created_id}}"]
+            },
+            "description": "Menyimpan snapshot nilai sebelum update parsial di request berikutnya."
+          }
+        },
+        {
+          "name": "Update parsial: kirim nota_dinas saja → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('hanya nota_dinas yang berubah', () => {",
+                  "    pm.expect(json.data.nota_dinas).to.eql(Number(pm.collectionVariables.get('nota_dinas_id')));",
+                  "    pm.expect(String(json.data.tag_number_ids)).to.eql(pm.collectionVariables.get('awal_tag_number_ids'));",
+                  "    pm.expect(String(json.data.no_notif)).to.eql(pm.collectionVariables.get('awal_no_notif'));",
+                  "});",
+                  "pm.test('no_dokumen diambil dari relasi', () => {",
+                  "    pm.expect(json.data).to.have.property('no_dokumen');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nota_dinas\": {{nota_dinas_id}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum/{{created_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum", "{{created_id}}"]
+            },
+            "description": "Aturan `sometimes` pada UpdateRequest membuat field yang tidak dikirim tidak ikut berubah. `no_dokumen` ikut tampil karena dibaca dari relasi `historicalMemorandum`, bukan kolom tersimpan. Sesuaikan `nota_dinas_id` bila ID tersebut tidak ada di database Anda."
+          }
+        },
+        {
+          "name": "Update: kosongkan nota_dinas dengan null → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('nota_dinas menjadi null', () => {",
+                  "    pm.expect(pm.response.json().data.nota_dinas).to.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nota_dinas\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum/{{created_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum", "{{created_id}}"]
+            },
+            "description": "String kosong (`\"\"`) juga dinormalisasi menjadi `null` di `prepareForValidation()`."
+          }
+        },
+        {
+          "name": "Update tanggal di masa depan → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('errors.tanggal_issue ada', () => {",
+                  "    pm.expect(pm.response.json().errors).to.have.property('tanggal_issue');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tanggal_issue\": \"2099-01-01\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum/{{created_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum", "{{created_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Export",
+      "item": [
+        {
+          "name": "Export semua (xlsx)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('content-type xlsx', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('spreadsheetml');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum/export",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum", "export"]
+            },
+            "description": "13 heading: No, Tanggal Issue, Issue Operasional, Tag Number, Nota Dinas, No Notif, Status Notif, No WO, Status WO, No PO, Status, Backlog Days, Keterangan."
+          }
+        },
+        {
+          "name": "Export dengan filter tag=all (xlsx)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('content-type xlsx', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('spreadsheetml');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum/export?tag_number_ids=all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum", "export"],
+              "query": [{ "key": "tag_number_ids", "value": "all" }]
+            },
+            "description": "Export memakai `baseQuery()` yang sama dengan `index()`, sehingga filter aktif ikut berlaku. Kolom Tag Number menampilkan teks `All Tag Number` untuk sentinel."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Bersih-bersih & Logout",
+      "item": [
+        {
+          "name": "Delete created_id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["if (!pm.collectionVariables.get('created_id')) pm.execution.skipRequest();"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success true', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum/{{created_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum", "{{created_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete created_multi_id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["if (!pm.collectionVariables.get('created_multi_id')) pm.execution.skipRequest();"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum/{{created_multi_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum", "{{created_multi_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete created_all_id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["if (!pm.collectionVariables.get('created_all_id')) pm.execution.skipRequest();"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring_memorandum/{{created_all_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring_memorandum", "{{created_all_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token', '');",
+                  "pm.environment.set('token', '');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "logout"]
+            },
+            "description": "Menghapus token dari variabel collection dan environment."
+          }
+        }
+      ]
+    }
+  ]
+}
