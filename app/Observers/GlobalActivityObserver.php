@@ -45,6 +45,7 @@ class GlobalActivityObserver
         'IsoMetric'             => 'no_drawing',
         'MonitoringPsv'         => 'record_label',
         'MonitoringPipeline'     => 'record_label',
+        'MonitoringMemorandum'   => 'record_label',
         'EcaFsca'               => 'functional_location',
         'Contract'              => 'no_contract',
         'ContractNew'           => 'no_contract',
