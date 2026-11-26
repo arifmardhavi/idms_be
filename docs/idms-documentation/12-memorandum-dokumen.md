@@ -61,6 +61,48 @@ Contoh: `Memo-Inspeksi-001_20072026_0.pdf`
 public/historical_memorandum/
 ```
 
+### Akses Link File Langsung (Wajib Login)
+
+URL file seperti `/historical_memorandum/{nama_file}` dan
+`/historical_memorandum/lampiran/{nama_file}` **tidak lagi disajikan langsung oleh web server**.
+Aturan di `public/.htaccess` (Apache) dan `server.php` (`php artisan serve`)
+memaksa keduanya masuk ke Laravel, lalu middleware `file.access` melakukan:
+
+1. Validasi JWT dari header `Authorization` **atau** cookie `idms_file_token`
+   (cookie dikirim dari `POST /api/login`, dihapus saat logout, diperbarui saat
+   `POST /api/refresh`).
+2. Cek status user aktif.
+3. Cek hak akses: `get_historical_memorandum` untuk file utama,
+   `get_historical_memorandum_lampiran` untuk lampiran. Superuser tetap diizinkan.
+4. Cek bahwa nama file terdaftar di tabel `historical_memorandum` / `lampiran_memos`.
+
+Semua kegagalan diberikan **404** (bukan 401/403) agar keberadaan file tidak
+dapat diketahui pihak yang tidak berhak. Nama file yang mengandung path traversal
+juga ditolak.
+
+FE di port 80 dan BE di port 8888 pada host yang sama masih **same-site**
+(SameSite memperhatikan scheme + domain, bukan port), sehingga cookie `lax`
+tetap dikirim baik saat buka tab baru maupun di `<iframe>`. Request login dari
+FE lintas port wajib memakai `credentials: 'include'` agar browser menyimpan
+cookie (CORS sudah `supports_credentials: true`).
+
+Apabila FE berada di domain lain (bukan sekadar port lain), cookie `lax` tidak
+akan dikirim di iframe. Saat itu gunakan HTTPS + `FILE_ACCESS_COOKIE_SAMESITE=None`
+dan `FILE_ACCESS_COOKIE_SECURE=true`, atau signed URL dari endpoint download.
+
+Aturan Apache mencocokkan `REQUEST_FILENAME` (sudah di-decode) dengan flag `NC`,
+sehingga varian huruf besar dan path terenkripsi tidak bisa menghindari middleware.
+`server.php` di root melakukan hal yang sama untuk server bawaan PHP: setelah
+menambahkan/mengubahnya, **restart `php artisan serve`** karena router dimuat
+saat server mulai.
+
+Pastikan vhost Apache production mengizinkan `.htaccess` (`AllowOverride All`).
+Jika tidak, aturan rewrite harus dipindahkan ke konfigurasi vhost — tanpa itu
+Apache tetap menyajikan file langsung dan pengecekan login tidak jalan.
+
+> Catatan: folder upload lain di `public/` (contract, plo, coi, readiness_*, dll)
+> masih memakai pola lama dan belum terlindungi oleh aturan ini.
+
 ### Validasi Upload
 
 - Format: `pdf`

@@ -71,8 +71,29 @@ class FileHelper
         return $size;
     }
     
+    /**
+     * Nama file yang berasal dari DB tidak boleh mengandung separator path.
+     * Tanpa pemeriksaan ini, nilai seperti "../rahasia.pdf" bisa keluar dari
+     * folder upload dan menyebabkan traversal (atau error 500 di header download).
+     */
+    public static function isSafeFileName(string $fileName): bool
+    {
+        $normalized = str_replace('\\', '/', $fileName);
+
+        return $fileName !== ''
+            && !str_contains($fileName, "\0")
+            && $normalized === basename($normalized);
+    }
+
     public static function downloadFile(string $destinationFolder, string $fileName)
     {
+        if (!self::isSafeFileName($fileName)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file name.',
+            ], 404);
+        }
+
         $filePath = public_path($destinationFolder . '/' . $fileName);
         if (!file_exists($filePath)) {
             return response()->json([
@@ -80,13 +101,17 @@ class FileHelper
                 'message' => 'File does not exist in storage.',
             ], 404);
         }
-        return response()->download(
+        $response = response()->download(
             $filePath,
             $fileName,
             [
                 'Content-Type' => mime_content_type($filePath),
-                'Content-Disposition' => "attachment; filename=\"{$fileName}\"; filename*=UTF-8''" . rawurlencode($fileName)
+                'Content-Disposition' => "attachment; filename=\"{$fileName}\"; filename*=UTF-8''" . rawurlencode($fileName),
             ]
         );
+        $response->setPrivate();
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
     }
 }

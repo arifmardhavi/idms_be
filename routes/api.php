@@ -149,6 +149,7 @@ Route::middleware(['auth:api'])->group(function () {
 
     // AUTH
     Route::post('/me', [AuthController::class, 'me']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
 
     // ACTIVITY LOG & RANKING
     Route::get('activity', [ActivityController::class, 'index']);
@@ -400,8 +401,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/termin_receipt/download_file/{id}', [TerminReceiptController::class, 'downloadTerminReceiptFile']); // Download Termin Receipt File
     Route::get('/lumpsum_progress_new/download_file/{id}', [LumpsumProgressNewController::class, 'downloadLumpsumProgressFile']); // Download Lumpsum Progress File
     Route::get('/amandemen_new/download_file/{id}', [AmandemenNewController::class, 'downloadAmandemenFile']); // Download Amandemen File
-    Route::get('/historical_memorandum/download_file/{id}', [HistoricalMemorandumController::class, 'downloadHistoricalMemorandumFile']); // Download Historical Memorandum File
-    Route::get('/lampiran_memo/download_file/{id}', [LampiranMemoController::class, 'downloadLampiranMemoFile']); // Download Lampiran Memo File
+    Route::get('/historical_memorandum/download_file/{id}', [HistoricalMemorandumController::class, 'downloadHistoricalMemorandumFile'])->middleware('file.access:get_historical_memorandum'); // Download Historical Memorandum File
+    Route::get('/lampiran_memo/download_file/{id}', [LampiranMemoController::class, 'downloadLampiranMemoFile'])->middleware('file.access:get_historical_memorandum_lampiran'); // Download Lampiran Memo File
     Route::get('/project_spec/download_file/{id}', [ProjectSpecController::class, 'downloadProjectSpecFile']); // Download Project Spec File
     
     
@@ -510,9 +511,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/contract_new_user', [ContractNewController::class, 'contractsByUser']);
 
     // HISTORICAL MEMORANDUM & LAMPIRAN
-    Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId']);
-    Route::post('/lampiran_memo/download', [LampiranMemoController::class, 'downloadLampiranMemoFiles']);
-    Route::post('/historical_memorandum/download', [HistoricalMemorandumController::class, 'downloadHistoricalMemorandumFiles']);
+    Route::get('/historical_memorandum/lampiran/{id}', [LampiranMemoController::class, 'showWithHistoricalId'])->middleware('file.access:get_historical_memorandum');
+    Route::post('/lampiran_memo/download', [LampiranMemoController::class, 'downloadLampiranMemoFiles'])->middleware('file.access:get_historical_memorandum_lampiran');
+    Route::post('/historical_memorandum/download', [HistoricalMemorandumController::class, 'downloadHistoricalMemorandumFiles'])->middleware('file.access:get_historical_memorandum');
 
     // GA DRAWING
     Route::get('/ga_drawing/engineering/{id}', [GaDrawingController::class, 'showWithEngineeringDataId']);

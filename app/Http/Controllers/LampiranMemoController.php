@@ -179,7 +179,7 @@ class LampiranMemoController extends Controller
     
         foreach ($lampiranMemos as $lampiranMemo) {
             // Cek jika file lampiran memorandum ada dan file tersebut valid
-            if ($lampiranMemo->lampiran_memo) {
+            if ($lampiranMemo->lampiran_memo && FileHelper::isSafeFileName($lampiranMemo->lampiran_memo)) {
                 $filePath = public_path('historical_memorandum/lampiran/' . $lampiranMemo->lampiran_memo);
                 if (file_exists($filePath)) {
                     // Menambahkan file ke dalam ZIP

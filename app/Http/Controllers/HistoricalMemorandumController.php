@@ -234,7 +234,7 @@ class HistoricalMemorandumController extends Controller
     
         foreach ($historical_memorandums as $historical_memorandum) {
             // Cek jika file memorandum ada dan file tersebut valid
-            if ($historical_memorandum->memorandum_file) {
+            if ($historical_memorandum->memorandum_file && FileHelper::isSafeFileName($historical_memorandum->memorandum_file)) {
                 $filePath = public_path('historical_memorandum/' . $historical_memorandum->memorandum_file);
                 if (file_exists($filePath)) {
                     // Menambahkan file ke dalam ZIP

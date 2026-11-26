@@ -86,18 +86,18 @@ class AuthController extends Controller
             ->where('user_id', $user->id)
             ->get();
 
-        $user->hak_akses_list = $data
+        $hakAksesList = $data
             ->pluck('hak_akses.hak_akses')
             ->filter()
             ->values()
             ->toArray();
 
-        // Username yang dapat akses semua
-        $superUsers = ['admin', 'superadmin', 'faza.ahmad'];
-        if (in_array($user->username, $superUsers)) {
+        // Username yang dapat akses semua (sumber tunggal: config/file_access.php)
+        if (in_array($user->username, config('file_access.superusers'), true)) {
             $hakAksesList[] = '*';
-            $user->hak_akses_list = $hakAksesList;
         }
+
+        $user->hak_akses_list = $hakAksesList;
 
         activity()->log('login', 'Auth', [
             'userId' => $user->id,
@@ -110,7 +110,27 @@ class AuthController extends Controller
                 'token' => $token,
                 'user' => new UserLoginResource($user),
             ],
-        ]);
+        ])->withCookie($this->fileAccessCookie($token));
+    }
+
+    /**
+     * Cookie ini hanya dipakai untuk link file yang dibuka langsung oleh browser.
+     * Link biasa tidak mengirim header Authorization, sehingga JWT harus ikut
+     * sebagai cookie supaya middleware file.access bisa memvalidasi login.
+     */
+    private function fileAccessCookie(string $token)
+    {
+        return cookie()->make(
+            config('file_access.cookie'),
+            $token,
+            (int) config('jwt.ttl'),
+            null,
+            null,
+            (bool) config('file_access.cookie_secure'),
+            true,
+            false,
+            config('file_access.cookie_samesite')
+        );
     }
 
 
@@ -134,7 +154,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 30
-        ]);
+        ])->withCookie($this->fileAccessCookie($token));
     }
 
     public function logout()
@@ -153,7 +173,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Logout berhasil.',
             'data' => null
-        ], 200);
+        ], 200)->withCookie(cookie()->forget(config('file_access.cookie')));
     }
 }
 

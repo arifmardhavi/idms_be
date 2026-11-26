@@ -188,6 +188,7 @@ Content-Type: application/json
 |--------|----------|-----------|
 | `POST` | `/api/logout` | Logout (invalidate token) |
 | `POST` | `/api/me` | Dapatkan data user yang sedang login |
+| `POST` | `/api/refresh` | Perbarui JWT (cookie akses file ikut diperbarui) |
 
 ---
 

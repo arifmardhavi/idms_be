@@ -14,6 +14,14 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # File sensitif harus melewati middleware Laravel. Pakai REQUEST_FILENAME
+    # (path filesystem yang sudah di-decode), bukan REQUEST_URI: varian huruf
+    # dan path terenkripsi tetap terdeteksi. Flag NC menutup celah pada
+    # filesystem case-insensitive.
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteCond %{REQUEST_FILENAME} /(historical_memorandum/|file_historical_memorandum\.zip$|file_lampiran_memo\.zip$) [NC]
+    RewriteRule ^ index.php [L]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
