@@ -30,10 +30,10 @@ class BacklogDays
     public static function label(int $bucket): string
     {
         return match ($bucket) {
-            1 => '1–30',
-            2 => '31–60',
-            3 => '61–90',
-            default => '91+',
+            1 => '1–20',
+            2 => '21–40',
+            3 => '41–60',
+            default => '61+',
         };
     }
 
@@ -41,10 +41,10 @@ class BacklogDays
     public static function meta(int $bucket): array
     {
         return match ($bucket) {
-            1 => ['bucket' => self::label(1), 'hari_min' => 1, 'hari_max' => 30],
-            2 => ['bucket' => self::label(2), 'hari_min' => 31, 'hari_max' => 60],
-            3 => ['bucket' => self::label(3), 'hari_min' => 61, 'hari_max' => 90],
-            default => ['bucket' => self::label(4), 'hari_min' => 91, 'hari_max' => null],
+            1 => ['bucket' => self::label(1), 'hari_min' => 1, 'hari_max' => 20],
+            2 => ['bucket' => self::label(2), 'hari_min' => 21, 'hari_max' => 40],
+            3 => ['bucket' => self::label(3), 'hari_min' => 41, 'hari_max' => 60],
+            default => ['bucket' => self::label(4), 'hari_min' => 61, 'hari_max' => null],
         };
     }
 }
