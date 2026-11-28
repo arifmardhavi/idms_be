@@ -12,6 +12,7 @@ class Ems extends BaseModel
     protected $fillable = [
         'tag_number_id',
         'no_ems',
+        'rev',
         'tanggal',
         'ems_file',
     ];
