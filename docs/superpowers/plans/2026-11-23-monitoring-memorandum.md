@@ -13,12 +13,12 @@
 ## Global Constraints
 
 - Spesifikasi sumber: `docs/superpowers/specs/2026-11-23-monitoring-memorandum-design.md`.
-- **Tanpa unit test baru** (keputusan eksplisit spec). Test cycle tiap task memakai `php -l`, `php artisan tinker --execute="..."`, `php artisan route:list`, dan `curl` dengan expected output yang tertulis.
+- **Awalnya tanpa unit test baru** (keputusan eksplisit spec). Setelah revisi bucket 2026-11-28 ditambah `tests/Unit/BacklogDaysBucketTest.php` sebagai regression test. Test cycle tiap task memakai `php -l`, `php artisan tinker --execute="..."`, `php artisan route:list`, dan `curl` dengan expected output yang tertulis.
 - Nama tabel **wajib** `monitoring_memorandum`; model wajib menulis `protected $table = 'monitoring_memorandum'` secara eksplisit.
 - Field wajib saat create hanya `tanggal_issue`, `issue_operasional`; sisanya nullable.
 - `tag_number_ids`: `all` atau `\d+(,\d+)*`, tanpa kolom boolean baru. `search` tidak boleh mencocokkan sentinel `all`; filter `tag_number_ids=all` harus mencocokkannya.
 - `tanggal_issue` ≤ hari ini; `backlog_days` minimum `0`, tidak disimpan di DB.
-- Bobot biner 0–100, dirata-rata per `YEAR(tanggal_issue)`. Bucket backlog tetap empat: `1–30`, `31–60`, `61–90`, `91+`.
+- Bobot biner 0–100, dirata-rata per `YEAR(tanggal_issue)`. Bucket backlog tetap empat: `0–20`, `21–40`, `41–60`, `61+` (revisi 2026-11-28).
 - Semua route di dalam `middleware(['auth:api'])`. Route literal (`dashboard`, `export`) ditulis **sebelum** `apiResource`.
 - Response CRUD: `['success' => bool, 'message' => string, 'data' => ...]`; `store` HTTP 201; error 500 memuat `error` hanya jika `config('app.debug')`.
 - Activity log otomatis via `GlobalActivityObserver` dengan label `record_label`; `config/log-activity.php` **tidak** diubah.
@@ -398,16 +398,16 @@ class BacklogDays
 
     public static function bucket(int $days): int
     {
-        return min(intdiv(max($days - 1, 0), 30) + 1, 4);
+        return min(intdiv(max($days - 1, 0), 20) + 1, 4);
     }
 
     public static function label(int $bucket): string
     {
         return match ($bucket) {
-            1 => '1–30',
-            2 => '31–60',
-            3 => '61–90',
-            default => '91+',
+            1 => '0–20',
+            2 => '21–40',
+            3 => '41–60',
+            default => '61+',
         };
     }
 
@@ -415,10 +415,10 @@ class BacklogDays
     public static function meta(int $bucket): array
     {
         return match ($bucket) {
-            1 => ['bucket' => self::label(1), 'hari_min' => 1, 'hari_max' => 30],
-            2 => ['bucket' => self::label(2), 'hari_min' => 31, 'hari_max' => 60],
-            3 => ['bucket' => self::label(3), 'hari_min' => 61, 'hari_max' => 90],
-            default => ['bucket' => self::label(4), 'hari_min' => 91, 'hari_max' => null],
+            1 => ['bucket' => self::label(1), 'hari_min' => 0, 'hari_max' => 20],
+            2 => ['bucket' => self::label(2), 'hari_min' => 21, 'hari_max' => 40],
+            3 => ['bucket' => self::label(3), 'hari_min' => 41, 'hari_max' => 60],
+            default => ['bucket' => self::label(4), 'hari_min' => 61, 'hari_max' => null],
         };
     }
 }
@@ -479,9 +479,9 @@ class MonitoringMemorandumBobot
 
 Run:
 ```bash
-php artisan tinker --execute="use App\Support\BacklogDays; use App\Support\MonitoringMemorandumBobot; echo implode(',', array_map([BacklogDays::class,'bucket'], [0,30,31,60,61,90,91,511])); echo PHP_EOL; echo BacklogDays::meta(4)['bucket']; echo PHP_EOL; echo MonitoringMemorandumBobot::score(['nota_dinas'=>18,'no_notif'=>4501,'status_notif'=>'OSNO','no_wo'=>8101,'status_wo'=>'50','no_po'=>'PO-1','status'=>'close']); echo PHP_EOL; echo MonitoringMemorandumBobot::score(['no_notif'=>4501,'status_notif'=>'OSNO']); echo PHP_EOL; echo MonitoringMemorandumBobot::score([]);"
+php artisan tinker --execute="use App\Support\BacklogDays; use App\Support\MonitoringMemorandumBobot; echo implode(',', array_map([BacklogDays::class,'bucket'], [0,20,21,40,41,60,61,511])); echo PHP_EOL; echo BacklogDays::meta(4)['bucket']; echo PHP_EOL; echo MonitoringMemorandumBobot::score(['nota_dinas'=>18,'no_notif'=>4501,'status_notif'=>'OSNO','no_wo'=>8101,'status_wo'=>'50','no_po'=>'PO-1','status'=>'close']); echo PHP_EOL; echo MonitoringMemorandumBobot::score(['no_notif'=>4501,'status_notif'=>'OSNO']); echo PHP_EOL; echo MonitoringMemorandumBobot::score([]);"
 ```
-Expected baris: `1,1,2,2,3,3,4,4`; `91+`; `100`; `30`; `0`.
+Expected baris: `1,1,2,2,3,3,4,4`; `61+`; `100`; `30`; `0`.
 
 - [ ] **Step 4: Commit**
 
@@ -946,7 +946,7 @@ Run:
 ```bash
 php artisan tinker --execute="DB::beginTransaction(); \$now = \Carbon\Carbon::today(); \$rows = [['2026-11-18',30],['2026-10-29',20],['2026-10-01',100],['2026-11-05',0],['2025-12-15',80],['2025-06-30',100]]; foreach (\$rows as \$r) { \$m = new \App\Models\MonitoringMemorandum(); \$m->tanggal_issue = \$r[0]; \$m->issue_operasional = 'uji'; \$m->no_po = 'X'; if (\$r[1] === 100) \$m->status = 'close'; \$m->save(); } print_r(app(\App\Services\MonitoringMemorandumDashboardService::class)->getDashboard()); DB::rollBack();"
 ```
-Expected: `bobot` dua entri tahun 2025 & 2026; `backlog` empat entri dengan bucket `1–30`, `31–60`, `61–90`, `91+`; transaksi di-rollback sehingga tidak ada data tertinggal.
+Expected: `bobot` dua entri tahun 2025 & 2026; `backlog` empat entri dengan bucket `0–20`, `21–40`, `41–60`, `61+`; transaksi di-rollback sehingga tidak ada data tertinggal.
 
 - [ ] **Step 3: Commit**
 
@@ -1274,7 +1274,7 @@ Expected: HTTP 422 dengan `errors.tanggal_issue` berisi `may not be a date in th
 ```bash
 curl -s http://127.0.0.1:8000/api/monitoring_memorandum/dashboard -H "Authorization: Bearer $TOKEN"
 ```
-Expected: `data.bobot` berisi tahun 2026, `data.backlog` empat entri `1–30`, `31–60`, `61–90`, `91+`.
+Expected: `data.bobot` berisi tahun 2026, `data.backlog` empat entri `0–20`, `21–40`, `41–60`, `61+`.
 
 ```bash
 curl -s -D mm-export-headers.txt -o mm-export.xlsx 'http://127.0.0.1:8000/api/monitoring_memorandum/export?tag_number_ids=all' -H "Authorization: Bearer $TOKEN"
@@ -1303,5 +1303,5 @@ git commit -m "feat(monitoring-memorandum): add controller, routes and verify CR
 - **Spec coverage:** migration & model (Task 1), `tag_number_ids` aturan + sentinel + search/filter (Task 2, 4, 8), `backlog_days` (Task 1, 3, 7, 8), bobot & dashboard (Task 3, 7, 8), validasi & partial update (Task 4, 8), resource (Task 5), export (Task 6, 8), routes & activity log (Task 1, 8). Tidak ada requirement spec tanpa task.
 - **Placeholder scan:** tidak ada `TBD`, `TODO`, "implement later", "add appropriate error handling", atau "serupa dengan Task N". Semua langkah kode memuat kode lengkap.
 - **Type consistency:** `BacklogDays::bucket(int): int`, `label(int): string`, `meta(int): array`; `TagNumberIds::applyFilter(Builder,string,?string): Builder`; `MonitoringMemorandumBobot::scoreSql(string): string`; `MonitoringMemorandumDashboardService::getDashboard(): array` dengan key `bobot`/`backlog`; `baseQuery(Request): Builder` dipakai `index()` dan `export()`. Nama konsisten di semua task.
-- **Koreksi saat eksekusi Task 7:** accessor `getBacklogDaysAttribute()` awalnya selalu memanggil `forDate()`, ternyata menimpa alias SQL `backlog_days` pada query dashboard yang tidak memilih `tanggal_issue` (semua baris jadi bucket `1–30`). Sudah diperbaiki di model, spec, dan plan: accessor menerima `$value` dari alias dan hanya fallback ke `forDate()` bila alias tidak ada. Verifikasi ulang menghasilkan bucket `3/1/0/2`.
+- **Koreksi saat eksekusi Task 7:** accessor `getBacklogDaysAttribute()` awalnya selalu memanggil `forDate()`, ternyata menimpa alias SQL `backlog_days` pada query dashboard yang tidak memilih `tanggal_issue` (semua baris jadi bucket pertama, kini bernama `0–20`). Sudah diperbaiki di model, spec, dan plan: accessor menerima `$value` dari alias dan hanya fallback ke `forDate()` bila alias tidak ada. Verifikasi ulang saat itu menghasilkan distribusi `3/1/0/2` (sebelum revisi rentang 2026-11-28).
 - **Verifikasi terhadap codebase nyata (sudah dicek):** `ApiResource::pagination($paginator, $resourceClass)` sesuai pemakaian; `BaseRequest` tidak meng-override `authorize()`, jadi kedua FormRequest wajib menambahkan `authorize(): bool` (sudah ada di Task 4); `ValidationRuleParser::explodeRules()` memecah rule string pada `|`, jadi rule `regex` dengan alternasi `all|\d+` ditulis array-form (sudah ada di Task 4); tabel `tag_numbers` dan FK `historical_memorandum` sesuai migration existing; `AppServiceProvider` memakai wildcard listener `eloquent.*: *`, sehingga tidak perlu registrasi observer per model; `ActivityModule::label('MonitoringMemorandum')` otomatis menjadi "Monitoring Memorandum" tanpa ubah config.

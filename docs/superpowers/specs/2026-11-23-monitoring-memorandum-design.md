@@ -19,7 +19,7 @@ Fitur utama:
 1. CRUD penuh + export Excel yang mengikuti filter aktif.
 2. Filter & global search.
 3. Dashboard dengan dua pengolahan: **bobot** per tahun dan **backlog** per
-   bucket 30 hari.
+   bucket 20 hari.
 
 ## Keputusan Saat Brainstorming
 
@@ -34,9 +34,10 @@ Fitur utama:
 | Filter tag numerik | `?tag_number_ids=43` hanya mencocokkan ID di string, **tidak** mencocokkan baris `all` | Turunan dari keputusan di atas |
 | Validasi `tanggal_issue` | `before_or_equal:today` | Keputusan user; `backlog_days` tidak bisa negatif |
 | Bobot | Biner "terisi = bobot penuh", skor 0–100, dirata-rata per tahun | Keputusan user |
-| Bucket backlog | `1–30`, `31–60`, `61–90`, `91+` | Keputusan user |
+| Bucket backlog | `0–20`, `21–40`, `41–60`, `61+` | Keputusan user (revisi 2026-11-28) |
 | Endpoint dashboard | Satu endpoint dengan dua blok, global (tanpa filter) | Keputusan user |
-| Import / unit test | Tidak | Tidak diminta |
+| Import | Tidak | Tidak diminta |
+| Unit test | Awalnya tidak; regression test bucket ditambahkan 2026-11-28 | `tests/Unit/BacklogDaysBucketTest.php` menjaga batas `0–20/21–40/41–60/61+` |
 
 ## Skema — Migration `2026_11_23_000001_create_monitoring_memorandum_table`
 
@@ -138,12 +139,12 @@ Satu helper `App\Support\BacklogDays`:
 - `forDate($date)` → `Carbon::parse($tanggalIssue)->diffInDays(today(), false)`
   (positif untuk tanggal lampau). Karena `tanggal_issue` divalidasi ≤ hari ini,
   nilai minimum `0`.
-- `bucket(int $days)` → `min(intdiv(max($days - 1, 0), 30) + 1, 4)`.
-  `0..30 → 1`, `31..60 → 2`, `61..90 → 3`, `>= 91 → 4`. Empat bucket tetap,
-  sesuai demo yang disetujui; tidak ada bucket dinamis yang bertumpang tindih.
-- `label(int $index)` → `1` = `1–30`, `2` = `31–60`, `3` = `61–90`,
-  `4` = `91+` (open-ended). `hari_min` berturut-turut `1/31/61/91`,
-  `hari_max` `30/60/90/null`.
+- `bucket(int $days)` → `min(intdiv(max($days - 1, 0), 20) + 1, 4)`.
+  `0..20 → 1`, `21..40 → 2`, `41..60 → 3`, `>= 61 → 4`. Empat bucket tetap,
+  sesuai revisi user 2026-11-28; tidak ada bucket dinamis yang bertumpang tindih.
+- `label(int $index)` → `1` = `0–20`, `2` = `21–40`, `3` = `41–60`,
+  `4` = `61+` (open-ended). `hari_min` berturut-turut `0/21/41/61`,
+  `hari_max` `20/40/60/null`.
 
 Accessor `getBacklogDaysAttribute()` memakai nilai alias SQL `backlog_days`
 apabila query menyertakannya, dan fallback ke `forDate()` bila tidak ada. Ini
@@ -186,10 +187,10 @@ resource list — bobot hanya hasil olahan dashboard.
       { "tahun": 2026, "rata_rata_bobot": 37.5, "total_data": 4 }
     ],
     "backlog": [
-      { "bucket": "1–30", "hari_min": 1, "hari_max": 30, "total": 3 },
-      { "bucket": "31–60", "hari_min": 31, "hari_max": 60, "total": 1 },
-      { "bucket": "61–90", "hari_min": 61, "hari_max": 90, "total": 0 },
-      { "bucket": "91+", "hari_min": 91, "hari_max": null, "total": 2 }
+      { "bucket": "0–20", "hari_min": 0, "hari_max": 20, "total": 3 },
+      { "bucket": "21–40", "hari_min": 21, "hari_max": 40, "total": 1 },
+      { "bucket": "41–60", "hari_min": 41, "hari_max": 60, "total": 0 },
+      { "bucket": "61+", "hari_min": 61, "hari_max": null, "total": 2 }
     ]
   }
 }
@@ -199,7 +200,7 @@ resource list — bobot hanya hasil olahan dashboard.
   `AVG(scoreSql()) as rata_rata_bobot`, `COUNT(*) as total_data`,
   `GROUP BY tahun ORDER BY tahun ASC`. Hasil dibulatkan 2 desimal.
 - `backlog`: satu query mengambil `backlog_days` per baris, dikelompokkan di PHP
-  per index bucket. Keempat bucket (`1–30`, `31–60`, `61–90`, `91+`) selalu
+  per index bucket. Keempat bucket (`0–20`, `21–40`, `41–60`, `61+`) selalu
   ditampilkan, termasuk yang `total: 0`, supaya grafik konsisten antar periode.
 - Dashboard **global**, tidak menerima filter/search, mengikuti konvensi
   dashboard PSV/Equipment.
@@ -317,6 +318,6 @@ Route::apiResource('monitoring_memorandum', MonitoringMemorandumController::clas
 - `MonitoringMemorandumBobot::score()`:
   semua terisi → 100; hanya `no_notif` + `status_notif` → 30; tidak ada → 0.
   Dashboard contoh: 2025 → 90, 2026 → 37.5.
-- `BacklogDays::bucket(0/30/31/60/61/90/91/511)` → `1/1/2/2/3/3/4/4`;
-  bucket tampil `1–30`, `31–60`, `61–90`, `91+`.
+- `BacklogDays::bucket(0/20/21/40/41/60/61/511)` → `1/1/2/2/3/3/4/4`;
+  bucket tampil `0–20`, `21–40`, `41–60`, `61+`.
 - Export `.xlsx` valid dengan 13 heading; isi identik dengan filter aktif.

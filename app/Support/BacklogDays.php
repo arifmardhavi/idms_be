@@ -24,13 +24,13 @@ class BacklogDays
 
     public static function bucket(int $days): int
     {
-        return min(intdiv(max($days - 1, 0), 30) + 1, 4);
+        return min(intdiv(max($days - 1, 0), 20) + 1, 4);
     }
 
     public static function label(int $bucket): string
     {
         return match ($bucket) {
-            1 => '1–20',
+            1 => '0–20',
             2 => '21–40',
             3 => '41–60',
             default => '61+',
@@ -41,7 +41,7 @@ class BacklogDays
     public static function meta(int $bucket): array
     {
         return match ($bucket) {
-            1 => ['bucket' => self::label(1), 'hari_min' => 1, 'hari_max' => 20],
+            1 => ['bucket' => self::label(1), 'hari_min' => 0, 'hari_max' => 20],
             2 => ['bucket' => self::label(2), 'hari_min' => 21, 'hari_max' => 40],
             3 => ['bucket' => self::label(3), 'hari_min' => 41, 'hari_max' => 60],
             default => ['bucket' => self::label(4), 'hari_min' => 61, 'hari_max' => null],
