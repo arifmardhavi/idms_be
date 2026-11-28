@@ -7,8 +7,10 @@ use App\Models\Ems;
 use App\Models\Tag_number;
 use App\Models\Type;
 use App\Models\Unit;
+use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class EmsRevFieldTest extends TestCase
 {
@@ -53,5 +55,73 @@ class EmsRevFieldTest extends TestCase
         ]);
 
         $this->assertSame('3', $ems->fresh()->rev);
+    }
+
+    /** @return array<string, string> */
+    private function authHeaders(): array
+    {
+        $suffix = bin2hex(random_bytes(5));
+
+        $user = User::create([
+            'fullname' => 'EMS rev test',
+            'email' => 'ems_rev_'.$suffix.'@example.test',
+            'username' => 'ems_rev_'.$suffix,
+            'password' => 'secret123',
+            'level_user' => 1,
+            'status' => 1,
+        ]);
+
+        return ['Authorization' => 'Bearer '.JWTAuth::fromUser($user)];
+    }
+
+    public function test_store_endpoint_defaults_rev_to_zero(): void
+    {
+        $response = $this->withHeaders($this->authHeaders())->postJson('/api/ems', [
+            'tag_number_id' => $this->tagNumber()->id,
+            'no_ems' => 'EMS-REV-003',
+            'tanggal' => '2026-11-28',
+        ]);
+
+        $response->assertCreated()->assertJsonPath('data.rev', '0');
+    }
+
+    public function test_store_endpoint_accepts_rev_string(): void
+    {
+        $response = $this->withHeaders($this->authHeaders())->postJson('/api/ems', [
+            'tag_number_id' => $this->tagNumber()->id,
+            'no_ems' => 'EMS-REV-004',
+            'tanggal' => '2026-11-28',
+            'rev' => '7',
+        ]);
+
+        $response->assertCreated()->assertJsonPath('data.rev', '7');
+    }
+
+    public function test_update_endpoint_keeps_rev_when_not_provided(): void
+    {
+        $ems = Ems::create([
+            'tag_number_id' => $this->tagNumber()->id,
+            'no_ems' => 'EMS-REV-005',
+            'tanggal' => '2026-11-28',
+            'rev' => '9',
+        ]);
+
+        $response = $this->withHeaders($this->authHeaders())->putJson('/api/ems/'.$ems->id, [
+            'no_ems' => 'EMS-REV-005-UPDATED',
+        ]);
+
+        $response->assertOk()->assertJsonPath('data.rev', '9');
+    }
+
+    public function test_store_endpoint_rejects_null_rev(): void
+    {
+        $response = $this->withHeaders($this->authHeaders())->postJson('/api/ems', [
+            'tag_number_id' => $this->tagNumber()->id,
+            'no_ems' => 'EMS-REV-006',
+            'tanggal' => '2026-11-28',
+            'rev' => null,
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('rev');
     }
 }

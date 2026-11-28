@@ -657,6 +657,7 @@
 | id | bigint | PK, auto-increment | |
 | tag_number_id | bigint | FK → tag_numbers.id, CASCADE | Relasi ke tag_numbers (satu tag number bisa punya banyak EMS) |
 | no_ems | varchar | NOT NULL | Nomor EMS |
+| rev | varchar | NOT NULL, DEFAULT '0' | Revisi EMS |
 | tanggal | date | NULLABLE | Tanggal EMS |
 | ems_file | text | NULLABLE | Nama file EMS (tersimpan di public/ems) |
 | created_at | timestamp | | |

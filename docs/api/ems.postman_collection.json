@@ -129,6 +129,7 @@
               "formdata": [
                 { "key": "tag_number_id", "value": "7", "type": "text", "description": "id tag number (required)" },
                 { "key": "no_ems", "value": "EMS-2026-001", "type": "text", "description": "nomor EMS (required)" },
+                { "key": "rev", "value": "0", "type": "text", "description": "revisi EMS (opsional, default \"0\")" },
                 { "key": "tanggal", "value": "2026-09-01", "type": "text", "description": "tanggal (required)" },
                 { "key": "ems_file", "value": "", "type": "file", "description": "file EMS, semua tipe (opsional)" }
               ]
@@ -161,6 +162,7 @@
               "formdata": [
                 { "key": "tag_number_id", "value": "7", "type": "text", "description": "id tag number (opsional)" },
                 { "key": "no_ems", "value": "EMS-2026-001-updated", "type": "text", "description": "nomor EMS (opsional)" },
+                { "key": "rev", "value": "1", "type": "text", "description": "revisi EMS (opsional)" },
                 { "key": "tanggal", "value": "2026-09-02", "type": "text", "description": "tanggal (opsional)" },
                 { "key": "ems_file", "value": "", "type": "file", "description": "file EMS baru, ganti file lama bila ada (opsional)" }
               ]

@@ -72,6 +72,7 @@ class EmsController extends Controller
         $validator = Validator::make($request->all(), [
             'tag_number_id' => 'required|exists:tag_numbers,id',
             'no_ems' => 'required|string|max:255',
+            'rev' => 'sometimes|string|max:255',
             'tanggal' => 'required|date',
             'ems_file' => 'nullable|file',
         ]);
@@ -92,6 +93,7 @@ class EmsController extends Controller
             }
 
             $ems = Ems::create($validatedData);
+            $ems->refresh();
 
             return response()->json([
                 'success' => true,
@@ -145,6 +147,7 @@ class EmsController extends Controller
         $validator = Validator::make($request->all(), [
             'tag_number_id' => 'sometimes|required|exists:tag_numbers,id',
             'no_ems' => 'sometimes|required|string|max:255',
+            'rev' => 'sometimes|string|max:255',
             'tanggal' => 'sometimes|required|date',
             'ems_file' => 'sometimes|nullable|file',
         ]);
